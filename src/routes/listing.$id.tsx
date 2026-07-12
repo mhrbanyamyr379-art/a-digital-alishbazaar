@@ -29,11 +29,17 @@ export const Route = createFileRoute("/listing/$id")({
 async function fetchListing(id: string) {
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_images(id,url,position), profiles!listings_seller_id_fkey(*)")
+    .select("*, listing_images(id,url,position)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  if (!data) return null;
+  const { data: seller } = await supabase
+    .from("profiles")
+    .select("id,display_name,avatar_url,rating_avg,rating_count,phone")
+    .eq("id", data.seller_id)
+    .maybeSingle();
+  return { ...data, seller };
 }
 
 function ListingDetail() {
