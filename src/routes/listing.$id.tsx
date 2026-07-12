@@ -97,12 +97,13 @@ function ListingDetail() {
   const prov = provinceById(l.province);
   const cat = categoryById(l.category);
   const cond = CONDITIONS.find((c) => c.id === l.condition);
-  const seller = l.profiles as {
+  const seller = l.seller as {
     id: string;
     display_name: string;
     avatar_url: string | null;
     rating_avg: number;
     rating_count: number;
+    phone: string | null;
   } | null;
 
   const startChat = async () => {
