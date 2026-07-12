@@ -88,10 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Afghan Bazaar — Buy & Sell across Afghanistan" },
       {
         property: "og:description",
-        content: "Afghanistan's trusted online marketplace across all 34 provinces.",
+        content: "Afghan Bazaar is Afghanistan's trusted online marketplace. Buy and sell cars, property, phones, electronics and more across all 34 provinces. Dari, Pashto & English.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Afghan Bazaar — Buy & Sell across Afghanistan" },
+      { name: "twitter:description", content: "Afghan Bazaar is Afghanistan's trusted online marketplace. Buy and sell cars, property, phones, electronics and more across all 34 provinces. Dari, Pashto & English." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3f0b7e16-617d-424c-a4b3-cbc22ff7c31d/id-preview-a448862e--ac0b5238-a7f7-44e5-b6d4-f5b26dd75109.lovable.app-1783843727305.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3f0b7e16-617d-424c-a4b3-cbc22ff7c31d/id-preview-a448862e--ac0b5238-a7f7-44e5-b6d4-f5b26dd75109.lovable.app-1783843727305.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
