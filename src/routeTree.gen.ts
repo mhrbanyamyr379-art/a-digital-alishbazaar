@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as AuthenticatedSellRouteImport } from './routes/_authenticated/sell'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -49,6 +50,11 @@ const AuthenticatedSellRoute = AuthenticatedSellRouteImport.update({
   path: '/sell',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNotificationsRoute =
   AuthenticatedNotificationsRouteImport.update({
     id: '/notifications',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/favorites'
     | '/notifications'
+    | '/profile'
     | '/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/favorites'
     | '/notifications'
+    | '/profile'
     | '/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/favorites'
     | '/_authenticated/notifications'
+    | '/_authenticated/profile'
     | '/_authenticated/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -195,6 +207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSellRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/notifications': {
       id: '/_authenticated/notifications'
       path: '/notifications'
@@ -241,6 +260,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSellRoute: typeof AuthenticatedSellRoute
 }
 
@@ -248,6 +268,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSellRoute: AuthenticatedSellRoute,
 }
 
