@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as AuthenticatedSellRouteImport } from './routes/_authenticated/sell'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -29,6 +30,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerIdRoute = SellerIdRouteImport.update({
+  id: '/seller/$id',
+  path: '/seller/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ListingIdRoute = ListingIdRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
+  '/seller/$id': typeof SellerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
+  '/seller/$id': typeof SellerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
+  '/seller/$id': typeof SellerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,8 +97,16 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/sell'
     | '/listing/$id'
+    | '/seller/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/favorites' | '/notifications' | '/sell' | '/listing/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/favorites'
+    | '/notifications'
+    | '/sell'
+    | '/listing/$id'
+    | '/seller/$id'
   id:
     | '__root__'
     | '/'
@@ -99,6 +116,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/sell'
     | '/listing/$id'
+    | '/seller/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +124,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ListingIdRoute: typeof ListingIdRoute
+  SellerIdRoute: typeof SellerIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -129,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/$id': {
+      id: '/seller/$id'
+      path: '/seller/$id'
+      fullPath: '/seller/$id'
+      preLoaderRoute: typeof SellerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/listing/$id': {
@@ -182,6 +208,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ListingIdRoute: ListingIdRoute,
+  SellerIdRoute: SellerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
