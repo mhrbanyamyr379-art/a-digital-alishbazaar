@@ -268,10 +268,10 @@ function ListingDetail() {
         <div className="fixed bottom-0 left-0 z-40 flex w-full gap-3 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {seller && (
             <a
-              href={`tel:${(l.profiles as { phone?: string })?.phone ?? ""}`}
+              href={`tel:${seller.phone ?? ""}`}
               className={cn(
                 "flex flex-1 items-center justify-center gap-2 rounded-lg border border-border py-3 text-sm font-bold",
-                !(l.profiles as { phone?: string })?.phone && "pointer-events-none opacity-50",
+                !seller.phone && "pointer-events-none opacity-50",
               )}
             >
               <Phone className="size-4" />
