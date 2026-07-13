@@ -247,6 +247,10 @@ function ListingDetail() {
             <Eye className="size-3.5" />
             {toLocalDigits(l.view_count ?? 0, lang)} {t("view")}
           </span>
+          <span className="flex items-center gap-1">
+            <Heart className="size-3.5" />
+            {toLocalDigits(l.favorites_count ?? 0, lang)} {t("favoritesCount")}
+          </span>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -257,7 +261,23 @@ function ListingDetail() {
             </span>
           )}
           {cond && <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">{locName(cond)}</span>}
+          {(l.tags ?? []).map((tg: string) => (
+            <span key={tg} className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">
+              #{tg}
+            </span>
+          ))}
         </div>
+
+        {user?.id === l.seller_id && (
+          <Link
+            to="/edit/$id"
+            params={{ id: l.id }}
+            className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold"
+          >
+            <Pencil className="size-4" />
+            {t("edit")}
+          </Link>
+        )}
 
         {l.description && (
           <div className="mt-5">
