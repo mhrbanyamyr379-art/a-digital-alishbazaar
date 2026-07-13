@@ -60,8 +60,7 @@ function ListingDetail() {
 
   useEffect(() => {
     if (!l) return;
-    supabase.rpc; // noop guard
-    supabase.from("listings").update({ view_count: (l.view_count ?? 0) + 1 }).eq("id", id).then(() => {});
+    supabase.rpc("increment_listing_views", { _listing_id: id }).then(() => {});
     if (user) {
       supabase
         .from("recently_viewed")
@@ -70,6 +69,40 @@ function ListingDetail() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [l?.id]);
+
+  const { data: related } = useQuery({
+    queryKey: ["related", l?.id, l?.category, l?.province],
+    enabled: !!l,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("listings")
+        .select("id,title,price,currency,province,city,created_at,is_featured,listing_images(url,position)")
+        .eq("status", "active")
+        .eq("category", l!.category)
+        .neq("id", l!.id)
+        .order("province", { ascending: l!.province ? true : false })
+        .limit(8);
+      const rows = data ?? [];
+      // Prioritize same-province results client-side
+      rows.sort((a, b) => Number(b.province === l!.province) - Number(a.province === l!.province));
+      return rows.slice(0, 6).map((r) => {
+        const imgs = (r.listing_images ?? []) as { url: string; position: number }[];
+        const first = imgs.sort((x, y) => x.position - y.position)[0];
+        return {
+          id: r.id,
+          title: r.title,
+          price: Number(r.price),
+          currency: r.currency,
+          province: r.province,
+          city: r.city,
+          created_at: r.created_at,
+          is_featured: r.is_featured,
+          image: first?.url ?? null,
+        };
+      });
+    },
+  });
+
 
   if (isLoading)
     return (
