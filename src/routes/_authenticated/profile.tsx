@@ -306,7 +306,28 @@ function ProfilePage() {
       </div>
 
       {editing && <EditProfileDialog onClose={() => setEditing(false)} onSaved={refreshProfile} />}
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("confirmDelete")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("confirmDeleteBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteId) remove(deleteId);
+                setDeleteId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <BottomNav />
+
     </div>
   );
 }
