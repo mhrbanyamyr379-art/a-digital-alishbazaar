@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2 } from "lucide-react";
+import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { provinceById } from "@/data/provinces";
 import { categoryById, CONDITIONS } from "@/data/categories";
 import { TopBar } from "@/components/TopBar";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
+import { ListingCard } from "@/components/ListingCard";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -60,8 +61,7 @@ function ListingDetail() {
 
   useEffect(() => {
     if (!l) return;
-    supabase.rpc; // noop guard
-    supabase.from("listings").update({ view_count: (l.view_count ?? 0) + 1 }).eq("id", id).then(() => {});
+    supabase.rpc("increment_listing_views", { _listing_id: id }).then(() => {});
     if (user) {
       supabase
         .from("recently_viewed")
@@ -70,6 +70,40 @@ function ListingDetail() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [l?.id]);
+
+  const { data: related } = useQuery({
+    queryKey: ["related", l?.id, l?.category, l?.province],
+    enabled: !!l,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("listings")
+        .select("id,title,price,currency,province,city,created_at,is_featured,listing_images(url,position)")
+        .eq("status", "active")
+        .eq("category", l!.category)
+        .neq("id", l!.id)
+        .order("province", { ascending: l!.province ? true : false })
+        .limit(8);
+      const rows = data ?? [];
+      // Prioritize same-province results client-side
+      rows.sort((a, b) => Number(b.province === l!.province) - Number(a.province === l!.province));
+      return rows.slice(0, 6).map((r) => {
+        const imgs = (r.listing_images ?? []) as { url: string; position: number }[];
+        const first = imgs.sort((x, y) => x.position - y.position)[0];
+        return {
+          id: r.id,
+          title: r.title,
+          price: Number(r.price),
+          currency: r.currency,
+          province: r.province,
+          city: r.city,
+          created_at: r.created_at,
+          is_featured: r.is_featured,
+          image: first?.url ?? null,
+        };
+      });
+    },
+  });
+
 
   if (isLoading)
     return (
@@ -214,6 +248,10 @@ function ListingDetail() {
             <Eye className="size-3.5" />
             {toLocalDigits(l.view_count ?? 0, lang)} {t("view")}
           </span>
+          <span className="flex items-center gap-1">
+            <Heart className="size-3.5" />
+            {toLocalDigits(l.favorites_count ?? 0, lang)} {t("favoritesCount")}
+          </span>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -224,7 +262,23 @@ function ListingDetail() {
             </span>
           )}
           {cond && <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">{locName(cond)}</span>}
+          {(l.tags ?? []).map((tg: string) => (
+            <span key={tg} className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">
+              #{tg}
+            </span>
+          ))}
         </div>
+
+        {user?.id === l.seller_id && (
+          <Link
+            to="/edit/$id"
+            params={{ id: l.id }}
+            className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold"
+          >
+            <Pencil className="size-4" />
+            {t("edit")}
+          </Link>
+        )}
 
         {l.description && (
           <div className="mt-5">
@@ -263,10 +317,22 @@ function ListingDetail() {
         <ReportDialog listingId={l.id} />
       </div>
 
+      {/* Related listings */}
+      {related && related.length > 0 && (
+        <div className="mt-8 px-4">
+          <h2 className="mb-3 font-display text-base font-black tracking-tight">{t("relatedListings")}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {related.map((r, i) => (
+              <ListingCard key={r.id} listing={r} index={i} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Sticky contact */}
       {user?.id !== l.seller_id && (
         <div className="fixed bottom-0 left-0 z-40 flex w-full gap-3 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          {seller && (
+          {seller && l.contact_method !== "chat" && (
             <a
               href={`tel:${seller.phone ?? ""}`}
               className={cn(
@@ -278,13 +344,15 @@ function ListingDetail() {
               {t("call")}
             </a>
           )}
-          <button
-            onClick={startChat}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground"
-          >
-            <MessageCircle className="size-4" />
-            {t("message")}
-          </button>
+          {l.contact_method !== "call" && (
+            <button
+              onClick={startChat}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground"
+            >
+              <MessageCircle className="size-4" />
+              {t("message")}
+            </button>
+          )}
         </div>
       )}
     </div>

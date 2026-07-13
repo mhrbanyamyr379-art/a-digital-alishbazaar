@@ -37,7 +37,7 @@ export function ListingCard({
     <Link
       to="/listing/$id"
       params={{ id: listing.id }}
-      className="animate-listing group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+      className="animate-listing group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg"
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
@@ -54,7 +54,7 @@ export function ListingCard({
           </div>
         )}
         {listing.is_featured && (
-          <span className="absolute top-2 end-2 rounded-md bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+          <span className="absolute top-2 end-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-sm">
             ★
           </span>
         )}
@@ -73,8 +73,10 @@ export function ListingCard({
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <div className="font-display text-base font-black leading-none tracking-tight">
-          {formatPrice(listing.price, listing.currency, lang)}
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-display text-base font-black leading-none tracking-tight">
+            {formatPrice(listing.price, listing.currency, lang)}
+          </span>
         </div>
         <h3 className="line-clamp-2 text-xs font-bold leading-snug">{listing.title}</h3>
         <div className="mt-auto flex items-center justify-between border-t border-border pt-2 text-[10px] font-mono text-muted-foreground">

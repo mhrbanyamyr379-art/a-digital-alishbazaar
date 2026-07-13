@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LogOut, Pencil, Shield, Clock, Package, Loader2, Trash2, Check } from "lucide-react";
+import { LogOut, Pencil, Shield, Clock, Package, Loader2, Trash2, Check, Eye, Heart, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,16 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { listingImg } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -29,6 +39,7 @@ function ProfilePage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"listings" | "recent">("listings");
   const [editing, setEditing] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: myListings } = useQuery({
     queryKey: ["my-listings", user?.id],
@@ -36,7 +47,7 @@ function ProfilePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id,title,price,currency,status,listing_images(url,position)")
+        .select("id,title,price,currency,status,view_count,favorites_count,created_at,expires_at,listing_images(url,position)")
         .eq("seller_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -67,11 +78,42 @@ function ProfilePage() {
   const setStatus = async (id: string, status: "active" | "sold") => {
     await supabase.from("listings").update({ status }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
+    toast.success(t("saved"));
+  };
+  const renew = async (id: string) => {
+    await supabase
+      .from("listings")
+      .update({
+        status: "active",
+        published_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 30 * 864e5).toISOString(),
+      })
+      .eq("id", id);
+    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
+    toast.success(t("renewed"));
   };
   const remove = async (id: string) => {
     await supabase.from("listings").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
     toast.success(t("saved"));
+  };
+
+  const isExpired = (l: { status: string; expires_at: string | null }) =>
+    l.status === "expired" || (l.status === "active" && !!l.expires_at && new Date(l.expires_at) < new Date());
+
+  const statusLabel = (l: { status: string; expires_at: string | null }) => {
+    if (isExpired(l)) return t("expired");
+    return t(
+      l.status === "sold"
+        ? "sold"
+        : l.status === "pending"
+          ? "pending"
+          : l.status === "draft"
+            ? "draft"
+            : l.status === "rejected"
+              ? "rejected"
+              : "active",
+    );
   };
 
   const firstImg = (imgs: { url: string; position: number }[]) =>
@@ -163,37 +205,83 @@ function ProfilePage() {
 
       <div className="flex flex-col gap-2 p-3">
         {tab === "listings" &&
-          myListings?.map((l) => (
-            <div key={l.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2">
-              <Link to="/listing/$id" params={{ id: l.id }} className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
-                {firstImg(l.listing_images) && (
-                  <img src={listingImg(firstImg(l.listing_images))} alt="" className="size-full object-cover" />
-                )}
-              </Link>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">{l.title}</p>
-                <p className="text-sm font-black text-accent">{formatPrice(Number(l.price), l.currency, lang)}</p>
-                <span
-                  className={cn(
-                    "mt-0.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold",
-                    l.status === "active" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+          myListings?.map((l) => {
+            const expired = isExpired(l);
+            return (
+              <div key={l.id} className="rounded-xl border border-border bg-card p-2">
+                <div className="flex items-center gap-3">
+                  <Link to="/listing/$id" params={{ id: l.id }} className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                    {firstImg(l.listing_images) && (
+                      <img src={listingImg(firstImg(l.listing_images))} alt="" className="size-full object-cover" />
+                    )}
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold">{l.title}</p>
+                    <p className="text-sm font-black text-accent">{formatPrice(Number(l.price), l.currency, lang)}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                      <span
+                        className={cn(
+                          "inline-block rounded px-1.5 py-0.5 text-[10px] font-bold",
+                          expired
+                            ? "bg-destructive/10 text-destructive"
+                            : l.status === "active"
+                              ? "bg-primary/10 text-primary"
+                              : l.status === "draft"
+                                ? "bg-accent/10 text-accent"
+                                : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {statusLabel(l)}
+                      </span>
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
+                        <Eye className="size-3" />
+                        {toLocalDigits(l.view_count ?? 0, lang)}
+                      </span>
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
+                        <Heart className="size-3" />
+                        {toLocalDigits(l.favorites_count ?? 0, lang)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5 border-t border-border pt-2">
+                  <Link
+                    to="/edit/$id"
+                    params={{ id: l.id }}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold"
+                  >
+                    <Pencil className="size-3.5" />
+                    {t("edit")}
+                  </Link>
+                  {l.status === "active" && !expired && (
+                    <button
+                      onClick={() => setStatus(l.id, "sold")}
+                      className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold"
+                    >
+                      <Check className="size-3.5" />
+                      {t("markSold")}
+                    </button>
                   )}
-                >
-                  {t(l.status === "sold" ? "sold" : l.status === "pending" ? "pending" : "active")}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                {l.status === "active" && (
-                  <button onClick={() => setStatus(l.id, "sold")} aria-label={t("markSold")} className="rounded-md p-1.5 hover:bg-secondary">
-                    <Check className="size-4" />
+                  {(expired || l.status === "sold" || l.status === "draft") && (
+                    <button
+                      onClick={() => renew(l.id)}
+                      className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
+                    >
+                      <RefreshCw className="size-3.5" />
+                      {l.status === "draft" ? t("publishNow") : t("renew")}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setDeleteId(l.id)}
+                    className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary"
+                  >
+                    <Trash2 className="size-3.5" />
+                    {t("delete")}
                   </button>
-                )}
-                <button onClick={() => remove(l.id)} aria-label={t("delete")} className="rounded-md p-1.5 text-destructive hover:bg-secondary">
-                  <Trash2 className="size-4" />
-                </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         {tab === "listings" && myListings && myListings.length === 0 && (
           <p className="py-16 text-center text-sm text-muted-foreground">{t("emptyListings")}</p>
         )}
@@ -218,7 +306,28 @@ function ProfilePage() {
       </div>
 
       {editing && <EditProfileDialog onClose={() => setEditing(false)} onSaved={refreshProfile} />}
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("confirmDelete")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("confirmDeleteBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteId) remove(deleteId);
+                setDeleteId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <BottomNav />
+
     </div>
   );
 }
