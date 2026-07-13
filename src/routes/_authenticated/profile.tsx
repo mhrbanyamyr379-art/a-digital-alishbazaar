@@ -39,6 +39,7 @@ function ProfilePage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"listings" | "recent">("listings");
   const [editing, setEditing] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: myListings } = useQuery({
     queryKey: ["my-listings", user?.id],
