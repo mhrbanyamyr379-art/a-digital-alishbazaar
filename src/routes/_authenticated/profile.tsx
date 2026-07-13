@@ -36,7 +36,7 @@ function ProfilePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id,title,price,currency,status,listing_images(url,position)")
+        .select("id,title,price,currency,status,view_count,favorites_count,created_at,expires_at,listing_images(url,position)")
         .eq("seller_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
