@@ -13,6 +13,7 @@ import { provinceById } from "@/data/provinces";
 import { categoryById, CONDITIONS } from "@/data/categories";
 import { TopBar } from "@/components/TopBar";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
+import { ListingCard } from "@/components/ListingCard";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
