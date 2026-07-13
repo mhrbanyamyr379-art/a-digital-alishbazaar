@@ -197,12 +197,10 @@ export function ListingForm({
         if (error) throw error;
         listingId = data.id;
       } else {
-        const patch: Record<string, unknown> = { ...base };
-        // (re)set publish/expiry when moving to active
-        if (status === "active" && initial?.status !== "active") {
-          patch.published_at = nowIso;
-          patch.expires_at = expiresIso;
-        }
+        const patch =
+          status === "active" && initial?.status !== "active"
+            ? { ...base, published_at: nowIso, expires_at: expiresIso }
+            : base;
         const { error } = await supabase.from("listings").update(patch).eq("id", listingId!);
         if (error) throw error;
       }
