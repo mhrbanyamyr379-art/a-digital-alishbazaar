@@ -316,10 +316,22 @@ function ListingDetail() {
         <ReportDialog listingId={l.id} />
       </div>
 
+      {/* Related listings */}
+      {related && related.length > 0 && (
+        <div className="mt-8 px-4">
+          <h2 className="mb-3 font-display text-base font-black tracking-tight">{t("relatedListings")}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {related.map((r, i) => (
+              <ListingCard key={r.id} listing={r} index={i} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Sticky contact */}
       {user?.id !== l.seller_id && (
         <div className="fixed bottom-0 left-0 z-40 flex w-full gap-3 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          {seller && (
+          {seller && l.contact_method !== "chat" && (
             <a
               href={`tel:${seller.phone ?? ""}`}
               className={cn(
@@ -331,13 +343,15 @@ function ListingDetail() {
               {t("call")}
             </a>
           )}
-          <button
-            onClick={startChat}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground"
-          >
-            <MessageCircle className="size-4" />
-            {t("message")}
-          </button>
+          {l.contact_method !== "call" && (
+            <button
+              onClick={startChat}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground"
+            >
+              <MessageCircle className="size-4" />
+              {t("message")}
+            </button>
+          )}
         </div>
       )}
     </div>
