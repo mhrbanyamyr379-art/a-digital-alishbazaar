@@ -118,16 +118,21 @@ export type Database = {
           category: string
           city: string | null
           condition: string | null
+          contact_method: string
           created_at: string
           currency: string
           description: string
+          expires_at: string | null
+          favorites_count: number
           id: string
           is_featured: boolean
           negotiable: boolean
           price: number
           province: string
+          published_at: string | null
           seller_id: string
           status: Database["public"]["Enums"]["listing_status"]
+          tags: string[]
           title: string
           updated_at: string
           view_count: number
@@ -136,16 +141,21 @@ export type Database = {
           category: string
           city?: string | null
           condition?: string | null
+          contact_method?: string
           created_at?: string
           currency?: string
           description?: string
+          expires_at?: string | null
+          favorites_count?: number
           id?: string
           is_featured?: boolean
           negotiable?: boolean
           price?: number
           province: string
+          published_at?: string | null
           seller_id: string
           status?: Database["public"]["Enums"]["listing_status"]
+          tags?: string[]
           title: string
           updated_at?: string
           view_count?: number
@@ -154,16 +164,21 @@ export type Database = {
           category?: string
           city?: string | null
           condition?: string | null
+          contact_method?: string
           created_at?: string
           currency?: string
           description?: string
+          expires_at?: string | null
+          favorites_count?: number
           id?: string
           is_featured?: boolean
           negotiable?: boolean
           price?: number
           province?: string
+          published_at?: string | null
           seller_id?: string
           status?: Database["public"]["Enums"]["listing_status"]
+          tags?: string[]
           title?: string
           updated_at?: string
           view_count?: number
@@ -407,10 +422,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_listing_views: {
+        Args: { _listing_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      listing_status: "active" | "pending" | "sold" | "rejected" | "expired"
+      listing_status:
+        | "active"
+        | "pending"
+        | "sold"
+        | "rejected"
+        | "expired"
+        | "draft"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -539,7 +564,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      listing_status: ["active", "pending", "sold", "rejected", "expired"],
+      listing_status: [
+        "active",
+        "pending",
+        "sold",
+        "rejected",
+        "expired",
+        "draft",
+      ],
     },
   },
 } as const
