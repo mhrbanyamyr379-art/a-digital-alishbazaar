@@ -67,11 +67,42 @@ function ProfilePage() {
   const setStatus = async (id: string, status: "active" | "sold") => {
     await supabase.from("listings").update({ status }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
+    toast.success(t("saved"));
+  };
+  const renew = async (id: string) => {
+    await supabase
+      .from("listings")
+      .update({
+        status: "active",
+        published_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 30 * 864e5).toISOString(),
+      })
+      .eq("id", id);
+    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
+    toast.success(t("renewed"));
   };
   const remove = async (id: string) => {
     await supabase.from("listings").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
     toast.success(t("saved"));
+  };
+
+  const isExpired = (l: { status: string; expires_at: string | null }) =>
+    l.status === "expired" || (l.status === "active" && !!l.expires_at && new Date(l.expires_at) < new Date());
+
+  const statusLabel = (l: { status: string; expires_at: string | null }) => {
+    if (isExpired(l)) return t("expired");
+    return t(
+      l.status === "sold"
+        ? "sold"
+        : l.status === "pending"
+          ? "pending"
+          : l.status === "draft"
+            ? "draft"
+            : l.status === "rejected"
+              ? "rejected"
+              : "active",
+    );
   };
 
   const firstImg = (imgs: { url: string; position: number }[]) =>
