@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2 } from "lucide-react";
+import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
