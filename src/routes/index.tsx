@@ -50,7 +50,8 @@ async function fetchListings(params: {
   let query = supabase
     .from("listings")
     .select("id,title,price,currency,province,city,created_at,is_featured,listing_images(url,position)")
-    .eq("status", "active");
+    .eq("status", "active")
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
   if (params.q) query = query.ilike("title", `%${params.q}%`);
   if (params.cat) query = query.eq("category", params.cat);
