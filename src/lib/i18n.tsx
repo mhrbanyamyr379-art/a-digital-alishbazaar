@@ -139,6 +139,27 @@ const T: Dict = {
   sortImagesHint: { fa: "برای مرتب‌سازی بکشید؛ اولی عکس اصلی است", ps: "د ترتیب لپاره ویې کاږئ", en: "Drag to reorder · first is the cover" },
   compressing: { fa: "در حال آماده‌سازی...", ps: "چمتو کیږي...", en: "Optimizing..." },
   all: { fa: "همه", ps: "ټول", en: "All" },
+  // Search & discovery
+  recentSearches: { fa: "جستجوهای اخیر", ps: "وروستي لټونونه", en: "Recent searches" },
+  popularSearches: { fa: "پرطرفدار", ps: "مشهور لټونونه", en: "Popular" },
+  popularCategories: { fa: "دسته‌های محبوب", ps: "مشهورې کټګورۍ", en: "Popular categories" },
+  featuredListings: { fa: "آگهی‌های ویژه", ps: "ځانګړي اعلانونه", en: "Featured" },
+  discover: { fa: "کشف کنید", ps: "کشف کړئ", en: "Discover" },
+  clear: { fa: "پاک کردن", ps: "پاکول", en: "Clear" },
+  loadMore: { fa: "بیشتر", ps: "نور", en: "Load more" },
+  anyCondition: { fa: "هر وضعیت", ps: "هر حالت", en: "Any condition" },
+  datePosted: { fa: "تاریخ ثبت", ps: "د خپرېدو نېټه", en: "Date posted" },
+  anyTime: { fa: "هر زمان", ps: "هر وخت", en: "Anytime" },
+  last24h: { fa: "۲۴ ساعت گذشته", ps: "تېر ۲۴ ساعته", en: "Last 24 hours" },
+  last7d: { fa: "۷ روز گذشته", ps: "تېره ۷ ورځې", en: "Last 7 days" },
+  last30d: { fa: "۳۰ روز گذشته", ps: "تېره ۳۰ ورځې", en: "Last 30 days" },
+  minRating: { fa: "حداقل امتیاز فروشنده", ps: "د پلورونکي لږ درجه", en: "Min seller rating" },
+  anyRating: { fa: "هر امتیاز", ps: "هر درجه", en: "Any rating" },
+  cityAll: { fa: "همه شهرها", ps: "ټول ښارونه", en: "All cities" },
+  sortBy: { fa: "مرتب‌سازی", ps: "ترتیب", en: "Sort" },
+  mostViewed: { fa: "پربازدیدترین", ps: "ډېر لیدل شوي", en: "Most viewed" },
+  activeFilters: { fa: "فیلترهای فعال", ps: "فعال فلټرونه", en: "Active filters" },
+  clearAll: { fa: "پاک‌کردن همه", ps: "ټول پاک کړه", en: "Clear all" },
 };
 
 
