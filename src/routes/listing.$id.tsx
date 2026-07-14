@@ -44,7 +44,7 @@ async function fetchListing(id: string) {
     .select(sellerCols)
     .eq("id", data.seller_id)
     .maybeSingle();
-  return { ...data, seller };
+  return { ...data, seller: seller as { id: string; display_name: string; avatar_url: string | null; rating_avg: number; rating_count: number; phone?: string | null } | null };
 }
 
 function ListingDetail() {
