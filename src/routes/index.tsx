@@ -1,19 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, SlidersHorizontal, ChevronDown, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { CATEGORIES } from "@/data/categories";
+import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
 import { PROVINCES, provinceById } from "@/data/provinces";
 import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/components/ListingCard";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SearchBar } from "@/components/SearchBar";
+import { DiscoverySections } from "@/components/DiscoverySections";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
+import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { avatarImg } from "@/lib/storage";
 import { toLocalDigits } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -29,44 +32,70 @@ const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
   cat: fallback(z.string(), "").default(""),
   prov: fallback(z.string(), "").default(""),
+  city: fallback(z.string(), "").default(""),
+  cond: fallback(z.string(), "").default(""),
+  days: fallback(z.number(), 0).default(0),
+  rating: fallback(z.number(), 0).default(0),
   sort: fallback(z.string(), "newest").default("newest"),
   min: fallback(z.number(), 0).default(0),
   max: fallback(z.number(), 0).default(0),
 });
+
+type SearchParams = z.infer<typeof searchSchema>;
 
 export const Route = createFileRoute("/")({
   validateSearch: zodValidator(searchSchema),
   component: Home,
 });
 
-async function fetchListings(params: {
-  q: string;
-  cat: string;
-  prov: string;
-  sort: string;
-  min: number;
-  max: number;
-}): Promise<ListingCardData[]> {
+const PAGE = 24;
+const COLS =
+  "id,title,price,currency,province,city,created_at,is_featured,seller_id,listing_images(url,position)";
+
+async function fetchListings(params: SearchParams, page: number): Promise<{
+  items: ListingCardData[];
+  nextPage: number | null;
+}> {
+  const from = page * PAGE;
+  const to = from + PAGE - 1;
+  const nowIso = new Date().toISOString();
+
   let query = supabase
     .from("listings")
-    .select("id,title,price,currency,province,city,created_at,is_featured,listing_images(url,position)")
+    .select(COLS)
     .eq("status", "active")
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
 
-  if (params.q) query = query.ilike("title", `%${params.q}%`);
+  if (params.q) {
+    const term = params.q.replace(/[%,]/g, " ").trim();
+    if (term) {
+      query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+    }
+  }
   if (params.cat) query = query.eq("category", params.cat);
   if (params.prov) query = query.eq("province", params.prov);
+  if (params.city) query = query.eq("city", params.city);
+  if (params.cond) query = query.eq("condition", params.cond);
   if (params.min > 0) query = query.gte("price", params.min);
   if (params.max > 0) query = query.lte("price", params.max);
+  if (params.days > 0) {
+    const since = new Date(Date.now() - params.days * 24 * 60 * 60 * 1000).toISOString();
+    query = query.gte("created_at", since);
+  }
 
   if (params.sort === "price_low") query = query.order("price", { ascending: true });
   else if (params.sort === "price_high") query = query.order("price", { ascending: false });
-  else query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
+  else if (params.sort === "views")
+    query = query.order("view_count", { ascending: false }).order("created_at", { ascending: false });
+  else
+    query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
 
-  const { data, error } = await query.limit(60);
+  query = query.range(from, to);
+
+  const { data, error } = await query;
   if (error) throw error;
 
-  return (data ?? []).map((l) => {
+  let rows = (data ?? []).map((l) => {
     const imgs = (l.listing_images ?? []) as { url: string; position: number }[];
     const first = imgs.sort((a, b) => a.position - b.position)[0];
     return {
@@ -79,8 +108,25 @@ async function fetchListings(params: {
       created_at: l.created_at,
       is_featured: l.is_featured,
       image: first?.url ?? null,
+      seller_id: l.seller_id as string,
     };
   });
+
+  // Optional seller-rating filter (client-side over each page since there is no FK to profiles).
+  if (params.rating > 0 && rows.length > 0) {
+    const sellerIds = Array.from(new Set(rows.map((r) => r.seller_id)));
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id,rating_avg")
+      .in("id", sellerIds);
+    const allowed = new Set((profs ?? []).filter((p) => Number(p.rating_avg) >= params.rating).map((p) => p.id));
+    rows = rows.filter((r) => allowed.has(r.seller_id));
+  }
+
+  // strip seller_id from the card DTO
+  const items: ListingCardData[] = rows.map(({ seller_id: _s, ...rest }) => rest);
+  const nextPage = (data?.length ?? 0) === PAGE ? page + 1 : null;
+  return { items, nextPage };
 }
 
 function Home() {
@@ -89,19 +135,61 @@ function Home() {
   const { t, locName, lang } = useI18n();
   const { user, profile } = useAuth();
   const [qInput, setQInput] = useState(search.q);
+  const { add: recordSearch } = useRecentSearches();
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  useEffect(() => {
+    setQInput(search.q);
+  }, [search.q]);
+
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["listings", search],
-    queryFn: () => fetchListings(search),
+    queryFn: ({ pageParam }) => fetchListings(search, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last) => last.nextPage,
   });
+
+  const items = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
+  const totalCount = items.length;
 
   const { data: favIds } = useFavoriteIds();
   const toggleFav = useToggleFavorite();
 
-  const setParam = (patch: Partial<typeof search>) =>
-    navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }) });
+  const setParam = (patch: Partial<SearchParams>) =>
+    navigate({ search: (prev: SearchParams) => ({ ...prev, ...patch }) });
 
   const activeProv = provinceById(search.prov);
+  const hasAnyFilter =
+    !!search.q ||
+    !!search.cat ||
+    !!search.prov ||
+    !!search.city ||
+    !!search.cond ||
+    search.days > 0 ||
+    search.rating > 0 ||
+    search.min > 0 ||
+    search.max > 0 ||
+    search.sort !== "newest";
+
+  // Infinite scroll sentinel
+  const loadRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    const el = loadRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) fetchNextPage();
+    }, { rootMargin: "600px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -139,40 +227,23 @@ function Home() {
 
         {/* Search + province */}
         <div className="flex flex-col gap-2 px-4 pb-4 pt-3">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setParam({ q: qInput });
+          <SearchBar
+            value={qInput}
+            onChange={setQInput}
+            onSubmit={(v) => {
+              if (v) recordSearch(v);
+              setParam({ q: v });
             }}
-            className="relative flex items-center"
-          >
-            <Search className="absolute start-3 size-5 text-muted-foreground" />
-            <input
-              value={qInput}
-              onChange={(e) => setQInput(e.target.value)}
-              placeholder={t("search")}
-              className="w-full rounded-lg bg-card py-3 pe-10 ps-10 text-sm font-medium text-foreground ring-2 ring-transparent transition-all focus:outline-none focus:ring-accent/50"
-            />
-            {qInput && (
-              <button
-                type="button"
-                onClick={() => {
-                  setQInput("");
-                  setParam({ q: "" });
-                }}
-                className="absolute end-3 text-muted-foreground"
-              >
-                <X className="size-4" />
-              </button>
-            )}
-          </form>
+          />
 
           <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1">
-            <ProvinceSelect value={search.prov} onChange={(prov) => setParam({ prov })} />
+            <ProvinceSelect value={search.prov} onChange={(prov) => setParam({ prov, city: "" })} />
             {PROVINCES.slice(0, 6).map((p) => (
               <button
                 key={p.id}
-                onClick={() => setParam({ prov: search.prov === p.id ? "" : p.id })}
+                onClick={() =>
+                  setParam({ prov: search.prov === p.id ? "" : p.id, city: "" })
+                }
                 className={cn(
                   "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
                   search.prov === p.id
@@ -213,14 +284,41 @@ function Home() {
         ))}
       </nav>
 
+      {/* Discovery — shown only when browsing without filters */}
+      {!hasAnyFilter && (
+        <DiscoverySections onPickCategory={(id) => setParam({ cat: id })} />
+      )}
+
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 pt-4">
+      <div className="flex items-center justify-between gap-2 px-4 pt-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {data ? `${toLocalDigits(data.length, lang)} ${t("results")}` : t("latest")}
+          {data ? `${toLocalDigits(totalCount, lang)} ${t("results")}` : t("latest")}
           {activeProv ? ` · ${locName(activeProv)}` : ""}
         </p>
         <FiltersSheet search={search} onApply={setParam} />
       </div>
+
+      {/* Active filter chips */}
+      {hasAnyFilter && (
+        <ActiveFilterChips
+          search={search}
+          onRemove={(patch) => setParam(patch)}
+          onClear={() =>
+            setParam({
+              q: "",
+              cat: "",
+              prov: "",
+              city: "",
+              cond: "",
+              days: 0,
+              rating: 0,
+              min: 0,
+              max: 0,
+              sort: "newest",
+            })
+          }
+        />
+      )}
 
       {/* Grid */}
       <main className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -239,7 +337,7 @@ function Home() {
           </div>
         )}
 
-        {data && data.length === 0 && (
+        {data && items.length === 0 && !isLoading && (
           <div className="col-span-full flex flex-col items-center gap-2 py-16 text-center">
             <div className="flex size-16 items-center justify-center rounded-full bg-secondary">
               <Search className="size-7 text-muted-foreground" />
@@ -248,7 +346,7 @@ function Home() {
           </div>
         )}
 
-        {data?.map((l, i) => (
+        {items.map((l, i) => (
           <ListingCard
             key={l.id}
             listing={l}
@@ -261,9 +359,86 @@ function Home() {
             }
           />
         ))}
+
+        {isFetchingNextPage &&
+          Array.from({ length: 4 }).map((_, i) => <ListingCardSkeleton key={"n" + i} />)}
       </main>
 
+      {/* Infinite-scroll sentinel + manual fallback */}
+      {hasNextPage && (
+        <div ref={loadRef} className="flex justify-center pb-8 pt-2">
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground disabled:opacity-50"
+          >
+            {isFetchingNextPage ? t("loading") : t("loadMore")}
+          </button>
+        </div>
+      )}
+
       <BottomNav />
+    </div>
+  );
+}
+
+function ActiveFilterChips({
+  search,
+  onRemove,
+  onClear,
+}: {
+  search: SearchParams;
+  onRemove: (patch: Partial<SearchParams>) => void;
+  onClear: () => void;
+}) {
+  const { t, locName, lang } = useI18n();
+  const chips: { key: string; label: string; clear: Partial<SearchParams> }[] = [];
+  if (search.q) chips.push({ key: "q", label: `"${search.q}"`, clear: { q: "" } });
+  if (search.cat) {
+    const c = categoryById(search.cat);
+    if (c) chips.push({ key: "cat", label: locName(c), clear: { cat: "" } });
+  }
+  if (search.prov) {
+    const p = provinceById(search.prov);
+    if (p) chips.push({ key: "prov", label: locName(p), clear: { prov: "", city: "" } });
+  }
+  if (search.city) chips.push({ key: "city", label: search.city, clear: { city: "" } });
+  if (search.cond) {
+    const c = CONDITIONS.find((x) => x.id === search.cond);
+    if (c) chips.push({ key: "cond", label: locName(c), clear: { cond: "" } });
+  }
+  if (search.days > 0) {
+    const lbl = search.days === 1 ? t("last24h") : search.days === 7 ? t("last7d") : t("last30d");
+    chips.push({ key: "days", label: lbl, clear: { days: 0 } });
+  }
+  if (search.rating > 0) {
+    chips.push({ key: "rating", label: `★ ${toLocalDigits(search.rating, lang)}+`, clear: { rating: 0 } });
+  }
+  if (search.min > 0 || search.max > 0) {
+    const lbl = `${toLocalDigits(search.min || 0, lang)} – ${
+      search.max > 0 ? toLocalDigits(search.max, lang) : "∞"
+    }`;
+    chips.push({ key: "price", label: lbl, clear: { min: 0, max: 0 } });
+  }
+  if (chips.length === 0) return null;
+  return (
+    <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-4 pt-3">
+      {chips.map((c) => (
+        <button
+          key={c.key}
+          onClick={() => onRemove(c.clear)}
+          className="flex flex-none items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold text-foreground"
+        >
+          {c.label}
+          <X className="size-3" />
+        </button>
+      ))}
+      <button
+        onClick={onClear}
+        className="flex-none whitespace-nowrap px-2 text-xs font-bold text-muted-foreground hover:text-foreground"
+      >
+        {t("clearAll")}
+      </button>
     </div>
   );
 }
@@ -320,20 +495,46 @@ function FiltersSheet({
   search,
   onApply,
 }: {
-  search: { sort: string; min: number; max: number };
-  onApply: (patch: { sort?: string; min?: number; max?: number }) => void;
+  search: SearchParams;
+  onApply: (patch: Partial<SearchParams>) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locName } = useI18n();
   const [open, setOpen] = useState(false);
   const [sort, setSort] = useState(search.sort);
   const [min, setMin] = useState(search.min || "");
   const [max, setMax] = useState(search.max || "");
+  const [cond, setCond] = useState(search.cond);
+  const [days, setDays] = useState(search.days);
+  const [rating, setRating] = useState(search.rating);
+  const [city, setCity] = useState(search.city);
+
+  useEffect(() => {
+    if (!open) return;
+    setSort(search.sort);
+    setMin(search.min || "");
+    setMax(search.max || "");
+    setCond(search.cond);
+    setDays(search.days);
+    setRating(search.rating);
+    setCity(search.city);
+  }, [open, search]);
 
   const sorts = [
     { id: "newest", label: t("newest") },
     { id: "price_low", label: t("priceLow") },
     { id: "price_high", label: t("priceHigh") },
+    { id: "views", label: t("mostViewed") },
   ];
+
+  const dateOptions = [
+    { id: 0, label: t("anyTime") },
+    { id: 1, label: t("last24h") },
+    { id: 7, label: t("last7d") },
+    { id: 30, label: t("last30d") },
+  ];
+
+  const ratingOptions = [0, 3, 4, 4.5];
+  const cityOptions = provinceById(search.prov)?.cities ?? [];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -341,65 +542,109 @@ function FiltersSheet({
         <SlidersHorizontal className="size-3.5" />
         {t("filters")}
       </SheetTrigger>
-      <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{t("filters")}</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col gap-5 pt-4">
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {t("newest")}
-            </p>
-            <div className="flex flex-col gap-2">
+          <FilterGroup label={t("sortBy")}>
+            <div className="grid grid-cols-2 gap-2">
               {sorts.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSort(s.id)}
-                  className={cn(
-                    "rounded-lg border p-3 text-start text-sm font-medium",
-                    sort === s.id ? "border-accent bg-accent/10" : "border-border",
-                  )}
-                >
+                <Chip key={s.id} active={sort === s.id} onClick={() => setSort(s.id)}>
                   {s.label}
-                </button>
+                </Chip>
               ))}
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {t("minPrice")}
-              </p>
+          </FilterGroup>
+
+          <FilterGroup label={t("price")}>
+            <div className="grid grid-cols-2 gap-3">
               <input
                 type="number"
                 inputMode="numeric"
                 value={min}
                 onChange={(e) => setMin(e.target.value)}
                 className="w-full rounded-lg border border-border bg-card p-3 text-sm"
-                placeholder="0"
+                placeholder={t("minPrice")}
               />
-            </div>
-            <div>
-              <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {t("maxPrice")}
-              </p>
               <input
                 type="number"
                 inputMode="numeric"
                 value={max}
                 onChange={(e) => setMax(e.target.value)}
                 className="w-full rounded-lg border border-border bg-card p-3 text-sm"
-                placeholder="∞"
+                placeholder={t("maxPrice")}
               />
             </div>
-          </div>
-          <div className="flex gap-3">
+          </FilterGroup>
+
+          <FilterGroup label={t("condition")}>
+            <div className="flex flex-wrap gap-2">
+              <Chip active={!cond} onClick={() => setCond("")}>
+                {t("anyCondition")}
+              </Chip>
+              {CONDITIONS.map((c) => (
+                <Chip key={c.id} active={cond === c.id} onClick={() => setCond(c.id)}>
+                  {locName(c)}
+                </Chip>
+              ))}
+            </div>
+          </FilterGroup>
+
+          {cityOptions.length > 0 && (
+            <FilterGroup label={t("city")}>
+              <div className="flex flex-wrap gap-2">
+                <Chip active={!city} onClick={() => setCity("")}>
+                  {t("cityAll")}
+                </Chip>
+                {cityOptions.map((c) => (
+                  <Chip key={c} active={city === c} onClick={() => setCity(c)}>
+                    {c}
+                  </Chip>
+                ))}
+              </div>
+            </FilterGroup>
+          )}
+
+          <FilterGroup label={t("datePosted")}>
+            <div className="flex flex-wrap gap-2">
+              {dateOptions.map((d) => (
+                <Chip key={d.id} active={days === d.id} onClick={() => setDays(d.id)}>
+                  {d.label}
+                </Chip>
+              ))}
+            </div>
+          </FilterGroup>
+
+          <FilterGroup label={t("minRating")}>
+            <div className="flex flex-wrap gap-2">
+              {ratingOptions.map((r) => (
+                <Chip key={r} active={rating === r} onClick={() => setRating(r)}>
+                  {r === 0 ? t("anyRating") : `★ ${r}+`}
+                </Chip>
+              ))}
+            </div>
+          </FilterGroup>
+
+          <div className="sticky bottom-0 -mx-6 flex gap-3 border-t border-border bg-background px-6 py-3">
             <button
               onClick={() => {
                 setSort("newest");
                 setMin("");
                 setMax("");
-                onApply({ sort: "newest", min: 0, max: 0 });
+                setCond("");
+                setDays(0);
+                setRating(0);
+                setCity("");
+                onApply({
+                  sort: "newest",
+                  min: 0,
+                  max: 0,
+                  cond: "",
+                  days: 0,
+                  rating: 0,
+                  city: "",
+                });
                 setOpen(false);
               }}
               className="flex-1 rounded-lg border border-border py-3 text-sm font-semibold"
@@ -408,7 +653,15 @@ function FiltersSheet({
             </button>
             <button
               onClick={() => {
-                onApply({ sort, min: Number(min) || 0, max: Number(max) || 0 });
+                onApply({
+                  sort,
+                  min: Number(min) || 0,
+                  max: Number(max) || 0,
+                  cond,
+                  days,
+                  rating,
+                  city,
+                });
                 setOpen(false);
               }}
               className="flex-1 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground"
@@ -419,5 +672,36 @@ function FiltersSheet({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+        active ? "border-accent bg-accent text-accent-foreground" : "border-border bg-card text-foreground",
+      )}
+    >
+      {children}
+    </button>
   );
 }
