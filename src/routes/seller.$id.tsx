@@ -39,7 +39,11 @@ function SellerPage() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ["seller", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,is_banned,created_at,updated_at")
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
