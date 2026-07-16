@@ -227,7 +227,7 @@ function ListingDetail() {
                 i === active ? "border-accent" : "border-transparent",
               )}
             >
-              <img src={listingImg(im.url)} alt="" className="size-full object-cover" />
+              <StorageImage bucket="listings" path={im.url} alt="" className="size-full object-cover" />
             </button>
           ))}
         </div>
