@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { formatPrice, timeAgo, toLocalDigits } from "@/lib/format";
-import { listingImg, avatarImg } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { provinceById } from "@/data/provinces";
 import { categoryById, CONDITIONS } from "@/data/categories";
 import { TopBar } from "@/components/TopBar";
