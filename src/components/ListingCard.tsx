@@ -31,7 +31,6 @@ export function ListingCard({
 }) {
   const { lang, locName, t } = useI18n();
   const prov = provinceById(listing.province);
-  const img = listingImg(listing.image);
 
   return (
     <Link
@@ -41,18 +40,13 @@ export function ListingCard({
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        {img ? (
-          <img
-            src={img}
-            alt={listing.title}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-            {t("appName")}
-          </div>
-        )}
+        <StorageImage
+          bucket="listings"
+          path={listing.image}
+          alt={listing.title}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
         {listing.is_featured && (
           <span className="absolute top-2 end-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-sm">
             ★
