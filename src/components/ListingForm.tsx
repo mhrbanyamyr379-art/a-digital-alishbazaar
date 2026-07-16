@@ -556,7 +556,11 @@ export function ListingForm({
       {currentStep === "reviewStep" && (
         <div className="flex flex-col gap-3">
           {images[0] && (
-            <img src={images[0].preview} alt="" className="aspect-video w-full rounded-xl object-cover" />
+            images[0].existing ? (
+              <StorageImage bucket="listings" path={images[0].url} alt="" className="aspect-video w-full rounded-xl object-cover" />
+            ) : (
+              <img src={images[0].preview} alt="" className="aspect-video w-full rounded-xl object-cover" />
+            )
           )}
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="font-display text-xl font-black">{formatPrice(Number(price) || 0, currency, lang)}</div>
