@@ -90,7 +90,7 @@ export function ListingForm({
       key: `ex-${i}-${im.url}`,
       existing: true,
       url: im.url,
-      preview: listingImg(im.url),
+      preview: "",
     })),
   );
   const [saving, setSaving] = useState(false);
