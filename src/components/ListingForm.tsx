@@ -20,7 +20,7 @@ import { useI18n } from "@/lib/i18n";
 import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
 import { PROVINCES, provinceById } from "@/data/provinces";
 import { uploadImage } from "@/lib/storage";
-import { listingImg } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
