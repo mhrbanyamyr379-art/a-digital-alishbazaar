@@ -213,7 +213,7 @@ function ProfilePage() {
                 <div className="flex items-center gap-3">
                   <Link to="/listing/$id" params={{ id: l.id }} className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
                     {firstImg(l.listing_images) && (
-                      <img src={listingImg(firstImg(l.listing_images))} alt="" className="size-full object-cover" />
+                      <StorageImage bucket="listings" path={firstImg(l.listing_images)} alt="" className="size-full object-cover" />
                     )}
                   </Link>
                   <div className="min-w-0 flex-1">
@@ -292,7 +292,7 @@ function ProfilePage() {
             <Link key={l.id} to="/listing/$id" params={{ id: l.id }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2">
               <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
                 {firstImg(l.listing_images) && (
-                  <img src={listingImg(firstImg(l.listing_images))} alt="" className="size-full object-cover" />
+                  <StorageImage bucket="listings" path={firstImg(l.listing_images)} alt="" className="size-full object-cover" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
