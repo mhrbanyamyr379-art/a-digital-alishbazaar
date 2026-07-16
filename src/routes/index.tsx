@@ -17,7 +17,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { DiscoverySections } from "@/components/DiscoverySections";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
-import { avatarImg } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -207,7 +207,7 @@ function Home() {
             {user ? (
               <Link to="/profile" className="size-8 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/20">
                 {profile?.avatar_url ? (
-                  <img src={avatarImg(profile.avatar_url)} alt="" className="size-full object-cover" />
+                  <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
                 ) : (
                   <span className="flex size-full items-center justify-center text-xs font-bold">
                     {profile?.display_name?.[0]?.toUpperCase() ?? "U"}

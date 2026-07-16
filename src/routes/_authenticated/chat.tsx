@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { timeAgo } from "@/lib/format";
-import { avatarImg } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { BottomNav } from "@/components/BottomNav";
 import { BrandTopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -101,7 +101,7 @@ function ChatListPage() {
           >
             <div className="size-12 shrink-0 overflow-hidden rounded-full bg-secondary">
               {c.other?.avatar_url ? (
-                <img src={avatarImg(c.other.avatar_url)} alt="" className="size-full object-cover" />
+                <StorageImage bucket="avatars" path={c.other.avatar_url} alt="" className="size-full object-cover" />
               ) : (
                 <span className="flex size-full items-center justify-center font-bold">
                   {c.other?.display_name?.[0]?.toUpperCase() ?? "?"}
