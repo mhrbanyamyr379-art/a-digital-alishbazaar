@@ -160,6 +160,28 @@ const T: Dict = {
   mostViewed: { fa: "پربازدیدترین", ps: "ډېر لیدل شوي", en: "Most viewed" },
   activeFilters: { fa: "فیلترهای فعال", ps: "فعال فلټرونه", en: "Active filters" },
   clearAll: { fa: "پاک‌کردن همه", ps: "ټول پاک کړه", en: "Clear all" },
+  // Seller profile upgrade
+  aboutSeller: { fa: "درباره فروشنده", ps: "د پلورونکي په اړه", en: "About seller" },
+  trustInfo: { fa: "اعتبار فروشنده", ps: "د پلورونکي باور", en: "Trust & reputation" },
+  activeListings: { fa: "آگهی‌های فعال", ps: "فعال اعلانونه", en: "Active listings" },
+  soldItems: { fa: "فروخته شده", ps: "پلورل شوي", en: "Sold" },
+  totalReviews: { fa: "مجموع نظرات", ps: "ټول نظرونه", en: "Total reviews" },
+  averageRating: { fa: "میانگین امتیاز", ps: "منځنی درجه", en: "Average rating" },
+  lastActive: { fa: "آخرین بازدید", ps: "وروستی لید", en: "Last active" },
+  gridView: { fa: "نمای شبکه‌ای", ps: "جدولي لید", en: "Grid" },
+  listView: { fa: "نمای لیستی", ps: "لیست لید", en: "List" },
+  noReviewsYet: { fa: "هنوز نظری ثبت نشده", ps: "تر اوسه نظر نشته", en: "No reviews yet" },
+  noReviewsHint: { fa: "اولین نفری باشید که نظر می‌دهد", ps: "لومړی وئ چې نظر ورکوي", en: "Be the first to leave a review" },
+  safetyTips: { fa: "نکات ایمنی", ps: "د خوندیتوب لارښوونې", en: "Safety tips" },
+  safetyMeet: { fa: "همیشه در مکان عمومی ملاقات کنید", ps: "تل په عامه ځای کې وګورئ", en: "Always meet in public places" },
+  safetyInspect: { fa: "قبل از پرداخت، کالا را بررسی کنید", ps: "له تادیې مخکې توکی وګورئ", en: "Inspect the item before you pay" },
+  safetyAdvance: { fa: "هرگز پول را از قبل ارسال نکنید", ps: "هېڅکله مخکې پیسې مه لیږئ", en: "Never send money in advance" },
+  safetyReport: { fa: "موارد مشکوک را گزارش دهید", ps: "شکمن قضیې راپور کړئ", en: "Report suspicious users" },
+  shareProfile: { fa: "اشتراک پروفایل", ps: "پروفایل شریکول", en: "Share profile" },
+  reportSeller: { fa: "گزارش فروشنده", ps: "د پلورونکي راپور", en: "Report seller" },
+  contactSeller: { fa: "تماس با فروشنده", ps: "له پلورونکي سره اړیکه", en: "Contact seller" },
+  reviewSubmitted: { fa: "نظر شما ثبت شد", ps: "ستاسو نظر ثبت شو", en: "Review submitted" },
+  cantReviewSelf: { fa: "نمی‌توانید به خودتان امتیاز بدهید", ps: "خپل ځان ته درجه نه ورکوئ", en: "You can't review yourself" },
 };
 
 
