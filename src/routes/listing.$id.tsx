@@ -300,7 +300,7 @@ function ListingDetail() {
           >
             <div className="size-11 overflow-hidden rounded-full bg-secondary">
               {seller.avatar_url ? (
-                <img src={avatarImg(seller.avatar_url)} alt="" className="size-full object-cover" />
+                <StorageImage bucket="avatars" path={seller.avatar_url} alt="" className="size-full object-cover" />
               ) : (
                 <span className="flex size-full items-center justify-center font-bold">
                   {seller.display_name?.[0]?.toUpperCase()}
