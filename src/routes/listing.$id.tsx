@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { formatPrice, timeAgo, toLocalDigits } from "@/lib/format";
-import { listingImg, avatarImg } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { provinceById } from "@/data/provinces";
 import { categoryById, CONDITIONS } from "@/data/categories";
 import { TopBar } from "@/components/TopBar";
@@ -206,7 +206,7 @@ function ListingDetail() {
       {/* Gallery */}
       <div className="relative aspect-square w-full bg-muted">
         {imgs.length > 0 ? (
-          <img src={listingImg(imgs[active]?.url)} alt={l.title} className="h-full w-full object-cover" />
+          <StorageImage bucket="listings" path={imgs[active]?.url} alt={l.title} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">{t("appName")}</div>
         )}
@@ -227,7 +227,7 @@ function ListingDetail() {
                 i === active ? "border-accent" : "border-transparent",
               )}
             >
-              <img src={listingImg(im.url)} alt="" className="size-full object-cover" />
+              <StorageImage bucket="listings" path={im.url} alt="" className="size-full object-cover" />
             </button>
           ))}
         </div>
@@ -300,7 +300,7 @@ function ListingDetail() {
           >
             <div className="size-11 overflow-hidden rounded-full bg-secondary">
               {seller.avatar_url ? (
-                <img src={avatarImg(seller.avatar_url)} alt="" className="size-full object-cover" />
+                <StorageImage bucket="avatars" path={seller.avatar_url} alt="" className="size-full object-cover" />
               ) : (
                 <span className="flex size-full items-center justify-center font-bold">
                   {seller.display_name?.[0]?.toUpperCase()}

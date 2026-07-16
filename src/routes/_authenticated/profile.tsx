@@ -7,13 +7,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { avatarImg, uploadImage } from "@/lib/storage";
+import { uploadImage } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits, formatPrice } from "@/lib/format";
 import { PROVINCES } from "@/data/provinces";
 import { BottomNav } from "@/components/BottomNav";
 import { BrandTopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { listingImg } from "@/lib/storage";
+
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -127,7 +128,7 @@ function ProfilePage() {
         <div className="flex items-center gap-4">
           <div className="size-16 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/20">
             {profile?.avatar_url ? (
-              <img src={avatarImg(profile.avatar_url)} alt="" className="size-full object-cover" />
+              <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
             ) : (
               <span className="flex size-full items-center justify-center text-2xl font-black">
                 {profile?.display_name?.[0]?.toUpperCase() ?? "U"}
@@ -212,7 +213,7 @@ function ProfilePage() {
                 <div className="flex items-center gap-3">
                   <Link to="/listing/$id" params={{ id: l.id }} className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
                     {firstImg(l.listing_images) && (
-                      <img src={listingImg(firstImg(l.listing_images))} alt="" className="size-full object-cover" />
+                      <StorageImage bucket="listings" path={firstImg(l.listing_images)} alt="" className="size-full object-cover" />
                     )}
                   </Link>
                   <div className="min-w-0 flex-1">
@@ -291,7 +292,7 @@ function ProfilePage() {
             <Link key={l.id} to="/listing/$id" params={{ id: l.id }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2">
               <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
                 {firstImg(l.listing_images) && (
-                  <img src={listingImg(firstImg(l.listing_images))} alt="" className="size-full object-cover" />
+                  <StorageImage bucket="listings" path={firstImg(l.listing_images)} alt="" className="size-full object-cover" />
                 )}
               </div>
               <div className="min-w-0 flex-1">

@@ -20,7 +20,7 @@ import { useI18n } from "@/lib/i18n";
 import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
 import { PROVINCES, provinceById } from "@/data/provinces";
 import { uploadImage } from "@/lib/storage";
-import { listingImg } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -90,7 +90,7 @@ export function ListingForm({
       key: `ex-${i}-${im.url}`,
       existing: true,
       url: im.url,
-      preview: listingImg(im.url),
+      preview: "",
     })),
   );
   const [saving, setSaving] = useState(false);
@@ -428,7 +428,11 @@ export function ListingForm({
                   i === 0 ? "border-accent" : "border-border",
                 )}
               >
-                <img src={im.preview} alt="" className="size-full object-cover" />
+                {im.existing ? (
+                  <StorageImage bucket="listings" path={im.url} alt="" className="size-full object-cover" />
+                ) : (
+                  <img src={im.preview} alt="" className="size-full object-cover" />
+                )}
                 {i === 0 && (
                   <span className="absolute bottom-1 start-1 rounded bg-accent px-1.5 py-0.5 text-[9px] font-bold text-accent-foreground">
                     {t("coverPhoto")}
@@ -552,7 +556,11 @@ export function ListingForm({
       {currentStep === "reviewStep" && (
         <div className="flex flex-col gap-3">
           {images[0] && (
-            <img src={images[0].preview} alt="" className="aspect-video w-full rounded-xl object-cover" />
+            images[0].existing ? (
+              <StorageImage bucket="listings" path={images[0].url} alt="" className="aspect-video w-full rounded-xl object-cover" />
+            ) : (
+              <img src={images[0].preview} alt="" className="aspect-video w-full rounded-xl object-cover" />
+            )
           )}
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="font-display text-xl font-black">{formatPrice(Number(price) || 0, currency, lang)}</div>

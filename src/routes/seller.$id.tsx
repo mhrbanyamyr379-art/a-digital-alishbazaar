@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { avatarImg } from "@/lib/storage";
+import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits } from "@/lib/format";
 import { provinceById } from "@/data/provinces";
 import { TopBar } from "@/components/TopBar";
@@ -131,7 +131,7 @@ function SellerPage() {
         <div className="flex items-center gap-4">
           <div className="size-16 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/20">
             {profile.avatar_url ? (
-              <img src={avatarImg(profile.avatar_url)} alt="" className="size-full object-cover" />
+              <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
             ) : (
               <span className="flex size-full items-center justify-center text-2xl font-black">
                 {profile.display_name?.[0]?.toUpperCase()}
