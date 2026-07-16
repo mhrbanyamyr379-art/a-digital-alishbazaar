@@ -428,7 +428,11 @@ export function ListingForm({
                   i === 0 ? "border-accent" : "border-border",
                 )}
               >
-                <img src={im.preview} alt="" className="size-full object-cover" />
+                {im.existing ? (
+                  <StorageImage bucket="listings" path={im.url} alt="" className="size-full object-cover" />
+                ) : (
+                  <img src={im.preview} alt="" className="size-full object-cover" />
+                )}
                 {i === 0 && (
                   <span className="absolute bottom-1 start-1 rounded bg-accent px-1.5 py-0.5 text-[9px] font-bold text-accent-foreground">
                     {t("coverPhoto")}
