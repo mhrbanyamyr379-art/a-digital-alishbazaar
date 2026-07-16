@@ -206,7 +206,7 @@ function ListingDetail() {
       {/* Gallery */}
       <div className="relative aspect-square w-full bg-muted">
         {imgs.length > 0 ? (
-          <img src={listingImg(imgs[active]?.url)} alt={l.title} className="h-full w-full object-cover" />
+          <StorageImage bucket="listings" path={imgs[active]?.url} alt={l.title} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">{t("appName")}</div>
         )}
