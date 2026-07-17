@@ -14,33 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
+          archived_by_buyer: boolean
+          archived_by_seller: boolean
           buyer_id: string
+          buyer_last_read_at: string | null
+          buyer_unread: number
           created_at: string
           id: string
           last_message: string | null
           last_message_at: string | null
           listing_id: string | null
           seller_id: string
+          seller_last_read_at: string | null
+          seller_unread: number
         }
         Insert: {
+          archived_by_buyer?: boolean
+          archived_by_seller?: boolean
           buyer_id: string
+          buyer_last_read_at?: string | null
+          buyer_unread?: number
           created_at?: string
           id?: string
           last_message?: string | null
           last_message_at?: string | null
           listing_id?: string | null
           seller_id: string
+          seller_last_read_at?: string | null
+          seller_unread?: number
         }
         Update: {
+          archived_by_buyer?: boolean
+          archived_by_seller?: boolean
           buyer_id?: string
+          buyer_last_read_at?: string | null
+          buyer_unread?: number
           created_at?: string
           id?: string
           last_message?: string | null
           last_message_at?: string | null
           listing_id?: string | null
           seller_id?: string
+          seller_last_read_at?: string | null
+          seller_unread?: number
         }
         Relationships: [
           {
@@ -187,30 +226,52 @@ export type Database = {
       }
       messages: {
         Row: {
-          body: string
+          attachment_listing_id: string | null
+          body: string | null
           conversation_id: string
           created_at: string
+          deleted_for: string[]
+          delivered_at: string | null
           id: string
+          image_paths: string[]
           read_at: string | null
           sender_id: string
+          type: string
         }
         Insert: {
-          body: string
+          attachment_listing_id?: string | null
+          body?: string | null
           conversation_id: string
           created_at?: string
+          deleted_for?: string[]
+          delivered_at?: string | null
           id?: string
+          image_paths?: string[]
           read_at?: string | null
           sender_id: string
+          type?: string
         }
         Update: {
-          body?: string
+          attachment_listing_id?: string | null
+          body?: string | null
           conversation_id?: string
           created_at?: string
+          deleted_for?: string[]
+          delivered_at?: string | null
           id?: string
+          image_paths?: string[]
           read_at?: string | null
           sender_id?: string
+          type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_attachment_listing_id_fkey"
+            columns: ["attachment_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
@@ -261,6 +322,7 @@ export type Database = {
           display_name: string
           id: string
           is_banned: boolean
+          last_seen: string | null
           phone: string | null
           province: string | null
           rating_avg: number
@@ -274,6 +336,7 @@ export type Database = {
           display_name?: string
           id: string
           is_banned?: boolean
+          last_seen?: string | null
           phone?: string | null
           province?: string | null
           rating_avg?: number
@@ -287,6 +350,7 @@ export type Database = {
           display_name?: string
           id?: string
           is_banned?: boolean
+          last_seen?: string | null
           phone?: string | null
           province?: string | null
           rating_avg?: number
@@ -415,6 +479,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_message_for_me: {
+        Args: { _message_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -422,8 +490,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      heartbeat: { Args: never; Returns: undefined }
       increment_listing_views: {
         Args: { _listing_id: string }
+        Returns: undefined
+      }
+      mark_conversation_read: { Args: { _conv_id: string }; Returns: undefined }
+      set_conversation_archived: {
+        Args: { _archived: boolean; _conv_id: string }
         Returns: undefined
       }
     }
