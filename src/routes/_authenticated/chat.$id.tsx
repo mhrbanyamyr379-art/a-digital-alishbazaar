@@ -219,7 +219,7 @@ function ChatThread() {
     if (!user || !messages) return;
     const hasUnreadFromOther = messages.some((m) => m.sender_id !== user.id && !m.read_at);
     if (hasUnreadFromOther) {
-      supabase.rpc("mark_conversation_read", { _conv_id: id }).then(() => {
+      (supabase.rpc as any)("mark_conversation_read", { _conv_id: id }).then(() => {
         qc.invalidateQueries({ queryKey: ["unread-total", user.id] });
         qc.invalidateQueries({ queryKey: ["conversations", user.id] });
       });
@@ -286,7 +286,7 @@ function ChatThread() {
 
   const deleteForMe = useMutation({
     mutationFn: async (messageId: string) => {
-      const { error } = await supabase.rpc("delete_message_for_me", { _message_id: messageId });
+      const { error } = await (supabase.rpc as any)("delete_message_for_me", { _message_id: messageId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -298,7 +298,7 @@ function ChatThread() {
   const toggleArchive = async () => {
     if (!conv || !user) return;
     setHeaderMenu(false);
-    await supabase.rpc("set_conversation_archived", { _conv_id: id, _archived: !archived });
+    await (supabase.rpc as any)("set_conversation_archived", { _conv_id: id, _archived: !archived });
     qc.invalidateQueries({ queryKey: ["conv", id] });
     qc.invalidateQueries({ queryKey: ["conversations", user.id] });
     if (!archived) navigate({ to: "/chat" });
