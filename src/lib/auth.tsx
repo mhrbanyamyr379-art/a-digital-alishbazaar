@@ -69,6 +69,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Presence heartbeat while signed in
+  useEffect(() => {
+    if (!user) return;
+    const beat = () => {
+      supabase.rpc("heartbeat" as never).then(() => {});
+    };
+    beat();
+    const iv = setInterval(beat, 45_000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") beat();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearInterval(iv);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [user]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
