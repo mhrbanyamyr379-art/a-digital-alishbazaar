@@ -324,9 +324,9 @@ function ChatThread() {
     if (!reason?.trim()) return;
     await supabase.from("reports").insert({
       reporter_id: user.id,
-      target_type: "user",
-      target_id: otherId,
+      listing_id: conv?.listing_id ?? null,
       reason: reason.trim(),
+      details: `User report: ${otherId}`,
     });
     toast.success(t("saved"));
   };
