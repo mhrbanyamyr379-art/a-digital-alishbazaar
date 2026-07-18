@@ -36,15 +36,17 @@ async function fetchListing(id: string) {
   if (error) throw error;
   if (!data) return null;
   const isAuthed = !!(await supabase.auth.getSession()).data.session;
-  const sellerCols = isAuthed
-    ? "id,display_name,avatar_url,rating_avg,rating_count,phone"
-    : "id,display_name,avatar_url,rating_avg,rating_count";
   const { data: seller } = await supabase
     .from("profiles")
-    .select(sellerCols)
+    .select("id,display_name,avatar_url,rating_avg,rating_count")
     .eq("id", data.seller_id)
     .maybeSingle();
-  return { ...data, seller: seller as { id: string; display_name: string; avatar_url: string | null; rating_avg: number; rating_count: number; phone?: string | null } | null };
+  let phone: string | null = null;
+  if (isAuthed) {
+    const { data: p } = await supabase.rpc("get_seller_phone", { _seller_id: data.seller_id } as never);
+    phone = (p as unknown as string | null) ?? null;
+  }
+  return { ...data, seller: seller ? { ...(seller as { id: string; display_name: string; avatar_url: string | null; rating_avg: number; rating_count: number }), phone } : null };
 }
 
 function ListingDetail() {
