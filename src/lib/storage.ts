@@ -42,6 +42,21 @@ export async function uploadImage(bucket: string, userId: string, folder: string
   return path;
 }
 
+// Uploads a private chat image into the `chat-images` bucket under
+// `<conversation_id>/<uploader_uid>/<uuid>.jpg`, matching the storage RLS policies
+// that restrict reads/writes to the two conversation participants.
+export async function uploadChatImage(conversationId: string, userId: string, file: File): Promise<string> {
+  const blob = await compress(file);
+  const path = `${conversationId}/${userId}/${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage.from("chat-images").upload(path, blob, {
+    cacheControl: "3600",
+    contentType: "image/jpeg",
+    upsert: false,
+  });
+  if (error) throw error;
+  return path;
+}
+
 // Resolves a stored path to a displayable URL. Works with public buckets.
 export function imageUrl(bucket: string, path?: string | null): string {
   if (!path) return "";
