@@ -509,7 +509,7 @@ function ChatThread() {
                             }}
                             className="aspect-square cursor-zoom-in overflow-hidden bg-muted"
                           >
-                            <StorageImage bucket="listings" path={p} alt="" className="size-full object-cover" />
+                            <StorageImage bucket="chat-images" path={p} alt="" className="size-full object-cover" />
                           </div>
                         ))}
                       </div>
