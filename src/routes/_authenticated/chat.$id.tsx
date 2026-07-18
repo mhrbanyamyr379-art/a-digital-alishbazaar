@@ -25,6 +25,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { uploadImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { PresenceLabel, isOnline } from "@/components/Presence";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +80,7 @@ function ChatThread() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null); // message id
   const [headerMenu, setHeaderMenu] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const [lightbox, setLightbox] = useState<{ paths: string[]; index: number } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -252,7 +254,7 @@ function ChatThread() {
       .insert({ conversation_id: id, sender_id: user.id, body, type: "text" });
     setSending(false);
     if (error) {
-      toast.error(t("errorTitle"));
+      toast.error(error.message === "blocked" ? t("cannotSendBlocked") : error.message || t("errorTitle"));
       setText(body);
       return;
     }
@@ -261,14 +263,23 @@ function ChatThread() {
 
   const onFiles = async (files: FileList | null) => {
     if (!files || !user || !canSend) return;
-    const list = Array.from(files).slice(0, 4);
+    const all = Array.from(files).slice(0, 4);
+    const list = all.filter((f) => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
+    if (list.length === 0) {
+      toast.error(all.length ? "Only images up to 10 MB are supported" : t("errorTitle"));
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     setUploading(true);
     try {
       const paths: string[] = [];
       for (const f of list) {
-        if (!f.type.startsWith("image/")) continue;
-        const p = await uploadImage("listings", user.id, "chat", f);
-        paths.push(p);
+        try {
+          const p = await uploadImage("listings", user.id, "chat", f);
+          paths.push(p);
+        } catch {
+          toast.error(`Failed to upload ${f.name}`);
+        }
       }
       if (paths.length === 0) return;
       const { error } = await supabase
@@ -276,8 +287,8 @@ function ChatThread() {
         .insert({ conversation_id: id, sender_id: user.id, type: "image", image_paths: paths, body: null });
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["messages", id] });
-    } catch {
-      toast.error(t("errorTitle"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("errorTitle"));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -488,8 +499,16 @@ function ChatThread() {
                           mine ? "rounded-ee-sm" : "rounded-es-sm",
                         )}
                       >
-                        {m.image_paths.map((p) => (
-                          <div key={p} className="aspect-square overflow-hidden bg-muted">
+                        {m.image_paths.map((p, idx) => (
+                          <div
+                            key={p}
+                            role="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLightbox({ paths: m.image_paths!, index: idx });
+                            }}
+                            className="aspect-square cursor-zoom-in overflow-hidden bg-muted"
+                          >
                             <StorageImage bucket="listings" path={p} alt="" className="size-full object-cover" />
                           </div>
                         ))}
@@ -675,6 +694,15 @@ function ChatThread() {
             </div>
           </div>
         </div>
+      )}
+
+      {lightbox && (
+        <ImageLightbox
+          bucket="listings"
+          paths={lightbox.paths}
+          startIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   );
