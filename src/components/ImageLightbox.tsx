@@ -3,7 +3,7 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { StorageImage } from "@/components/StorageImage";
 
 interface Props {
-  bucket: "listings" | "avatars";
+  bucket: "listings" | "avatars" | "chat-images";
   paths: string[];
   startIndex?: number;
   onClose: () => void;
