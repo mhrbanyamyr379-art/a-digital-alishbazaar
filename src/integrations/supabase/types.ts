@@ -483,6 +483,8 @@ export type Database = {
         Args: { _message_id: string }
         Returns: undefined
       }
+      get_my_phone: { Args: never; Returns: string }
+      get_seller_phone: { Args: { _seller_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

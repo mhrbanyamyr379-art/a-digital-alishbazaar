@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { formatPrice, timeAgo } from "@/lib/format";
-import { uploadImage } from "@/lib/storage";
+import { uploadChatImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { PresenceLabel, isOnline } from "@/components/Presence";
@@ -275,7 +275,7 @@ function ChatThread() {
       const paths: string[] = [];
       for (const f of list) {
         try {
-          const p = await uploadImage("listings", user.id, "chat", f);
+          const p = await uploadChatImage(id, user.id, f);
           paths.push(p);
         } catch {
           toast.error(`Failed to upload ${f.name}`);
@@ -509,7 +509,7 @@ function ChatThread() {
                             }}
                             className="aspect-square cursor-zoom-in overflow-hidden bg-muted"
                           >
-                            <StorageImage bucket="listings" path={p} alt="" className="size-full object-cover" />
+                            <StorageImage bucket="chat-images" path={p} alt="" className="size-full object-cover" />
                           </div>
                         ))}
                       </div>
@@ -698,7 +698,7 @@ function ChatThread() {
 
       {lightbox && (
         <ImageLightbox
-          bucket="listings"
+          bucket="chat-images"
           paths={lightbox.paths}
           startIndex={lightbox.index}
           onClose={() => setLightbox(null)}
