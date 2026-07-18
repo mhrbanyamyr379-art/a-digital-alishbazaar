@@ -32,7 +32,7 @@ async function getSignedUrl(bucket: string, path: string): Promise<string | null
 }
 
 interface Props extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
-  bucket: "listings" | "avatars";
+  bucket: "listings" | "avatars" | "chat-images";
   path?: string | null;
   fallbackClassName?: string;
 }
