@@ -14,6 +14,7 @@ import { PROVINCES } from "@/data/provinces";
 import { BottomNav } from "@/components/BottomNav";
 import { BrandTopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { AvatarPicker } from "@/components/AvatarPicker";
 
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -373,8 +374,13 @@ function EditProfileDialog({ onClose, onSaved }: { onClose: () => void; onSaved:
           <DialogTitle>{t("editProfile")}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
-          <label className="text-xs font-bold">{t("photos")}</label>
-          <input type="file" accept="image/*" onChange={(e) => setAvatar(e.target.files?.[0] ?? null)} className="text-xs" />
+          <AvatarPicker
+            currentPath={profile?.avatar_url}
+            file={avatar}
+            onFile={setAvatar}
+            uploading={saving}
+            fallbackLetter={profile?.display_name?.[0]}
+          />
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("displayName")} className={field} />
           <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t("phone")} className={field} />
           <Select value={province} onValueChange={setProvince}>
