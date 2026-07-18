@@ -338,11 +338,24 @@ function EditProfileDialog({ onClose, onSaved }: { onClose: () => void; onSaved:
   const { t, locName } = useI18n();
   const { user, profile } = useAuth();
   const [name, setName] = useState(profile?.display_name ?? "");
-  const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [phone, setPhone] = useState("");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [province, setProvince] = useState(profile?.province ?? "");
   const [avatar, setAvatar] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Phone is no longer returned by the profiles table for authenticated bulk reads;
+  // load the current user's own phone via a security-definer RPC.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_my_phone" as never);
+      if (!cancelled && typeof data === "string") setPhone(data);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const save = async () => {
     if (!user) return;
