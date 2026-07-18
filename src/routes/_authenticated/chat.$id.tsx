@@ -275,7 +275,7 @@ function ChatThread() {
       const paths: string[] = [];
       for (const f of list) {
         try {
-          const p = await uploadImage("listings", user.id, "chat", f);
+          const p = await uploadChatImage(id, user.id, f);
           paths.push(p);
         } catch {
           toast.error(`Failed to upload ${f.name}`);
