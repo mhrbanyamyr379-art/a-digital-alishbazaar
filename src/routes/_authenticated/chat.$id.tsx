@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { formatPrice, timeAgo } from "@/lib/format";
-import { uploadImage } from "@/lib/storage";
+import { uploadChatImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { PresenceLabel, isOnline } from "@/components/Presence";
