@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /profile
+Disallow: /chat
+Disallow: /post
+Disallow: /favorites
+
+Sitemap: https://afghan-bazaar-digital.lovable.app/sitemap.xml
