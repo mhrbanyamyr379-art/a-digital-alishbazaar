@@ -80,6 +80,7 @@ function ChatThread() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null); // message id
   const [headerMenu, setHeaderMenu] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const [lightbox, setLightbox] = useState<{ paths: string[]; index: number } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -489,8 +490,16 @@ function ChatThread() {
                           mine ? "rounded-ee-sm" : "rounded-es-sm",
                         )}
                       >
-                        {m.image_paths.map((p) => (
-                          <div key={p} className="aspect-square overflow-hidden bg-muted">
+                        {m.image_paths.map((p, idx) => (
+                          <div
+                            key={p}
+                            role="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLightbox({ paths: m.image_paths!, index: idx });
+                            }}
+                            className="aspect-square cursor-zoom-in overflow-hidden bg-muted"
+                          >
                             <StorageImage bucket="listings" path={p} alt="" className="size-full object-cover" />
                           </div>
                         ))}
