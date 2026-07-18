@@ -686,6 +686,15 @@ function ChatThread() {
           </div>
         </div>
       )}
+
+      {lightbox && (
+        <ImageLightbox
+          bucket="listings"
+          paths={lightbox.paths}
+          startIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   );
 }
