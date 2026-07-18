@@ -254,7 +254,7 @@ function ChatThread() {
       .insert({ conversation_id: id, sender_id: user.id, body, type: "text" });
     setSending(false);
     if (error) {
-      toast.error(t("errorTitle"));
+      toast.error(error.message === "blocked" ? t("cannotSendBlocked") : error.message || t("errorTitle"));
       setText(body);
       return;
     }
