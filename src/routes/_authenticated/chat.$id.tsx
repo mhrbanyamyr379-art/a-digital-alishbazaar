@@ -698,7 +698,7 @@ function ChatThread() {
 
       {lightbox && (
         <ImageLightbox
-          bucket="listings"
+          bucket="chat-images"
           paths={lightbox.paths}
           startIndex={lightbox.index}
           onClose={() => setLightbox(null)}
