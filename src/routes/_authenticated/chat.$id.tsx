@@ -25,6 +25,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { uploadImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { PresenceLabel, isOnline } from "@/components/Presence";
 import { cn } from "@/lib/utils";
 
