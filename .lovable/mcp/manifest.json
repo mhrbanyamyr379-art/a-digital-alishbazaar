@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://hxqbsscmnkaazkqfiqml.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "afghan-marketplace-hub",
+      "version": "0.1.0",
+      "title": "Afghan Marketplace Hub"
+    },
+    "tools": [
+      {
+        "name": "search_listings",
+        "title": "Search listings",
+        "description": "Search active marketplace listings by keyword, category, province and price range.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "description": "Keyword to match in the title.",
+              "type": "string"
+            },
+            "category": {
+              "description": "Category slug filter.",
+              "type": "string"
+            },
+            "province": {
+              "description": "Province filter.",
+              "type": "string"
+            },
+            "minPrice": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxPrice": {
+              "type": "number",
+              "minimum": 0
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_listing",
+        "title": "Get listing",
+        "description": "Fetch the full details of a single marketplace listing by its id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Listing id."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "my_listings",
+        "title": "My listings",
+        "description": "List the signed-in user's own listings, optionally filtered by status.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "active",
+                "sold",
+                "expired",
+                "removed"
+              ]
+            },
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_listing",
+        "title": "Create listing",
+        "description": "Create a new marketplace listing owned by the signed-in user (draft by default).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 120
+            },
+            "description": {
+              "default": "",
+              "type": "string",
+              "maxLength": 5000
+            },
+            "price": {
+              "default": 0,
+              "type": "number",
+              "minimum": 0
+            },
+            "currency": {
+              "default": "AFN",
+              "type": "string",
+              "enum": [
+                "AFN",
+                "USD"
+              ]
+            },
+            "category": {
+              "type": "string",
+              "minLength": 1
+            },
+            "province": {
+              "type": "string",
+              "minLength": 1
+            },
+            "city": {
+              "type": "string"
+            },
+            "condition": {
+              "type": "string",
+              "enum": [
+                "new",
+                "used"
+              ]
+            },
+            "negotiable": {
+              "default": false,
+              "type": "boolean"
+            },
+            "publish": {
+              "default": false,
+              "description": "Publish immediately instead of saving as a draft.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "title",
+            "category",
+            "province"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_conversations",
+        "title": "List conversations",
+        "description": "List the signed-in user's chat conversations with last message preview and unread counts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
