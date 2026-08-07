@@ -14,7 +14,9 @@ import { categoryById, CONDITIONS } from "@/data/categories";
 import { TopBar } from "@/components/TopBar";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { ListingCard } from "@/components/ListingCard";
+import { useStartChat } from "@/hooks/useStartChat";
 import { cn } from "@/lib/utils";
+
 import {
   Dialog,
   DialogContent,
@@ -54,7 +56,9 @@ function ListingDetail() {
   const { t, locName, lang } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { startChat, starting } = useStartChat();
   const [active, setActive] = useState(0);
+
 
   const { data: l, isLoading, isError, refetch } = useQuery({
     queryKey: ["listing", id],
@@ -146,31 +150,10 @@ function ListingDetail() {
     phone: string | null;
   } | null;
 
-  const startChat = async () => {
-    if (!user) return navigate({ to: "/auth" });
-    if (user.id === l.seller_id) return;
-    const { data: existing } = await supabase
-      .from("conversations")
-      .select("id")
-      .eq("listing_id", l.id)
-      .eq("buyer_id", user.id)
-      .eq("seller_id", l.seller_id)
-      .maybeSingle();
-    let convId = existing?.id;
-    if (!convId) {
-      const { data, error } = await supabase
-        .from("conversations")
-        .insert({ listing_id: l.id, buyer_id: user.id, seller_id: l.seller_id })
-        .select("id")
-        .single();
-      if (error) {
-        toast.error(t("errorTitle"));
-        return;
-      }
-      convId = data.id;
-    }
-    navigate({ to: "/chat/$id", params: { id: convId } });
-  };
+  const phoneDigits = (seller?.phone ?? "").replace(/[^\d+]/g, "");
+  const waNumber = phoneDigits.replace(/^\+/, "").replace(/^0/, "93");
+  const shareText = `${l.title} — ${window.location.origin}/listing/${l.id}`;
+
 
   const share = async () => {
     const url = window.location.href;
@@ -335,35 +318,104 @@ function ListingDetail() {
         </div>
       )}
 
-      {/* Sticky contact */}
+      {/* Sticky contact — Chat is always available */}
       {user?.id !== l.seller_id && (
-        <div className="fixed bottom-0 left-0 z-40 flex w-full gap-3 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          {seller && l.contact_method !== "chat" && (
-            <a
-              href={`tel:${seller.phone ?? ""}`}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-lg border border-border py-3 text-sm font-bold",
-                !seller.phone && "pointer-events-none opacity-50",
-              )}
-            >
-              <Phone className="size-4" />
-              {t("call")}
-            </a>
-          )}
-          {l.contact_method !== "call" && (
+        <div className="fixed bottom-0 left-0 z-40 w-full border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="flex items-center gap-2">
             <button
-              onClick={startChat}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground"
+              onClick={() => startChat({ sellerId: l.seller_id, listingId: l.id })}
+              disabled={starting}
+              className="flex flex-[2] items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground transition-transform active:scale-[0.98] disabled:opacity-60"
             >
-              <MessageCircle className="size-4" />
-              {t("message")}
+              {starting ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
+              {t("chat")}
             </button>
-          )}
+            <ContactAction
+              label={t("call")}
+              icon={<Phone className="size-4" />}
+              href={phoneDigits ? `tel:${phoneDigits}` : null}
+              disabledMsg={t("noPhone")}
+            />
+            <ContactAction
+              label={t("whatsapp")}
+              icon={<WhatsAppIcon />}
+              href={waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(shareText)}` : null}
+              disabledMsg={t("noPhone")}
+              external
+            />
+            <ContactAction
+              label={t("telegram")}
+              icon={<TelegramIcon />}
+              href={
+                phoneDigits
+                  ? `https://t.me/${phoneDigits.startsWith("+") ? phoneDigits : `+${waNumber}`}`
+                  : null
+              }
+              disabledMsg={t("noPhone")}
+              external
+            />
+          </div>
         </div>
       )}
+
     </div>
   );
 }
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="size-4" aria-hidden="true">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.16c-.24.68-1.4 1.3-1.94 1.35-.5.05-1.13.07-1.82-.11-.42-.11-.96-.29-1.65-.59-2.9-1.25-4.79-4.17-4.94-4.36-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.41.26-.29.57-.36.76-.36h.55c.17 0 .42-.07.65.5.24.58.81 2 .88 2.14.07.15.12.32.02.51-.1.19-.15.31-.29.48-.14.17-.3.38-.43.51-.14.14-.29.3-.12.58.17.29.75 1.24 1.62 2.01 1.11.99 2.05 1.3 2.34 1.45.29.14.46.12.63-.07.17-.19.72-.85.91-1.14.19-.29.38-.24.65-.14.26.09 1.68.79 1.97.94.29.14.48.22.55.34.07.12.07.7-.17 1.37Z" />
+    </svg>
+  );
+}
+
+function TelegramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="size-4" aria-hidden="true">
+      <path d="M21.94 4.6 18.9 19.2c-.23 1.02-.84 1.27-1.7.79l-4.7-3.46-2.27 2.18c-.25.25-.46.46-.94.46l.33-4.77 8.68-7.84c.38-.34-.08-.53-.58-.19L6.99 13.1l-4.62-1.45c-1-.31-1.02-1 .21-1.48l18.06-6.96c.84-.31 1.57.19 1.3 1.39Z" />
+    </svg>
+  );
+}
+
+function ContactAction({
+  label,
+  icon,
+  href,
+  disabledMsg,
+  external,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  href: string | null;
+  disabledMsg: string;
+  external?: boolean;
+}) {
+  if (!href) {
+    return (
+      <button
+        type="button"
+        onClick={() => toast.info(disabledMsg)}
+        aria-label={label}
+        className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground opacity-60"
+      >
+        {icon}
+      </button>
+    );
+  }
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border transition-colors hover:bg-secondary"
+    >
+      {icon}
+    </a>
+  );
+}
+
+
 
 function ReportDialog({ listingId }: { listingId: string }) {
   const { t } = useI18n();

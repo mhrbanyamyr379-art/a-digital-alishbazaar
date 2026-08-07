@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Send,
@@ -17,12 +17,16 @@ import {
   Loader2,
   X,
   ArrowLeft,
+  CornerUpLeft,
+  Pencil,
+  AlertCircle,
+  WifiOff,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { formatPrice, timeAgo } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { uploadChatImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
 import { ImageLightbox } from "@/components/ImageLightbox";
@@ -43,6 +47,18 @@ interface Msg {
   deleted_for: string[] | null;
   read_at: string | null;
   created_at: string;
+  reply_to_id: string | null;
+  edited_at: string | null;
+  deleted_at: string | null;
+}
+
+interface Pending {
+  tempId: string;
+  body: string | null;
+  files: File[];
+  previews: string[];
+  replyToId: string | null;
+  status: "sending" | "failed";
 }
 
 interface OtherProfile {
@@ -61,10 +77,26 @@ interface ListingPreview {
   image: string | null;
 }
 
+const MAX_IMAGES = 4;
+const MAX_BYTES = 10 * 1024 * 1024;
+
 function sameDay(a: string, b: string) {
-  const da = new Date(a);
-  const db = new Date(b);
-  return da.toDateString() === db.toDateString();
+  return new Date(a).toDateString() === new Date(b).toDateString();
+}
+
+function useOnline() {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const set = () => setOnline(navigator.onLine);
+    set();
+    window.addEventListener("online", set);
+    window.addEventListener("offline", set);
+    return () => {
+      window.removeEventListener("online", set);
+      window.removeEventListener("offline", set);
+    };
+  }, []);
+  return online;
 }
 
 function ChatThread() {
@@ -73,21 +105,32 @@ function ChatThread() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const online = useOnline();
+
   const [text, setText] = useState("");
-  const [sending, setSending] = useState(false);
+  const [pending, setPending] = useState<Pending[]>([]);
+  const [replyTo, setReplyTo] = useState<Msg | null>(null);
+  const [editing, setEditing] = useState<Msg | null>(null);
   const [uploading, setUploading] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
-  const [menuOpen, setMenuOpen] = useState<string | null>(null); // message id
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [headerMenu, setHeaderMenu] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [lightbox, setLightbox] = useState<{ paths: string[]; index: number } | null>(null);
+
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const otherTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: conv } = useQuery({
+  const {
+    data: conv,
+    isLoading: convLoading,
+    isError: convError,
+    refetch: refetchConv,
+  } = useQuery({
     queryKey: ["conv", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("conversations").select("*").eq("id", id).maybeSingle();
@@ -167,31 +210,58 @@ function ChatThread() {
     },
   });
 
-  const { data: messages } = useQuery({
+  const {
+    data: messages,
+    isLoading: msgsLoading,
+    isError: msgsError,
+    refetch: refetchMsgs,
+  } = useQuery({
     queryKey: ["messages", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("messages")
-        .select("id,sender_id,body,type,image_paths,attachment_listing_id,deleted_for,read_at,created_at")
+        .select(
+          "id,sender_id,body,type,image_paths,attachment_listing_id,deleted_for,read_at,created_at,reply_to_id,edited_at,deleted_at",
+        )
         .eq("conversation_id", id)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
       if (error) throw error;
-      return data as Msg[];
+      return data as unknown as Msg[];
     },
   });
 
-  // Realtime: message inserts/updates
+  // Realtime message inserts / updates for this conversation only.
   useEffect(() => {
     const channel = supabase
       .channel("msgs-" + id)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${id}` },
-        () => qc.invalidateQueries({ queryKey: ["messages", id] }),
+        () => {
+          qc.invalidateQueries({ queryKey: ["messages", id] });
+          qc.invalidateQueries({ queryKey: ["conv", id] });
+        },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
+    };
+  }, [id, qc]);
+
+  // Refresh after tab/mobile reconnect so nothing is missed while backgrounded.
+  useEffect(() => {
+    const resync = () => {
+      if (document.visibilityState === "visible") {
+        qc.invalidateQueries({ queryKey: ["messages", id] });
+        qc.invalidateQueries({ queryKey: ["conv", id] });
+      }
+    };
+    document.addEventListener("visibilitychange", resync);
+    window.addEventListener("online", resync);
+    return () => {
+      document.removeEventListener("visibilitychange", resync);
+      window.removeEventListener("online", resync);
     };
   }, [id, qc]);
 
@@ -216,21 +286,33 @@ function ChatThread() {
     };
   }, [id, user]);
 
-  // Mark read on mount + when new messages arrive while visible
+  // Mark read whenever unread messages from the other side are on screen.
   useEffect(() => {
     if (!user || !messages) return;
     const hasUnreadFromOther = messages.some((m) => m.sender_id !== user.id && !m.read_at);
-    if (hasUnreadFromOther) {
-      (supabase.rpc as any)("mark_conversation_read", { _conv_id: id }).then(() => {
+    if (!hasUnreadFromOther) return;
+    (supabase.rpc as unknown as (fn: string, args: unknown) => Promise<unknown>)("mark_conversation_read", {
+      _conv_id: id,
+    })
+      .then(() => {
         qc.invalidateQueries({ queryKey: ["unread-total", user.id] });
         qc.invalidateQueries({ queryKey: ["conversations", user.id] });
-      });
-    }
+      })
+      .catch(() => {});
   }, [messages, id, user, qc]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, otherTyping]);
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, pending, otherTyping]);
+
+  // Revoke object URLs of finished optimistic messages.
+  useEffect(
+    () => () => {
+      pending.forEach((p) => p.previews.forEach((u) => URL.revokeObjectURL(u)));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const emitTyping = () => {
     if (!user || !typingChannelRef.current) return;
@@ -241,77 +323,139 @@ function ChatThread() {
     }, 1500);
   };
 
-  const canSend = !archived && !blockedByMe && !blockedMe;
+  const canSend = !archived && !blockedByMe && !blockedMe && online;
+
+  const deliver = useCallback(
+    async (p: Pending) => {
+      if (!user) return;
+      try {
+        let paths: string[] = [];
+        if (p.files.length > 0) {
+          setUploading(true);
+          for (const f of p.files) {
+            const path = await uploadChatImage(id, user.id, f);
+            paths.push(path);
+          }
+          setUploading(false);
+        }
+        const { error } = await supabase.from("messages").insert({
+          conversation_id: id,
+          sender_id: user.id,
+          body: p.body,
+          type: paths.length > 0 ? "image" : "text",
+          image_paths: paths,
+          reply_to_id: p.replyToId,
+        });
+        if (error) throw error;
+        p.previews.forEach((u) => URL.revokeObjectURL(u));
+        setPending((cur) => cur.filter((x) => x.tempId !== p.tempId));
+        paths = [];
+        qc.invalidateQueries({ queryKey: ["messages", id] });
+        qc.invalidateQueries({ queryKey: ["conversations", user.id] });
+      } catch (err) {
+        setUploading(false);
+        setPending((cur) => cur.map((x) => (x.tempId === p.tempId ? { ...x, status: "failed" } : x)));
+        const msg = err instanceof Error ? err.message : "";
+        toast.error(msg === "blocked" ? t("cannotSendBlocked") : msg || t("failedToSend"));
+      }
+    },
+    [id, qc, t, user],
+  );
 
   const send = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const body = text.trim();
-    if (!body || !user || !canSend || sending) return;
-    setSending(true);
+    if (!user) return;
+
+    if (editing) {
+      if (!body) return;
+      setText("");
+      const target = editing;
+      setEditing(null);
+      const { error } = await (
+        supabase.rpc as unknown as (fn: string, args: unknown) => Promise<{ error: unknown }>
+      )("edit_message", { _message_id: target.id, _body: body });
+      if (error) toast.error(t("errorTitle"));
+      qc.invalidateQueries({ queryKey: ["messages", id] });
+      return;
+    }
+
+    if (!body || !canSend) return;
+    const p: Pending = {
+      tempId: crypto.randomUUID(),
+      body,
+      files: [],
+      previews: [],
+      replyToId: replyTo?.id ?? null,
+      status: "sending",
+    };
     setText("");
-    const { error } = await supabase
-      .from("messages")
-      .insert({ conversation_id: id, sender_id: user.id, body, type: "text" });
-    setSending(false);
-    if (error) {
-      toast.error(error.message === "blocked" ? t("cannotSendBlocked") : error.message || t("errorTitle"));
-      setText(body);
-      return;
-    }
-    qc.invalidateQueries({ queryKey: ["messages", id] });
+    setReplyTo(null);
+    setPending((cur) => [...cur, p]);
+    void deliver(p);
   };
 
-  const onFiles = async (files: FileList | null) => {
+  const onFiles = (files: FileList | null) => {
     if (!files || !user || !canSend) return;
-    const all = Array.from(files).slice(0, 4);
-    const list = all.filter((f) => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
+    const all = Array.from(files).slice(0, MAX_IMAGES);
+    const list = all.filter((f) => f.type.startsWith("image/") && f.size <= MAX_BYTES);
+    if (fileRef.current) fileRef.current.value = "";
     if (list.length === 0) {
-      toast.error(all.length ? "Only images up to 10 MB are supported" : t("errorTitle"));
-      if (fileRef.current) fileRef.current.value = "";
+      toast.error(all.length ? `${t("photo")} ≤ 10 MB` : t("errorTitle"));
       return;
     }
-    setUploading(true);
-    try {
-      const paths: string[] = [];
-      for (const f of list) {
-        try {
-          const p = await uploadChatImage(id, user.id, f);
-          paths.push(p);
-        } catch {
-          toast.error(`Failed to upload ${f.name}`);
-        }
-      }
-      if (paths.length === 0) return;
-      const { error } = await supabase
-        .from("messages")
-        .insert({ conversation_id: id, sender_id: user.id, type: "image", image_paths: paths, body: null });
-      if (error) throw error;
-      qc.invalidateQueries({ queryKey: ["messages", id] });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("errorTitle"));
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
+    const p: Pending = {
+      tempId: crypto.randomUUID(),
+      body: null,
+      files: list,
+      previews: list.map((f) => URL.createObjectURL(f)),
+      replyToId: replyTo?.id ?? null,
+      status: "sending",
+    };
+    setReplyTo(null);
+    setPending((cur) => [...cur, p]);
+    void deliver(p);
   };
 
-  const deleteForMe = useMutation({
-    mutationFn: async (messageId: string) => {
-      const { error } = await (supabase.rpc as any)("delete_message_for_me", { _message_id: messageId });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success(t("messageDeleted"));
-      qc.invalidateQueries({ queryKey: ["messages", id] });
-    },
-  });
+  const retry = (p: Pending) => {
+    setPending((cur) => cur.map((x) => (x.tempId === p.tempId ? { ...x, status: "sending" } : x)));
+    void deliver({ ...p, status: "sending" });
+  };
+
+  const discard = (p: Pending) => {
+    p.previews.forEach((u) => URL.revokeObjectURL(u));
+    setPending((cur) => cur.filter((x) => x.tempId !== p.tempId));
+  };
+
+  const rpcMutation = (fn: string) =>
+    useMutation({
+      mutationFn: async (args: Record<string, unknown>) => {
+        const { error } = await (
+          supabase.rpc as unknown as (n: string, a: unknown) => Promise<{ error: unknown }>
+        )(fn, args);
+        if (error) throw error;
+      },
+      onSuccess: () => {
+        toast.success(t("messageDeleted"));
+        qc.invalidateQueries({ queryKey: ["messages", id] });
+        if (user) qc.invalidateQueries({ queryKey: ["conversations", user.id] });
+      },
+      onError: () => toast.error(t("errorTitle")),
+    });
+
+  const deleteForMe = rpcMutation("delete_message_for_me");
+  const deleteForAll = rpcMutation("delete_message_for_everyone");
 
   const toggleArchive = async () => {
     if (!conv || !user) return;
     setHeaderMenu(false);
-    await (supabase.rpc as any)("set_conversation_archived", { _conv_id: id, _archived: !archived });
+    await (supabase.rpc as unknown as (n: string, a: unknown) => Promise<unknown>)(
+      "set_conversation_archived",
+      { _conv_id: id, _archived: !archived },
+    );
     qc.invalidateQueries({ queryKey: ["conv", id] });
     qc.invalidateQueries({ queryKey: ["conversations", user.id] });
+    qc.invalidateQueries({ queryKey: ["unread-total", user.id] });
     if (!archived) navigate({ to: "/chat" });
   };
 
@@ -354,11 +498,82 @@ function ChatThread() {
     () => (messages ?? []).filter((m) => !(m.deleted_for ?? []).includes(user?.id ?? "")),
     [messages, user],
   );
+  const byId = useMemo(() => new Map((messages ?? []).map((m) => [m.id, m])), [messages]);
+
+  const dateLabel = (iso: string) => {
+    const d = new Date(iso);
+    const today = new Date();
+    const yest = new Date();
+    yest.setDate(today.getDate() - 1);
+    if (d.toDateString() === today.toDateString()) return t("today");
+    if (d.toDateString() === yest.toDateString()) return t("yesterday");
+    return d.toLocaleDateString(lang === "en" ? "en-US" : lang === "ps" ? "ps-AF" : "fa-AF", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+  const timeLabel = (iso: string) =>
+    new Date(iso).toLocaleTimeString(lang === "en" ? "en-US" : "fa-AF", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const quoted = (mid: string | null) => {
+    if (!mid) return null;
+    const q = byId.get(mid);
+    if (!q) return null;
+    return (
+      <div className="mb-1 truncate rounded-lg border-s-2 border-accent/60 bg-black/5 px-2 py-1 text-[11px] opacity-80 dark:bg-white/10">
+        {q.deleted_at ? t("messageRemoved") : (q.body ?? t("imageMessage"))}
+      </div>
+    );
+  };
+
+  if (convLoading || msgsLoading) {
+    return (
+      <div className="min-h-screen space-y-3 bg-background p-4">
+        <div className="h-12 animate-pulse rounded-xl bg-secondary" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn("h-10 w-2/3 animate-pulse rounded-2xl bg-secondary", i % 2 ? "ms-auto" : "")}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (convError || msgsError || !conv) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background p-6 text-center">
+        <AlertCircle className="size-8 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              refetchConv();
+              refetchMsgs();
+            }}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+          >
+            {t("retry")}
+          </button>
+          <button
+            onClick={() => navigate({ to: "/chat" })}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-bold"
+          >
+            {t("back")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-3 py-2.5 backdrop-blur">
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur">
         <button
           onClick={() => navigate({ to: "/chat" })}
           className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-secondary"
@@ -366,11 +581,7 @@ function ChatThread() {
         >
           <ArrowLeft className="size-5 rtl:rotate-180" />
         </button>
-        <Link
-          to="/seller/$id"
-          params={{ id: otherId ?? "" }}
-          className="flex min-w-0 flex-1 items-center gap-2.5"
-        >
+        <Link to="/seller/$id" params={{ id: otherId ?? "" }} className="flex min-w-0 flex-1 items-center gap-2.5">
           <div className="relative size-10 shrink-0 overflow-hidden rounded-full bg-secondary">
             {other?.avatar_url ? (
               <StorageImage bucket="avatars" path={other.avatar_url} alt="" className="size-full object-cover" />
@@ -434,6 +645,13 @@ function ChatThread() {
         </div>
       </header>
 
+      {!online && (
+        <div className="flex items-center justify-center gap-2 bg-destructive/10 py-1.5 text-[11px] font-bold text-destructive">
+          <WifiOff className="size-3.5" />
+          {t("youAreOffline")}
+        </div>
+      )}
+
       {/* Listing pinned preview */}
       {listing && (
         <Link
@@ -462,20 +680,21 @@ function ChatThread() {
       )}
 
       {/* Messages */}
-      <main className="flex-1 space-y-1 overflow-y-auto p-3 pb-28">
+      <main className="flex-1 space-y-1 overflow-y-auto p-3 pb-40">
+        {visible.length === 0 && pending.length === 0 && (
+          <p className="py-16 text-center text-sm text-muted-foreground">{t("typeMessage")}</p>
+        )}
         {visible.map((m, i) => {
           const mine = m.sender_id === user?.id;
           const prev = visible[i - 1];
           const showDay = !prev || !sameDay(prev.created_at, m.created_at);
+          const removed = !!m.deleted_at;
           return (
             <div key={m.id}>
               {showDay && (
                 <div className="my-3 flex justify-center">
                   <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                    {new Date(m.created_at).toLocaleDateString(
-                      lang === "en" ? "en-US" : lang === "ps" ? "ps-AF" : "fa-AF",
-                      { day: "numeric", month: "short", year: "numeric" },
-                    )}
+                    {dateLabel(m.created_at)}
                   </span>
                 </div>
               )}
@@ -484,14 +703,16 @@ function ChatThread() {
                   <button
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      setMenuOpen(m.id);
+                      if (!removed) setMenuOpen(m.id);
                     }}
-                    onClick={() => setMenuOpen((v) => (v === m.id ? null : m.id))}
-                    className={cn(
-                      "block w-full text-start",
-                    )}
+                    onClick={() => !removed && setMenuOpen((v) => (v === m.id ? null : m.id))}
+                    className="block w-full text-start"
                   >
-                    {m.type === "image" && m.image_paths && m.image_paths.length > 0 ? (
+                    {removed ? (
+                      <div className="rounded-2xl border border-dashed border-border px-3.5 py-2 text-sm italic text-muted-foreground">
+                        {t("messageRemoved")}
+                      </div>
+                    ) : m.type === "image" && m.image_paths && m.image_paths.length > 0 ? (
                       <div
                         className={cn(
                           "grid gap-1 overflow-hidden rounded-2xl",
@@ -522,6 +743,7 @@ function ChatThread() {
                             : "rounded-es-sm border border-border bg-card",
                         )}
                       >
+                        {quoted(m.reply_to_id)}
                         {m.body}
                       </div>
                     )}
@@ -532,13 +754,9 @@ function ChatThread() {
                       mine ? "justify-end" : "justify-start",
                     )}
                   >
-                    <span>
-                      {new Date(m.created_at).toLocaleTimeString(
-                        lang === "en" ? "en-US" : "fa-AF",
-                        { hour: "2-digit", minute: "2-digit" },
-                      )}
-                    </span>
-                    {mine && (
+                    {m.edited_at && !removed && <span>({t("edited")})</span>}
+                    <span>{timeLabel(m.created_at)}</span>
+                    {mine && !removed && (
                       <span aria-label={m.read_at ? t("read") : t("sent")}>
                         {m.read_at ? (
                           <CheckCheck className="size-3 text-accent" />
@@ -553,10 +771,22 @@ function ChatThread() {
                       <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(null)} />
                       <div
                         className={cn(
-                          "absolute top-full z-50 mt-1 w-44 overflow-hidden rounded-xl border border-border bg-popover shadow-xl",
+                          "absolute top-full z-50 mt-1 w-48 overflow-hidden rounded-xl border border-border bg-popover shadow-xl",
                           mine ? "end-0" : "start-0",
                         )}
                       >
+                        {canSend && (
+                          <button
+                            onClick={() => {
+                              setMenuOpen(null);
+                              setReplyTo(m);
+                              inputRef.current?.focus();
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
+                          >
+                            <CornerUpLeft className="size-4" /> {t("reply")}
+                          </button>
+                        )}
                         {m.body && (
                           <button
                             onClick={() => copy(m)}
@@ -565,10 +795,34 @@ function ChatThread() {
                             <Copy className="size-4" /> {t("copy")}
                           </button>
                         )}
+                        {mine && m.type === "text" && m.body && (
+                          <button
+                            onClick={() => {
+                              setMenuOpen(null);
+                              setEditing(m);
+                              setText(m.body ?? "");
+                              inputRef.current?.focus();
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
+                          >
+                            <Pencil className="size-4" /> {t("edit")}
+                          </button>
+                        )}
+                        {mine && (
+                          <button
+                            onClick={() => {
+                              setMenuOpen(null);
+                              deleteForAll.mutate({ _message_id: m.id });
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-secondary"
+                          >
+                            <Trash2 className="size-4" /> {t("deleteForEveryone")}
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setMenuOpen(null);
-                            deleteForMe.mutate(m.id);
+                            deleteForMe.mutate({ _message_id: m.id });
                           }}
                           className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-secondary"
                         >
@@ -582,6 +836,47 @@ function ChatThread() {
             </div>
           );
         })}
+
+        {/* Optimistic outgoing messages */}
+        {pending.map((p) => (
+          <div key={p.tempId} className="flex justify-end">
+            <div className="max-w-[78%]">
+              {p.previews.length > 0 ? (
+                <div
+                  className={cn(
+                    "grid gap-1 overflow-hidden rounded-2xl rounded-ee-sm opacity-70",
+                    p.previews.length === 1 ? "grid-cols-1" : "grid-cols-2",
+                  )}
+                >
+                  {p.previews.map((u) => (
+                    <img key={u} src={u} alt="" className="aspect-square size-full object-cover" />
+                  ))}
+                </div>
+              ) : (
+                <div className="whitespace-pre-wrap break-words rounded-2xl rounded-ee-sm bg-accent/70 px-3.5 py-2 text-sm text-accent-foreground">
+                  {p.body}
+                </div>
+              )}
+              <div className="mt-0.5 flex items-center justify-end gap-1.5 px-1 text-[10px]">
+                {p.status === "sending" ? (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Loader2 className="size-3 animate-spin" /> {t("sending")}
+                  </span>
+                ) : (
+                  <>
+                    <button onClick={() => retry(p)} className="font-bold text-destructive">
+                      {t("failedToSend")}
+                    </button>
+                    <button onClick={() => discard(p)} aria-label={t("cancel")} className="text-muted-foreground">
+                      <X className="size-3" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+
         {otherTyping && (
           <div className="flex justify-start">
             <div className="flex items-center gap-1 rounded-2xl rounded-es-sm border border-border bg-card px-3 py-2">
@@ -596,14 +891,14 @@ function ChatThread() {
 
       {/* Composer */}
       {archived ? (
-        <div className="fixed bottom-0 left-0 w-full border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground">
+        <div className="fixed bottom-0 start-0 w-full border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground">
           {t("archived")} ·{" "}
           <button onClick={toggleArchive} className="font-bold text-accent">
             {t("unarchive")}
           </button>
         </div>
-      ) : !canSend ? (
-        <div className="fixed bottom-0 left-0 w-full border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground">
+      ) : blockedByMe || blockedMe ? (
+        <div className="fixed bottom-0 start-0 w-full border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground">
           {t("cannotSendBlocked")}
           {blockedByMe && (
             <>
@@ -615,52 +910,75 @@ function ChatThread() {
           )}
         </div>
       ) : (
-        <form
-          onSubmit={send}
-          className="fixed bottom-0 left-0 flex w-full items-end gap-2 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            onChange={(e) => onFiles(e.target.files)}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-muted"
-            aria-label={t("attach")}
+        <div className="fixed bottom-0 start-0 w-full border-t border-border bg-card">
+          {(replyTo || editing) && (
+            <div className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs">
+              {editing ? <Pencil className="size-3.5 text-accent" /> : <CornerUpLeft className="size-3.5 text-accent" />}
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                <span className="font-bold text-foreground">{editing ? t("edit") : t("replyingTo")}: </span>
+                {(editing ?? replyTo)?.body ?? t("imageMessage")}
+              </span>
+              <button
+                onClick={() => {
+                  setReplyTo(null);
+                  if (editing) setText("");
+                  setEditing(null);
+                }}
+                aria-label={t("cancel")}
+                className="text-muted-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          )}
+          <form
+            onSubmit={send}
+            className="flex w-full items-end gap-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           >
-            {uploading ? <Loader2 className="size-5 animate-spin" /> : <Paperclip className="size-5" />}
-          </button>
-          <textarea
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              emitTyping();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            placeholder={t("typeMessage")}
-            rows={1}
-            className="max-h-32 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-          />
-          <button
-            type="submit"
-            disabled={!text.trim() || sending}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-transform active:scale-95 disabled:opacity-50"
-            aria-label={t("sendMessage")}
-          >
-            {sending ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
-          </button>
-        </form>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => onFiles(e.target.files)}
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading || !canSend || !!editing}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+              aria-label={t("attach")}
+            >
+              {uploading ? <Loader2 className="size-5 animate-spin" /> : <Paperclip className="size-5" />}
+            </button>
+            <textarea
+              ref={inputRef}
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                emitTyping();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              placeholder={t("typeMessage")}
+              rows={1}
+              className="max-h-32 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+            />
+            <button
+              type="submit"
+              disabled={!text.trim() || (!canSend && !editing)}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-transform active:scale-95 disabled:opacity-50"
+              aria-label={t("sendMessage")}
+            >
+              <Send className="size-5 rtl:-scale-x-100" />
+            </button>
+          </form>
+        </div>
       )}
 
       {/* Block confirm */}
@@ -668,9 +986,7 @@ function ChatThread() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div className="w-full max-w-sm rounded-2xl bg-card p-5 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg font-black">
-                {blockedByMe ? t("unblock") : t("block")}
-              </h3>
+              <h3 className="font-display text-lg font-black">{blockedByMe ? t("unblock") : t("block")}</h3>
               <button onClick={() => setConfirmBlock(false)} className="text-muted-foreground">
                 <X className="size-5" />
               </button>

@@ -209,7 +209,20 @@ const T: Dict = {
   read: { fa: "خوانده شد", ps: "لوستل شو", en: "Read" },
   sent: { fa: "ارسال شد", ps: "لیږل شو", en: "Sent" },
   searchChats: { fa: "جستجو در پیام‌ها", ps: "په پیغامونو کې لټون", en: "Search chats" },
+  whatsapp: { fa: "واتساپ", ps: "واټساپ", en: "WhatsApp" },
+  telegram: { fa: "تلگرام", ps: "تلګرام", en: "Telegram" },
+  reply: { fa: "پاسخ", ps: "ځواب", en: "Reply" },
+  replyingTo: { fa: "پاسخ به", ps: "ځواب ورکول", en: "Replying to" },
+  edited: { fa: "ویرایش‌شده", ps: "سم شوی", en: "edited" },
+  deleteForEveryone: { fa: "حذف برای همه", ps: "د ټولو لپاره ړنګول", en: "Delete for everyone" },
+  messageRemoved: { fa: "این پیام حذف شد", ps: "دا پیغام ړنګ شو", en: "This message was deleted" },
+  sending: { fa: "در حال ارسال", ps: "لیږل کیږي", en: "Sending" },
+  failedToSend: { fa: "ارسال نشد — برای تلاش دوباره بزنید", ps: "ونه لیږل شو — بیا هڅه وکړئ", en: "Not sent — tap to retry" },
+  youAreOffline: { fa: "اتصال اینترنت قطع است", ps: "انټرنټ نشته", en: "You are offline" },
+  noPhone: { fa: "شماره تماس در دسترس نیست", ps: "د اړیکې شمېره نشته", en: "Phone number unavailable" },
+  photo: { fa: "عکس", ps: "انځور", en: "Photo" },
 };
+
 
 
 interface I18nCtx {

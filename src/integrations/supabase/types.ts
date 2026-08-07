@@ -230,11 +230,14 @@ export type Database = {
           body: string | null
           conversation_id: string
           created_at: string
+          deleted_at: string | null
           deleted_for: string[]
           delivered_at: string | null
+          edited_at: string | null
           id: string
           image_paths: string[]
           read_at: string | null
+          reply_to_id: string | null
           sender_id: string
           type: string
         }
@@ -243,11 +246,14 @@ export type Database = {
           body?: string | null
           conversation_id: string
           created_at?: string
+          deleted_at?: string | null
           deleted_for?: string[]
           delivered_at?: string | null
+          edited_at?: string | null
           id?: string
           image_paths?: string[]
           read_at?: string | null
+          reply_to_id?: string | null
           sender_id: string
           type?: string
         }
@@ -256,11 +262,14 @@ export type Database = {
           body?: string | null
           conversation_id?: string
           created_at?: string
+          deleted_at?: string | null
           deleted_for?: string[]
           delivered_at?: string | null
+          edited_at?: string | null
           id?: string
           image_paths?: string[]
           read_at?: string | null
+          reply_to_id?: string | null
           sender_id?: string
           type?: string
         }
@@ -277,6 +286,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -479,11 +495,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_message_for_everyone: {
+        Args: { _message_id: string }
+        Returns: undefined
+      }
       delete_message_for_me: {
         Args: { _message_id: string }
         Returns: undefined
       }
+      edit_message: {
+        Args: { _body: string; _message_id: string }
+        Returns: undefined
+      }
       get_my_phone: { Args: never; Returns: string }
+      get_or_create_conversation: {
+        Args: { _listing_id: string; _seller_id: string }
+        Returns: string
+      }
       get_seller_phone: { Args: { _seller_id: string }; Returns: string }
       has_role: {
         Args: {

@@ -27,7 +27,9 @@ import { provinceById } from "@/data/provinces";
 import { CATEGORIES, categoryById } from "@/data/categories";
 import { TopBar } from "@/components/TopBar";
 import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/components/ListingCard";
+import { useStartChat } from "@/hooks/useStartChat";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/seller/$id")({
   component: SellerPage,
@@ -54,6 +56,9 @@ function SellerPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { startChat, starting } = useStartChat();
+  const isSelfSeller = user?.id === id;
+
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
@@ -178,37 +183,12 @@ function SellerPage() {
     }
   };
 
-  const startChatWithSeller = async () => {
-    if (!user) return navigate({ to: "/auth" });
-    if (user.id === id) return;
-    // Anchor chat to the seller's newest active listing (chats are listing-scoped).
-    const anchor = activeListings[0];
-    if (!anchor) {
-      toast.error(t("emptyListings"));
-      return;
-    }
-    const { data: existing } = await supabase
-      .from("conversations")
-      .select("id")
-      .eq("listing_id", anchor.id)
-      .eq("buyer_id", user.id)
-      .eq("seller_id", id)
-      .maybeSingle();
-    let convId = existing?.id;
-    if (!convId) {
-      const { data, error } = await supabase
-        .from("conversations")
-        .insert({ listing_id: anchor.id, buyer_id: user.id, seller_id: id })
-        .select("id")
-        .single();
-      if (error) {
-        toast.error(t("errorTitle"));
-        return;
-      }
-      convId = data.id;
-    }
-    navigate({ to: "/chat/$id", params: { id: convId } });
+  const startChatWithSeller = () => {
+    if (isSelfSeller) return;
+    // Chats are listing-scoped; anchor to the seller's newest active listing when there is one.
+    startChat({ sellerId: id, listingId: activeListings[0]?.id ?? null });
   };
+
 
   const reportSeller = () => {
     if (!user) return navigate({ to: "/auth" });
@@ -310,15 +290,14 @@ function SellerPage() {
         {/* Contact actions */}
         {!isSelf && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {activeListings.length > 0 && (
-              <button
-                onClick={startChatWithSeller}
-                className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-primary shadow-sm transition-transform active:scale-95"
-              >
-                <MessageCircle className="size-4" />
-                {t("chat")}
-              </button>
-            )}
+            <button
+              onClick={startChatWithSeller}
+              disabled={starting}
+              className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-primary shadow-sm transition-transform active:scale-95 disabled:opacity-70"
+            >
+              {starting ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
+              {t("chat")}
+            </button>
             <button
               onClick={shareProfile}
               className="flex items-center justify-center gap-1.5 rounded-xl bg-white/15 px-3 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-colors hover:bg-white/25"
