@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Profile {
   id: string;
   display_name: string;
-  phone: string | null;
+  /** Not selectable by the Data API — read via the `get_my_phone` RPC. */
+  phone?: string | null;
   avatar_url: string | null;
   bio: string | null;
   province: string | null;
