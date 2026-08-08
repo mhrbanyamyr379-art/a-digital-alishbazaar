@@ -30,7 +30,7 @@ function NotificationsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["notifications", user?.id],
     enabled: !!user,
     queryFn: async () => {
@@ -51,6 +51,7 @@ function NotificationsPage() {
       .channel("notif-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => {
         qc.invalidateQueries({ queryKey: ["notifications", user.id] });
+        qc.invalidateQueries({ queryKey: ["unread-notifications", user.id] });
       })
       .subscribe();
     return () => {
@@ -58,10 +59,22 @@ function NotificationsPage() {
     };
   }, [user, qc]);
 
+  const invalidate = () => {
+    if (!user) return;
+    qc.invalidateQueries({ queryKey: ["notifications", user.id] });
+    qc.invalidateQueries({ queryKey: ["unread-notifications", user.id] });
+  };
+
   const markAllRead = async () => {
     if (!user) return;
     await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("user_id", user.id).is("read_at", null);
-    qc.invalidateQueries({ queryKey: ["notifications", user.id] });
+    invalidate();
+  };
+
+  const markOneRead = async (n: Notif) => {
+    if (!user || n.read_at) return;
+    await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", n.id);
+    invalidate();
   };
 
   return (
@@ -77,7 +90,12 @@ function NotificationsPage() {
       </div>
       <main className="flex flex-col gap-2 p-3">
         {isLoading && Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-secondary" />)}
-        {data && data.length === 0 && (
+        {error && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center text-sm font-semibold text-destructive">
+            {t("errorTitle")}
+          </div>
+        )}
+        {!isLoading && !error && data && data.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-20 text-center">
             <div className="flex size-16 items-center justify-center rounded-full bg-secondary">
               <Bell className="size-7 text-muted-foreground" />
@@ -98,11 +116,13 @@ function NotificationsPage() {
             </div>
           );
           return n.link ? (
-            <Link key={n.id} to={n.link}>
+            <Link key={n.id} to={n.link} onClick={() => markOneRead(n)}>
               {inner}
             </Link>
           ) : (
-            <div key={n.id}>{inner}</div>
+            <button key={n.id} type="button" className="text-start" onClick={() => markOneRead(n)}>
+              {inner}
+            </button>
           );
         })}
       </main>

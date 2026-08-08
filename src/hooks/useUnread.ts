@@ -50,3 +50,43 @@ export function useUnreadTotal() {
 
   return q.data ?? { unreadChats: 0, unreadMsgs: 0 };
 }
+
+/** Count of unread notification rows for the signed-in user, kept live. */
+export function useUnreadNotifications() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  const q = useQuery({
+    queryKey: ["unread-notifications", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .is("read_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel("notif-count-" + user.id)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["unread-notifications", user.id] });
+          qc.invalidateQueries({ queryKey: ["notifications", user.id] });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user, qc]);
+
+  return q.data ?? 0;
+}
