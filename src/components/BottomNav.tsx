@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Bell, MessageCircle, User, Plus } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { useUnreadTotal } from "@/hooks/useUnread";
+import { useUnreadNotifications, useUnreadTotal } from "@/hooks/useUnread";
 import { useAuth } from "@/lib/auth";
 
 export function BottomNav() {
@@ -10,10 +10,11 @@ export function BottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const { unreadChats } = useUnreadTotal();
+  const unreadNotifs = useUnreadNotifications();
 
   const items = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
-    { to: "/notifications", icon: Bell, label: t("notifications"), badge: 0 },
+    { to: "/notifications", icon: Bell, label: t("notifications"), badge: user ? unreadNotifs : 0 },
     { to: "/chat", icon: MessageCircle, label: t("chat"), badge: user ? unreadChats : 0 },
     { to: "/profile", icon: User, label: t("profile"), badge: 0 },
   ] as const;
