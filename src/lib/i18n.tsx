@@ -221,7 +221,29 @@ const T: Dict = {
   youAreOffline: { fa: "اتصال اینترنت قطع است", ps: "انټرنټ نشته", en: "You are offline" },
   noPhone: { fa: "شماره تماس در دسترس نیست", ps: "د اړیکې شمېره نشته", en: "Phone number unavailable" },
   photo: { fa: "عکس", ps: "انځور", en: "Photo" },
+  markAllRead: { fa: "خواندن همه", ps: "ټول لوستل شوي", en: "Mark all read" },
+  tabAll: { fa: "همه", ps: "ټول", en: "All" },
+  tabUnread: { fa: "خوانده‌نشده", ps: "نالوستل شوي", en: "Unread" },
+  tabRead: { fa: "خوانده‌شده", ps: "لوستل شوي", en: "Read" },
+  dismiss: { fa: "حذف", ps: "ړنګول", en: "Dismiss" },
+  loadMore: { fa: "بیشتر", ps: "نور", en: "Load more" },
+  emptyNotifications: { fa: "اطلاعیه‌ای ندارید", ps: "هېڅ خبرتیا نشته", en: "No notifications yet" },
+  retry: { fa: "تلاش دوباره", ps: "بیا هڅه", en: "Try again" },
+  listingUnavailable: { fa: "این آگهی دیگر در دسترس نیست", ps: "دا اعلان نور شتون نلري", en: "This listing is no longer available" },
+  savedItem: { fa: "ذخیره شد", ps: "خوندي شو", en: "Saved" },
+  removedItem: { fa: "حذف شد", ps: "لرې شو", en: "Removed" },
+  notifMessage: { fa: "پیام جدید", ps: "نوی پیغام", en: "New message" },
+  notifFavorite: { fa: "آگهی شما را ذخیره کرد", ps: "ستاسو اعلان یې خوندي کړ", en: "saved your listing" },
+  notifReview: { fa: "نظر جدید", ps: "نوې کتنه", en: "New review" },
+  notifApproved: { fa: "آگهی تایید شد", ps: "اعلان تصویب شو", en: "Listing approved" },
+  notifRejected: { fa: "آگهی رد شد", ps: "اعلان رد شو", en: "Listing rejected" },
+  notifSold: { fa: "آگهی فروخته شد", ps: "اعلان وپلورل شو", en: "Listing marked sold" },
+  notifExpired: { fa: "آگهی منقضی شد", ps: "اعلان پای ته ورسېد", en: "Listing expired" },
+  notifExpiring: { fa: "آگهی به‌زودی منقضی می‌شود", ps: "اعلان ژر پای ته رسېږي", en: "Listing expiring soon" },
+  notifRenewed: { fa: "آگهی تمدید شد", ps: "اعلان نوی شو", en: "Listing renewed" },
+  notifAccount: { fa: "اطلاعیه حساب", ps: "د حساب خبرتیا", en: "Account notice" },
 };
+
 
 
 
