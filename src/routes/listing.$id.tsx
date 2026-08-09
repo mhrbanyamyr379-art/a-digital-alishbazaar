@@ -178,7 +178,7 @@ function ListingDetail() {
               <Share2 className="size-5" />
             </button>
             <button
-              onClick={() => (user ? toggleFav.mutate({ id, isFav: !!isFav }) : navigate({ to: "/auth" }))}
+              onClick={() => toggleFav.toggle(id, !!isFav)}
               aria-label={t("favorites")}
               className="flex size-9 items-center justify-center rounded-full hover:bg-secondary"
             >

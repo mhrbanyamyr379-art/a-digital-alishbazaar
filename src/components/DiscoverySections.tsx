@@ -21,10 +21,8 @@ export function DiscoverySections({ onPickCategory }: { onPickCategory: (id: str
   const toggleFav = useToggleFavorite();
   const navigate = useNavigate();
 
-  const favorite = (id: string) =>
-    user
-      ? toggleFav.mutate({ id, isFav: !!favIds?.has(id) })
-      : navigate({ to: "/auth" });
+  const favorite = (id: string) => toggleFav.toggle(id, !!favIds?.has(id));
+
 
   return (
     <div className="flex flex-col gap-6 py-4">

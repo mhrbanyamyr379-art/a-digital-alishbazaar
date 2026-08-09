@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
+import { Route as ApiPublicNotifyExpiringRouteImport } from './routes/api/public/notify-expiring'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated/edit.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -112,6 +113,11 @@ const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedChatRoute,
 } as any)
+const ApiPublicNotifyExpiringRoute = ApiPublicNotifyExpiringRouteImport.update({
+  id: '/api/public/notify-expiring',
+  path: '/api/public/notify-expiring',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEditIdRoute = AuthenticatedEditIdRouteImport.update({
   id: '/edit/$id',
   path: '/edit/$id',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
+  '/api/public/notify-expiring': typeof ApiPublicNotifyExpiringRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
 }
 export interface FileRoutesByTo {
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
+  '/api/public/notify-expiring': typeof ApiPublicNotifyExpiringRoute
   '/chat': typeof AuthenticatedChatIndexRoute
 }
 export interface FileRoutesById {
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
+  '/api/public/notify-expiring': typeof ApiPublicNotifyExpiringRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
 }
 export interface FileRouteTypes {
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/chat/$id'
     | '/edit/$id'
+    | '/api/public/notify-expiring'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/chat/$id'
     | '/edit/$id'
+    | '/api/public/notify-expiring'
     | '/chat'
   id:
     | '__root__'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/chat/$id'
     | '/_authenticated/edit/$id'
+    | '/api/public/notify-expiring'
     | '/_authenticated/chat/'
   fileRoutesById: FileRoutesById
 }
@@ -276,6 +288,7 @@ export interface RootRouteChildren {
   SellerIdRoute: typeof SellerIdRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicNotifyExpiringRoute: typeof ApiPublicNotifyExpiringRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -392,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
       parentRoute: typeof AuthenticatedChatRoute
     }
+    '/api/public/notify-expiring': {
+      id: '/api/public/notify-expiring'
+      path: '/api/public/notify-expiring'
+      fullPath: '/api/public/notify-expiring'
+      preLoaderRoute: typeof ApiPublicNotifyExpiringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/edit/$id': {
       id: '/_authenticated/edit/$id'
       path: '/edit/$id'
@@ -472,6 +492,7 @@ const rootRouteChildren: RootRouteChildren = {
   SellerIdRoute: SellerIdRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicNotifyExpiringRoute: ApiPublicNotifyExpiringRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

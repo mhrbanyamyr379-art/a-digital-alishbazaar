@@ -299,36 +299,60 @@ export type Database = {
       }
       notifications: {
         Row: {
+          actor_id: string | null
           body: string | null
+          conversation_id: string | null
           created_at: string
           id: string
           link: string | null
+          listing_id: string | null
           read_at: string | null
           title: string
           type: string
           user_id: string
         }
         Insert: {
+          actor_id?: string | null
           body?: string | null
+          conversation_id?: string | null
           created_at?: string
           id?: string
           link?: string | null
+          listing_id?: string | null
           read_at?: string | null
           title: string
           type?: string
           user_id: string
         }
         Update: {
+          actor_id?: string | null
           body?: string | null
+          conversation_id?: string | null
           created_at?: string
           id?: string
           link?: string | null
+          listing_id?: string | null
           read_at?: string | null
           title?: string
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -526,6 +550,7 @@ export type Database = {
         Returns: undefined
       }
       mark_conversation_read: { Args: { _conv_id: string }; Returns: undefined }
+      notify_expiring_listings: { Args: never; Returns: number }
       set_conversation_archived: {
         Args: { _archived: boolean; _conv_id: string }
         Returns: undefined
