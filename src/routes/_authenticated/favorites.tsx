@@ -84,7 +84,7 @@ function FavoritesPage() {
             listing={l}
             index={i}
             isFavorite={favIds?.has(l.id)}
-            onToggleFavorite={(id) => toggleFav.mutate({ id, isFav: !!favIds?.has(id) })}
+            onToggleFavorite={(id) => toggleFav.toggle(id, !!favIds?.has(id))}
           />
         ))}
       </main>

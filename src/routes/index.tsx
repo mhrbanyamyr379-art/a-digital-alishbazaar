@@ -352,11 +352,8 @@ function Home() {
             listing={l}
             index={i}
             isFavorite={favIds?.has(l.id)}
-            onToggleFavorite={
-              user
-                ? (id) => toggleFav.mutate({ id, isFav: !!favIds?.has(id) })
-                : () => navigate({ to: "/auth" })
-            }
+            onToggleFavorite={(id) => toggleFav.toggle(id, !!favIds?.has(id))}
+
           />
         ))}
 
