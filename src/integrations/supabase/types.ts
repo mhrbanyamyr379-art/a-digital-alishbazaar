@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked_id: string
@@ -165,10 +195,13 @@ export type Database = {
           favorites_count: number
           id: string
           is_featured: boolean
+          moderated_at: string | null
+          moderated_by: string | null
           negotiable: boolean
           price: number
           province: string
           published_at: string | null
+          rejection_reason: string | null
           seller_id: string
           status: Database["public"]["Enums"]["listing_status"]
           tags: string[]
@@ -188,10 +221,13 @@ export type Database = {
           favorites_count?: number
           id?: string
           is_featured?: boolean
+          moderated_at?: string | null
+          moderated_by?: string | null
           negotiable?: boolean
           price?: number
           province: string
           published_at?: string | null
+          rejection_reason?: string | null
           seller_id: string
           status?: Database["public"]["Enums"]["listing_status"]
           tags?: string[]
@@ -211,10 +247,13 @@ export type Database = {
           favorites_count?: number
           id?: string
           is_featured?: boolean
+          moderated_at?: string | null
+          moderated_by?: string | null
           negotiable?: boolean
           price?: number
           province?: string
           published_at?: string | null
+          rejection_reason?: string | null
           seller_id?: string
           status?: Database["public"]["Enums"]["listing_status"]
           tags?: string[]
@@ -357,6 +396,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          banned_at: string | null
+          banned_reason: string | null
           bio: string | null
           created_at: string
           display_name: string
@@ -371,6 +412,8 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          banned_at?: string | null
+          banned_reason?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string
@@ -385,6 +428,8 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          banned_at?: string | null
+          banned_reason?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string
@@ -430,31 +475,46 @@ export type Database = {
       }
       reports: {
         Row: {
+          admin_notes: string | null
           created_at: string
           details: string | null
           id: string
           listing_id: string | null
           reason: string
+          reported_user_id: string | null
           reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
+          updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           details?: string | null
           id?: string
           listing_id?: string | null
           reason: string
+          reported_user_id?: string | null
           reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
+          updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           details?: string | null
           id?: string
           listing_id?: string | null
           reason?: string
+          reported_user_id?: string | null
           reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -519,6 +579,115 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_audit: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: {
+          action: string
+          admin_name: string
+          created_at: string
+          id: string
+          reason: string
+          target_id: string
+          target_type: string
+          total_count: number
+        }[]
+      }
+      admin_list_listings: {
+        Args: {
+          _category?: string
+          _limit?: number
+          _offset?: number
+          _province?: string
+          _search?: string
+          _since?: string
+          _sort?: string
+          _status?: string
+        }
+        Returns: {
+          category: string
+          city: string
+          created_at: string
+          currency: string
+          favorites_count: number
+          id: string
+          image_url: string
+          price: number
+          province: string
+          rejection_reason: string
+          report_count: number
+          seller_banned: boolean
+          seller_id: string
+          seller_name: string
+          status: Database["public"]["Enums"]["listing_status"]
+          title: string
+          total_count: number
+          view_count: number
+        }[]
+      }
+      admin_list_reports: {
+        Args: {
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _status?: string
+          _type?: string
+        }
+        Returns: {
+          admin_notes: string
+          created_at: string
+          details: string
+          id: string
+          listing_id: string
+          listing_status: Database["public"]["Enums"]["listing_status"]
+          listing_title: string
+          reason: string
+          reported_user_id: string
+          reported_user_name: string
+          reporter_id: string
+          reporter_name: string
+          status: string
+          total_count: number
+        }[]
+      }
+      admin_list_users: {
+        Args: {
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _status?: string
+        }
+        Returns: {
+          active_count: number
+          avatar_url: string
+          banned_reason: string
+          created_at: string
+          display_name: string
+          id: string
+          is_admin: boolean
+          is_banned: boolean
+          last_seen: string
+          listing_count: number
+          province: string
+          rating_avg: number
+          rating_count: number
+          report_count: number
+          sold_count: number
+          total_count: number
+        }[]
+      }
+      admin_set_listing_status: {
+        Args: { _listing_id: string; _reason?: string; _status: string }
+        Returns: undefined
+      }
+      admin_set_user_banned: {
+        Args: { _banned: boolean; _reason?: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_stats: { Args: never; Returns: Json }
+      admin_update_report: {
+        Args: { _note?: string; _report_id: string; _status: string }
+        Returns: undefined
+      }
       delete_message_for_everyone: {
         Args: { _message_id: string }
         Returns: undefined
@@ -549,8 +718,20 @@ export type Database = {
         Args: { _listing_id: string }
         Returns: undefined
       }
+      is_moderator: { Args: { _uid: string }; Returns: boolean }
+      log_admin_action: {
+        Args: {
+          _action: string
+          _admin: string
+          _reason: string
+          _target_id: string
+          _target_type: string
+        }
+        Returns: undefined
+      }
       mark_conversation_read: { Args: { _conv_id: string }; Returns: undefined }
       notify_expiring_listings: { Args: never; Returns: number }
+      require_moderator: { Args: never; Returns: string }
       set_conversation_archived: {
         Args: { _archived: boolean; _conv_id: string }
         Returns: undefined
@@ -565,6 +746,7 @@ export type Database = {
         | "rejected"
         | "expired"
         | "draft"
+        | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -700,6 +882,7 @@ export const Constants = {
         "rejected",
         "expired",
         "draft",
+        "suspended",
       ],
     },
   },
