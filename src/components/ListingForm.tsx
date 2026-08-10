@@ -511,18 +511,41 @@ export function ListingForm({
               <label className="mb-1.5 block text-sm font-bold">
                 {t("city")} <span className="text-muted-foreground">({t("optional")})</span>
               </label>
-              <Select value={city} onValueChange={setCity} disabled={!prov}>
-                <SelectTrigger className={field}>
-                  <SelectValue placeholder={t("city")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {prov?.cities.map((c) => (
-                    <SelectItem key={c} value={c}>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder={t("city")}
+                list="city-suggestions"
+                autoComplete="off"
+                maxLength={60}
+                className={field}
+              />
+              <datalist id="city-suggestions">
+                {prov?.cities.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+              {!!prov?.cities.length && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {prov.cities.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCity(c)}
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
+                        city === c
+                          ? "border-accent bg-accent text-accent-foreground"
+                          : "border-border bg-background text-muted-foreground hover:border-accent/50",
+                      )}
+                    >
                       {c}
-                    </SelectItem>
+                    </button>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
+
             </div>
           </div>
 
