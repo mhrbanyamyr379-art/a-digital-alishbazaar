@@ -71,13 +71,13 @@ export function AdminListings() {
   const listQuery = useQuery({
     queryKey: ["admin-listings", query, status, category, province, days, sort, page],
     queryFn: async (): Promise<Row[]> => {
-      const since = days ? new Date(Date.now() - Number(days) * 864e5).toISOString() : null;
+      const since = days ? new Date(Date.now() - Number(days) * 864e5).toISOString() : undefined;
       const { data, error } = await supabase.rpc("admin_list_listings", {
-        _search: query || null,
-        _status: status || null,
-        _category: category || null,
-        _province: province || null,
-        _since: since,
+        _search: query || undefined,
+        _status: status || undefined,
+        _category: category || undefined,
+        _province: province || undefined,
+        _since: since ?? undefined,
         _sort: sort,
         _limit: PAGE,
         _offset: page * PAGE,
@@ -92,7 +92,7 @@ export function AdminListings() {
       const { error } = await supabase.rpc("admin_set_listing_status", {
         _listing_id: v.id,
         _status: v.status,
-        _reason: v.reason ?? null,
+        _reason: v.reason ?? undefined,
       });
       if (error) throw error;
     },
