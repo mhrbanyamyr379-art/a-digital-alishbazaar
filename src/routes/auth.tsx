@@ -164,11 +164,8 @@ function AuthPage() {
               {t("continueGoogle")}
             </button>
 
-            <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              <span>{t("or") === "or" ? "" : ""}</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
+            <div className="my-4 h-px bg-border" />
+
 
             <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1">
               <button
