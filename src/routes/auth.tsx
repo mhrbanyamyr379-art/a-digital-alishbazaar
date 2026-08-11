@@ -166,53 +166,156 @@ function AuthPage() {
 
             <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
-              <span>{t("email")}</span>
+              <span>{t("or") === "or" ? "" : ""}</span>
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <form onSubmit={submit} className="flex flex-col gap-3">
-              {mode === "up" && (
+            <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1">
+              <button
+                type="button"
+                onClick={() => setChannel("email")}
+                className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-colors ${
+                  channel === "email" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <Mail className="size-3.5" />
+                {t("emailTab")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setChannel("phone")}
+                className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-colors ${
+                  channel === "phone" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                <PhoneIcon className="size-3.5" />
+                {t("phoneTab")}
+              </button>
+            </div>
+
+            {channel === "email" ? (
+              <>
+                <form onSubmit={submit} className="flex flex-col gap-3">
+                  {mode === "up" && (
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t("displayName")}
+                      className="rounded-lg border border-border bg-background p-3 text-sm"
+                      required
+                    />
+                  )}
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t("email")}
+                    className="rounded-lg border border-border bg-background p-3 text-sm"
+                    required
+                  />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t("password")}
+                    minLength={6}
+                    className="rounded-lg border border-border bg-background p-3 text-sm"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground disabled:opacity-60"
+                  >
+                    {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+                    {mode === "in" ? t("signIn") : t("signUp")}
+                  </button>
+                </form>
+
+                <button
+                  onClick={() => setMode(mode === "in" ? "up" : "in")}
+                  className="mt-4 w-full text-center text-xs font-medium text-muted-foreground"
+                >
+                  {mode === "in" ? `${t("signUp")} →` : `${t("signIn")} →`}
+                </button>
+              </>
+            ) : !sentTo ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void sendOtp(false);
+                }}
+                className="flex flex-col gap-3"
+              >
                 <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t("displayName")}
-                  className="rounded-lg border border-border bg-background p-3 text-sm"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  dir="ltr"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={t("phoneNumber")}
+                  className="rounded-lg border border-border bg-background p-3 text-start text-sm"
                   required
                 />
-              )}
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("email")}
-                className="rounded-lg border border-border bg-background p-3 text-sm"
-                required
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("password")}
-                minLength={6}
-                className="rounded-lg border border-border bg-background p-3 text-sm"
-                required
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground disabled:opacity-60"
-              >
-                {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
-                {mode === "in" ? t("signIn") : t("signUp")}
-              </button>
-            </form>
-
-            <button
-              onClick={() => setMode(mode === "in" ? "up" : "in")}
-              className="mt-4 w-full text-center text-xs font-medium text-muted-foreground"
-            >
-              {mode === "in" ? `${t("signUp")} →` : `${t("signIn")} →`}
-            </button>
+                <p dir="ltr" className="text-start text-[11px] text-muted-foreground">
+                  {t("phoneHint")}
+                </p>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <PhoneIcon className="size-4" />}
+                  {t("sendCode")}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={verifyOtp} className="flex flex-col gap-3">
+                <p className="text-xs text-muted-foreground">
+                  {t("codeSentTo")} <span dir="ltr" className="font-semibold text-foreground">{sentTo}</span>
+                </p>
+                <input
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  dir="ltr"
+                  maxLength={8}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  placeholder={t("enterCode")}
+                  className="rounded-lg border border-border bg-background p-3 text-center text-lg font-bold tracking-[0.4em]"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+                  {t("verifyCode")}
+                </button>
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSentTo(null);
+                      setOtp("");
+                    }}
+                    className="font-medium text-muted-foreground"
+                  >
+                    {t("changeNumber")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={cooldown > 0 || loading}
+                    onClick={() => void sendOtp(true)}
+                    className="font-semibold text-primary disabled:text-muted-foreground"
+                  >
+                    {cooldown > 0 ? `${t("resendIn")} ${cooldown}${t("seconds")}` : t("resendCode")}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
