@@ -35,6 +35,64 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // --- Phone OTP state ---
+  const [channel, setChannel] = useState<"email" | "phone">("email");
+  const [phone, setPhone] = useState("");
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [otp, setOtp] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    timerRef.current = setInterval(() => setCooldown((c) => (c <= 1 ? 0 : c - 1)), 1000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [cooldown > 0]);
+
+  const sendOtp = async (resend = false) => {
+    const e164 = normalizePhone(phone);
+    if (!e164) {
+      toast.error(t("errInvalidPhone"));
+      return;
+    }
+    if (resend && cooldown > 0) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
+      if (error) throw error;
+      setSentTo(e164);
+      setOtp("");
+      setCooldown(60);
+      toast.success(`${t("codeSentTo")} ${e164}`);
+    } catch (err) {
+      toast.error(t(phoneAuthErrorKey(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sentTo) return;
+    const token = otp.replace(/\D/g, "");
+    if (token.length < 4) {
+      toast.error(t("errInvalidOtp"));
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token, type: "sms" });
+      if (error) throw error;
+      goNext();
+    } catch (err) {
+      toast.error(t(phoneAuthErrorKey(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user) goNext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
