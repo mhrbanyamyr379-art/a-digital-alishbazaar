@@ -392,7 +392,7 @@ const T: Dict = {
   signedInWith: { fa: "روش ورود", ps: "د ننوتلو لاره", en: "Signed in with" },
   emailAddress: { fa: "آدرس ایمیل", ps: "د ایمیل پته", en: "Email address" },
   notSet: { fa: "ثبت نشده", ps: "نه دی ټاکل شوی", en: "Not set" },
-  all: { fa: "همه", ps: "ټول", en: "All" },
+  allTab: { fa: "همه", ps: "ټول", en: "All" },
   statusExpired: { fa: "منقضی", ps: "پای ته رسېدلی", en: "Expired" },
   privacyPhoneNote: {
     fa: "شماره تماس شما تنها برای کسانی که با آنها گفتگو دارید یا از طریق دکمه تماس در آگهی نمایش داده می‌شود.",
