@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as AuthenticatedSellRouteImport } from './routes/_authenticated/sell'
+import { Route as AuthenticatedRecentRouteImport } from './routes/_authenticated/recent'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
@@ -105,6 +106,11 @@ const ListingIdRoute = ListingIdRouteImport.update({
 const AuthenticatedSellRoute = AuthenticatedSellRouteImport.update({
   id: '/sell',
   path: '/sell',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRecentRoute = AuthenticatedRecentRouteImport.update({
+  id: '/recent',
+  path: '/recent',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recent': typeof AuthenticatedRecentRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/recent': typeof AuthenticatedRecentRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/recent': typeof AuthenticatedRecentRoute
   '/_authenticated/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/my-listings'
     | '/notifications'
     | '/profile'
+    | '/recent'
     | '/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/my-listings'
     | '/notifications'
     | '/profile'
+    | '/recent'
     | '/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-listings'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
+    | '/_authenticated/recent'
     | '/_authenticated/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -481,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSellRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/recent': {
+      id: '/_authenticated/recent'
+      path: '/recent'
+      fullPath: '/recent'
+      preLoaderRoute: typeof AuthenticatedRecentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -602,6 +621,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedRecentRoute: typeof AuthenticatedRecentRoute
   AuthenticatedSellRoute: typeof AuthenticatedSellRoute
   AuthenticatedEditIdRoute: typeof AuthenticatedEditIdRoute
 }
@@ -613,6 +633,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedRecentRoute: AuthenticatedRecentRoute,
   AuthenticatedSellRoute: AuthenticatedSellRoute,
   AuthenticatedEditIdRoute: AuthenticatedEditIdRoute,
 }
