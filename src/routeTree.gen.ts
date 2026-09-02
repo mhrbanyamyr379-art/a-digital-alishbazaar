@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as AuthenticatedSellRouteImport } from './routes/_authenticated/sell'
+import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedRecentRouteImport } from './routes/_authenticated/recent'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -106,6 +107,11 @@ const ListingIdRoute = ListingIdRouteImport.update({
 const AuthenticatedSellRoute = AuthenticatedSellRouteImport.update({
   id: '/sell',
   path: '/sell',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRecentRoute = AuthenticatedRecentRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recent': typeof AuthenticatedRecentRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recent': typeof AuthenticatedRecentRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recent': typeof AuthenticatedRecentRoute
+  '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/sell': typeof AuthenticatedSellRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/recent'
+    | '/security'
     | '/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/recent'
+    | '/security'
     | '/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/recent'
+    | '/_authenticated/security'
     | '/_authenticated/sell'
     | '/listing/$id'
     | '/seller/$id'
@@ -493,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSellRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/security': {
+      id: '/_authenticated/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/recent': {
       id: '/_authenticated/recent'
       path: '/recent'
@@ -622,6 +641,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecentRoute: typeof AuthenticatedRecentRoute
+  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedSellRoute: typeof AuthenticatedSellRoute
   AuthenticatedEditIdRoute: typeof AuthenticatedEditIdRoute
 }
@@ -634,6 +654,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecentRoute: AuthenticatedRecentRoute,
+  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedSellRoute: AuthenticatedSellRoute,
   AuthenticatedEditIdRoute: AuthenticatedEditIdRoute,
 }
