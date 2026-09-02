@@ -1,26 +1,57 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { LogOut, Pencil, Shield, Clock, Package, Loader2, Trash2, Check, Eye, Heart, RefreshCw } from "lucide-react";
+import {
+  BadgeCheck,
+  Bell,
+  Clock,
+  Globe,
+  HelpCircle,
+  Heart,
+  Info,
+  KeyRound,
+  Loader2,
+  LogOut,
+  MessageCircle,
+  Moon,
+  Package,
+  Pencil,
+  ScrollText,
+  Send,
+  Shield,
+  ShieldCheck,
+  Trash2,
+  UserPen,
+  MessageSquareWarning,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, LANGS } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 import { uploadImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
-import { toLocalDigits, formatPrice } from "@/lib/format";
+import { toLocalDigits } from "@/lib/format";
 import { PROVINCES } from "@/data/provinces";
 import { BottomNav } from "@/components/BottomNav";
 import { BrandTopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AvatarPicker } from "@/components/AvatarPicker";
+import { useUnreadTotal } from "@/hooks/useUnread";
+import { APP_VERSION, TELEGRAM_LINK, TELEGRAM_HANDLE } from "@/lib/app-meta";
+import {
+  SettingsSection,
+  SettingsLink,
+  SettingsButton,
+  SettingsExternal,
+  SettingsStatic,
+  CountBadge,
+} from "@/components/settings/SettingsUI";
 
-import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -32,311 +63,276 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
+  head: () => ({
+    meta: [
+      { title: "My account — Afghan Bazaar" },
+      { name: "description", content: "Manage your Afghan Bazaar account: profile, listings, favorites, notifications, language, theme and support." },
+      { property: "og:title", content: "My account — Afghan Bazaar" },
+      { property: "og:description", content: "Manage your Afghan Bazaar profile, listings and settings." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
 });
 
 function ProfilePage() {
-  const { t, lang, locName } = useI18n();
-  const { user, profile, isAdmin, signOut, refreshProfile } = useAuth();
+  const { t, lang } = useI18n();
+  const { user, profile, isAdmin, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const qc = useQueryClient();
-  const [tab, setTab] = useState<"listings" | "recent">("listings");
   const [editing, setEditing] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { unreadChats } = useUnreadTotal();
 
-  const { data: myListings } = useQuery({
-    queryKey: ["my-listings", user?.id],
+  const { data: counts } = useQuery({
+    queryKey: ["account-counts", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("listings")
-        .select("id,title,price,currency,status,view_count,favorites_count,created_at,expires_at,listing_images(url,position)")
-        .eq("seller_id", user!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      const [listings, favs] = await Promise.all([
+        supabase.from("listings").select("id,status,expires_at").eq("seller_id", user!.id),
+        supabase.from("favorites").select("listing_id", { count: "exact", head: true }).eq("user_id", user!.id),
+      ]);
+      const rows = listings.data ?? [];
+      const expired = (l: { status: string; expires_at: string | null }) =>
+        l.status === "expired" || (l.status === "active" && !!l.expires_at && new Date(l.expires_at) < new Date());
+      return {
+        listings: rows.length,
+        active: rows.filter((l) => l.status === "active" && !expired(l)).length,
+        favorites: favs.count ?? 0,
+      };
     },
   });
 
-  const { data: recent } = useQuery({
-    queryKey: ["recent", user?.id],
-    enabled: !!user && tab === "recent",
-    queryFn: async () => {
-      const { data: rv } = await supabase
-        .from("recently_viewed")
-        .select("listing_id,viewed_at")
-        .eq("user_id", user!.id)
-        .order("viewed_at", { ascending: false })
-        .limit(30);
-      const ids = (rv ?? []).map((r) => r.listing_id);
-      if (!ids.length) return [];
-      const { data } = await supabase
-        .from("listings")
-        .select("id,title,price,currency,listing_images(url,position)")
-        .in("id", ids);
-      return data ?? [];
-    },
-  });
+  const verified = !!(user?.email_confirmed_at || user?.phone_confirmed_at);
+  const themeLabel = theme === "dark" ? t("themeDark") : theme === "system" ? t("themeSystem") : t("themeLight");
+  const langLabel = LANGS.find((l) => l.id === lang)?.native ?? "";
 
-  const setStatus = async (id: string, status: "active" | "sold") => {
-    await supabase.from("listings").update({ status }).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    toast.success(t("saved"));
-  };
-  const renew = async (id: string) => {
-    await supabase
-      .from("listings")
-      .update({
-        status: "active",
-        published_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 30 * 864e5).toISOString(),
-      })
-      .eq("id", id);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    toast.success(t("renewed"));
-  };
-  const remove = async (id: string) => {
-    await supabase.from("listings").delete().eq("id", id);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    toast.success(t("saved"));
-  };
-
-  const isExpired = (l: { status: string; expires_at: string | null }) =>
-    l.status === "expired" || (l.status === "active" && !!l.expires_at && new Date(l.expires_at) < new Date());
-
-  const statusLabel = (l: { status: string; expires_at: string | null }) => {
-    if (isExpired(l)) return t("expired");
-    return t(
-      l.status === "sold"
-        ? "sold"
-        : l.status === "pending"
-          ? "pending"
-          : l.status === "draft"
-            ? "draft"
-            : l.status === "rejected"
-              ? "rejected"
-              : "active",
-    );
-  };
-
-  const firstImg = (imgs: { url: string; position: number }[]) =>
-    (imgs ?? []).sort((a, b) => a.position - b.position)[0]?.url ?? null;
+  const cycleTheme = () => setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light");
 
   return (
     <div className="min-h-screen bg-background pb-32">
       <BrandTopBar right={<LanguageSwitcher />} />
 
-      <div className="bg-primary px-4 pb-6 pt-4 text-primary-foreground">
-        <div className="flex items-center gap-4">
-          <div className="size-16 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/20">
-            {profile?.avatar_url ? (
-              <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
-            ) : (
-              <span className="flex size-full items-center justify-center text-2xl font-black">
-                {profile?.display_name?.[0]?.toUpperCase() ?? "U"}
-              </span>
+      <div className="mx-auto w-full max-w-2xl px-4 py-4">
+        {/* Header card */}
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+            <div className="size-16 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-border">
+              {profile?.avatar_url ? (
+                <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
+              ) : (
+                <span className="flex size-full items-center justify-center text-2xl font-black text-muted-foreground">
+                  {profile?.display_name?.[0]?.toUpperCase() ?? "U"}
+                </span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <h1 className="truncate font-display text-lg font-black">{profile?.display_name ?? "—"}</h1>
+                {verified && <BadgeCheck className="size-4 shrink-0 text-primary" aria-label={t("verified")} />}
+              </div>
+              <p className="truncate text-xs text-muted-foreground">{user?.email ?? (user?.phone ? `+${user.phone}` : "")}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("memberSince")}{" "}
+                {profile ? toLocalDigits(new Date(profile.created_at).getFullYear(), lang) : ""}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => setEditing(true)}
+              className="flex min-h-10 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground"
+            >
+              <Pencil className="size-3.5" />
+              {t("editProfile")}
+            </button>
+            {user && (
+              <Link
+                to="/seller/$id"
+                params={{ id: user.id }}
+                className="flex min-h-10 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-bold"
+              >
+                {t("viewProfile")}
+              </Link>
+            )}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="flex min-h-10 items-center gap-1.5 rounded-lg bg-accent px-3 text-xs font-bold text-accent-foreground"
+              >
+                <Shield className="size-3.5" />
+                {t("admin")}
+              </Link>
             )}
           </div>
-          <div className="flex-1">
-            <h1 className="font-display text-xl font-black">{profile?.display_name}</h1>
-            <p className="text-xs text-primary-foreground/70">
-              {t("memberSince")} {profile ? new Date(profile.created_at).getFullYear() : ""}
-            </p>
-          </div>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            onClick={() => setEditing(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold"
-          >
-            <Pencil className="size-3.5" />
-            {t("editProfile")}
-          </button>
-          {user && (
-            <Link
-              to="/seller/$id"
-              params={{ id: user.id }}
-              className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold"
-            >
-              {t("reviews")}
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to="/admin" className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground">
-              <Shield className="size-3.5" />
-              {t("admin")}
-            </Link>
-          )}
-          <button
+
+        {/* My account */}
+        <SettingsSection title={t("myAccount")}>
+          <SettingsButton icon={UserPen} label={t("editProfile")} onClick={() => setEditing(true)} />
+          <SettingsLink to="/security" icon={KeyRound} label={t("accountSecurity")} />
+          <SettingsLink to="/privacy" icon={ShieldCheck} label={t("privacyItem")} />
+          <SettingsLink to="/notifications" icon={Bell} label={t("notifications")} />
+        </SettingsSection>
+
+        {/* My activity */}
+        <SettingsSection title={t("myActivity")}>
+          <SettingsLink
+            to="/my-listings"
+            icon={Package}
+            label={t("myListings")}
+            badge={<CountBadge count={counts?.listings ?? 0} />}
+          />
+          <SettingsLink
+            to="/favorites"
+            icon={Heart}
+            label={t("favorites")}
+            badge={<CountBadge count={counts?.favorites ?? 0} />}
+          />
+          <SettingsLink to="/recent" icon={Clock} label={t("recentlyViewed")} />
+          <SettingsLink
+            to="/chat"
+            icon={MessageCircle}
+            label={t("chat")}
+            badge={<CountBadge count={unreadChats ?? 0} />}
+          />
+        </SettingsSection>
+
+        {/* Listing management */}
+        <SettingsSection title={t("listingManagement")}>
+          <SettingsLink
+            to="/my-listings"
+            icon={Package}
+            label={t("active")}
+            badge={<CountBadge count={counts?.active ?? 0} />}
+          />
+          <SettingsLink to="/sell" icon={Pencil} label={t("postListing")} />
+        </SettingsSection>
+
+        {/* Help & support */}
+        <SettingsSection title={t("helpSupport")}>
+          <SettingsLink to="/help" icon={HelpCircle} label={t("helpCenter")} />
+          <SettingsLink to="/contact" icon={Send} label={t("contactUs")} />
+          <SettingsExternal href={TELEGRAM_LINK} icon={MessageSquareWarning} label={t("reportProblem")} />
+          <SettingsLink to="/faq" icon={HelpCircle} label={t("faqTitle")} />
+        </SettingsSection>
+
+        {/* Official Telegram */}
+        <SettingsSection>
+          <SettingsExternal
+            href={TELEGRAM_LINK}
+            icon={Send}
+            label={t("telegramOfficial")}
+            value={`@${TELEGRAM_HANDLE}`}
+          />
+        </SettingsSection>
+
+        {/* App & legal */}
+        <SettingsSection title={t("appLegal")}>
+          <div className="border-b border-border px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Globe className="size-[18px] shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 break-words text-sm font-semibold">{t("languageItem")}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">{langLabel}</span>
+              <LanguageSwitcher variant="onLight" />
+            </div>
+          </div>
+          <SettingsButton icon={Moon} label={t("appearance")} value={themeLabel} onClick={cycleTheme} />
+          <SettingsLink to="/about" icon={Info} label={t("aboutApp")} />
+          <SettingsLink to="/terms" icon={ScrollText} label={t("termsOfUse")} />
+          <SettingsLink to="/privacy" icon={ShieldCheck} label={t("privacyPolicy")} />
+          <SettingsStatic icon={Info} label={t("appVersion")} value={APP_VERSION} />
+        </SettingsSection>
+
+        {/* Account actions */}
+        <SettingsSection title={t("accountActions")}>
+          <SettingsButton
+            icon={LogOut}
+            label={t("signOut")}
+            showChevron={false}
             onClick={async () => {
-              await qc.cancelQueries();
-              qc.clear();
               await signOut();
               navigate({ to: "/" });
             }}
-            className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold"
-          >
-            <LogOut className="size-3.5" />
-            {t("signOut")}
-          </button>
+          />
+        </SettingsSection>
+
+        <div className="mt-4 overflow-hidden rounded-2xl border border-destructive/30 bg-destructive/5">
+          <SettingsButton
+            icon={Trash2}
+            label={t("deleteAccount")}
+            danger
+            showChevron={false}
+            onClick={() => setConfirmDelete(true)}
+          />
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-border">
-        <button
-          onClick={() => setTab("listings")}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-bold",
-            tab === "listings" ? "border-b-2 border-accent text-accent" : "text-muted-foreground",
-          )}
-        >
-          <Package className="size-4" />
-          {t("myListings")}
-        </button>
-        <button
-          onClick={() => setTab("recent")}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-bold",
-            tab === "recent" ? "border-b-2 border-accent text-accent" : "text-muted-foreground",
-          )}
-        >
-          <Clock className="size-4" />
-          {t("recentlyViewed")}
-        </button>
-      </div>
-
-      <div className="flex flex-col gap-2 p-3">
-        {tab === "listings" &&
-          myListings?.map((l) => {
-            const expired = isExpired(l);
-            return (
-              <div key={l.id} className="rounded-xl border border-border bg-card p-2">
-                <div className="flex items-center gap-3">
-                  <Link to="/listing/$id" params={{ id: l.id }} className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
-                    {firstImg(l.listing_images) && (
-                      <StorageImage bucket="listings" path={firstImg(l.listing_images)} alt="" className="size-full object-cover" />
-                    )}
-                  </Link>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold">{l.title}</p>
-                    <p className="text-sm font-black text-accent">{formatPrice(Number(l.price), l.currency, lang)}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                      <span
-                        className={cn(
-                          "inline-block rounded px-1.5 py-0.5 text-[10px] font-bold",
-                          expired
-                            ? "bg-destructive/10 text-destructive"
-                            : l.status === "active"
-                              ? "bg-primary/10 text-primary"
-                              : l.status === "draft"
-                                ? "bg-accent/10 text-accent"
-                                : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {statusLabel(l)}
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
-                        <Eye className="size-3" />
-                        {toLocalDigits(l.view_count ?? 0, lang)}
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
-                        <Heart className="size-3" />
-                        {toLocalDigits(l.favorites_count ?? 0, lang)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1.5 border-t border-border pt-2">
-                  <Link
-                    to="/edit/$id"
-                    params={{ id: l.id }}
-                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold"
-                  >
-                    <Pencil className="size-3.5" />
-                    {t("edit")}
-                  </Link>
-                  {l.status === "active" && !expired && (
-                    <button
-                      onClick={() => setStatus(l.id, "sold")}
-                      className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold"
-                    >
-                      <Check className="size-3.5" />
-                      {t("markSold")}
-                    </button>
-                  )}
-                  {(expired || l.status === "sold" || l.status === "draft") && (
-                    <button
-                      onClick={() => renew(l.id)}
-                      className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
-                    >
-                      <RefreshCw className="size-3.5" />
-                      {l.status === "draft" ? t("publishNow") : t("renew")}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setDeleteId(l.id)}
-                    className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary"
-                  >
-                    <Trash2 className="size-3.5" />
-                    {t("delete")}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        {tab === "listings" && myListings && myListings.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">{t("emptyListings")}</p>
-        )}
-
-        {tab === "recent" &&
-          recent?.map((l) => (
-            <Link key={l.id} to="/listing/$id" params={{ id: l.id }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2">
-              <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
-                {firstImg(l.listing_images) && (
-                  <StorageImage bucket="listings" path={firstImg(l.listing_images)} alt="" className="size-full object-cover" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">{l.title}</p>
-                <p className="text-sm font-black text-accent">{formatPrice(Number(l.price), l.currency, lang)}</p>
-              </div>
-            </Link>
-          ))}
-        {tab === "recent" && recent && recent.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">{t("recentlyViewed")}</p>
-        )}
-      </div>
-
-      {editing && <EditProfileDialog onClose={() => setEditing(false)} onSaved={refreshProfile} />}
-      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("confirmDelete")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("confirmDeleteBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteId) remove(deleteId);
-                setDeleteId(null);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {t("delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {editing && <EditProfileDialog onClose={() => setEditing(false)} />}
+      <DeleteAccountDialog open={confirmDelete} onOpenChange={setConfirmDelete} />
       <BottomNav />
-
     </div>
   );
 }
 
-function EditProfileDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => Promise<void> }) {
+function DeleteAccountDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { t } = useI18n();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const run = async () => {
+    setBusy(true);
+    try {
+      const { deleteMyAccount } = await import("@/lib/account.functions");
+      await deleteMyAccount();
+      await signOut();
+      toast.success(t("accountDeleted"));
+      onOpenChange(false);
+      navigate({ to: "/" });
+    } catch {
+      toast.error(t("actionFailed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-destructive">{t("deleteAccount")}</AlertDialogTitle>
+          <AlertDialogDescription className="break-words">{t("deleteAccountBody")}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-semibold text-muted-foreground">{t("deleteAccountConfirmHint")}</label>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="DELETE"
+            className="w-full rounded-lg border border-border bg-background p-3 text-sm"
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setText("")}>{t("cancel")}</AlertDialogCancel>
+          <button
+            disabled={text.trim().toUpperCase() !== "DELETE" || busy}
+            onClick={run}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-destructive px-4 text-sm font-bold text-destructive-foreground disabled:opacity-50"
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            {t("deleteAccount")}
+          </button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function EditProfileDialog({ onClose }: { onClose: () => void }) {
   const { t, locName } = useI18n();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [name, setName] = useState(profile?.display_name ?? "");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState(profile?.bio ?? "");
@@ -344,8 +340,6 @@ function EditProfileDialog({ onClose, onSaved }: { onClose: () => void; onSaved:
   const [avatar, setAvatar] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Phone is no longer returned by the profiles table for authenticated bulk reads;
-  // load the current user's own phone via a security-definer RPC.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -368,7 +362,7 @@ function EditProfileDialog({ onClose, onSaved }: { onClose: () => void; onSaved:
         .update({ display_name: name, phone: phone || null, bio: bio || null, province: province || null, avatar_url })
         .eq("id", user.id);
       if (error) throw error;
-      await onSaved();
+      await refreshProfile();
       toast.success(t("saved"));
       onClose();
     } catch {
@@ -412,7 +406,7 @@ function EditProfileDialog({ onClose, onSaved }: { onClose: () => void; onSaved:
           <button
             onClick={save}
             disabled={saving}
-            className="flex items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground disabled:opacity-60"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-accent text-sm font-bold text-accent-foreground disabled:opacity-60"
           >
             {saving && <Loader2 className="size-4 animate-spin" />}
             {t("save")}
