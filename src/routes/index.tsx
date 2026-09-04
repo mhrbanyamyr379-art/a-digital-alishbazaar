@@ -20,6 +20,7 @@ import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import logoAsset from "@/assets/logo.png.asset.json";
 import {
   Sheet,
   SheetContent,
@@ -197,9 +198,11 @@ function Home() {
       <header className="sticky top-0 z-50 bg-primary text-primary-foreground">
         <div className="flex items-center justify-between gap-4 px-4 pt-3">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-sm bg-accent font-display text-lg font-black text-accent-foreground">
-              A
-            </div>
+            <img
+              src={logoAsset.url}
+              alt={t("appName")}
+              className="size-8 rounded-sm object-cover"
+            />
             <h1 className="font-display text-lg font-black tracking-tight">{t("appName")}</h1>
           </Link>
           <div className="flex items-center gap-2">
