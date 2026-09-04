@@ -36,7 +36,7 @@ export function useUnreadTotal() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel("unread-" + user.id)
+      .channel(`unread-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "conversations" },
@@ -73,7 +73,7 @@ export function useUnreadNotifications() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel("notif-count-" + user.id)
+      .channel(`notif-count-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
