@@ -20,6 +20,7 @@ import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import logoAsset from "@/assets/logo.png.asset.json";
 import {
   Sheet,
   SheetContent,
