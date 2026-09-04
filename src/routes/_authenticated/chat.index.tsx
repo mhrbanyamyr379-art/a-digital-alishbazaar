@@ -98,7 +98,7 @@ function ChatListPage() {
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel("convs-" + user.id)
+      .channel(`convs-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => {
         qc.invalidateQueries({ queryKey: ["conversations", user.id] });
       })
