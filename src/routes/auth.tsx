@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { normalizePhone, phoneAuthErrorKey } from "@/lib/phone";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { next?: string } => {
@@ -142,9 +143,11 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col bg-primary text-primary-foreground">
       <div className="flex items-center justify-between p-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-sm bg-accent font-display text-lg font-black text-accent-foreground">
-            A
-          </div>
+          <img
+            src={logoAsset.url}
+            alt={t("appName")}
+            className="size-8 rounded-sm object-cover"
+          />
           <span className="font-display text-lg font-black">{t("appName")}</span>
         </Link>
         <LanguageSwitcher />
