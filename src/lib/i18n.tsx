@@ -137,6 +137,68 @@ const T: Dict = {
     ps: "د تلیفون شمېرې سره ننوتل لا فعال نه دي",
     en: "Phone sign-in is not enabled yet",
   },
+  // Email/password auth
+  errInvalidCredentials: {
+    fa: "ایمیل یا رمز عبور نادرست است",
+    ps: "بریښنالیک یا پټنوم ناسم دی",
+    en: "Incorrect email or password",
+  },
+  errEmailNotConfirmed: {
+    fa: "ایمیل شما هنوز تایید نشده است. لینک تایید را در ایمیل خود باز کنید",
+    ps: "ستاسو بریښنالیک لا تایید شوی نه دی. په بریښنالیک کې د تایید لینک پرانیزئ",
+    en: "Your email isn't verified yet — open the verification link we sent you",
+  },
+  errEmailExists: {
+    fa: "این ایمیل قبلاً ثبت شده است. وارد شوید یا با گوگل ادامه دهید",
+    ps: "دا بریښنالیک مخکې ثبت شوی. ننوځئ یا له ګوګل سره دوام ورکړئ",
+    en: "This email is already registered — sign in or continue with Google",
+  },
+  errWeakPassword: {
+    fa: "رمز عبور باید حداقل ۶ کاراکتر باشد",
+    ps: "پټنوم باید لږ تر لږه ۶ توري ولري",
+    en: "Password must be at least 6 characters",
+  },
+  errInvalidEmail: {
+    fa: "آدرس ایمیل معتبر نیست",
+    ps: "د بریښنالیک پته سمه نه ده",
+    en: "That email address doesn't look valid",
+  },
+  errTooManyRequests: {
+    fa: "درخواست‌های زیاد. چند دقیقه بعد تلاش کنید",
+    ps: "ډېرې غوښتنې. څو دقیقې وروسته هڅه وکړئ",
+    en: "Too many attempts — please try again in a few minutes",
+  },
+  checkInboxTitle: {
+    fa: "ایمیل خود را بررسی کنید",
+    ps: "خپل بریښنالیک وګورئ",
+    en: "Check your inbox",
+  },
+  checkInboxBody: {
+    fa: "برای فعال‌سازی حساب، لینک تایید ارسال‌شده به این ایمیل را باز کنید:",
+    ps: "د حساب فعالولو لپاره، دې بریښنالیک ته لېږل شوی د تایید لینک پرانیزئ:",
+    en: "Open the verification link we sent to this address to activate your account:",
+  },
+  resendEmail: {
+    fa: "ارسال دوباره ایمیل تایید",
+    ps: "د تایید بریښنالیک بیا ولېږئ",
+    en: "Resend verification email",
+  },
+  emailResent: {
+    fa: "ایمیل تایید دوباره ارسال شد",
+    ps: "د تایید بریښنالیک بیا ولېږل شو",
+    en: "Verification email sent again",
+  },
+  backToSignIn: {
+    fa: "بازگشت به ورود",
+    ps: "ننوتلو ته بېرته",
+    en: "Back to sign in",
+  },
+  signInSuccess: {
+    fa: "خوش آمدید",
+    ps: "ښه راغلاست",
+    en: "Welcome back",
+  },
+
   // Listing system upgrade
   next: { fa: "بعدی", ps: "بل", en: "Next" },
   back: { fa: "قبلی", ps: "شاته", en: "Back" },
