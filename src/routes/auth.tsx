@@ -104,7 +104,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "up") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -113,19 +113,58 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success(t("saved"));
-        goNext();
+
+        // Supabase hides "already registered" behind a fake user with no identities.
+        if (data.user && (data.user.identities?.length ?? 0) === 0) {
+          toast.error(t("errEmailExists"));
+          setMode("in");
+          return;
+        }
+
+        if (data.session) {
+          // Confirmation not required — the user is signed in already.
+          toast.success(t("signInSuccess"));
+          goNext();
+          return;
+        }
+
+        // Confirmation required: no session yet, so do NOT claim they are in.
+        setPendingEmail(email);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (!data.session) throw new Error("no session");
         goNext();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("errorTitle"));
+      const key = authErrorKey(err);
+      if (key === "errEmailNotConfirmed") setPendingEmail(email);
+      toast.error(t(key));
     } finally {
       setLoading(false);
     }
   };
+
+  const resendConfirmation = async () => {
+    if (!pendingEmail) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: pendingEmail,
+        options: {
+          emailRedirectTo: next ? `${window.location.origin}${next}` : window.location.origin,
+        },
+      });
+      if (error) throw error;
+      toast.success(t("emailResent"));
+    } catch (err) {
+      toast.error(t(authErrorKey(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const google = async () => {
     const result = await lovable.auth.signInWithOAuth("google", {
