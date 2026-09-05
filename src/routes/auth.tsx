@@ -8,6 +8,8 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { normalizePhone, phoneAuthErrorKey } from "@/lib/phone";
+import { authErrorKey } from "@/lib/auth-errors";
+
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import logoAsset from "@/assets/logo.png.asset.json";
 
@@ -35,6 +37,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
 
   // --- Phone OTP state ---
   const [channel, setChannel] = useState<"email" | "phone">("email");
