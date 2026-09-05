@@ -236,8 +236,38 @@ function AuthPage() {
               </button>
             </div>
 
-            {channel === "email" ? (
+            {channel === "email" && pendingEmail ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm font-bold">{t("checkInboxTitle")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("checkInboxBody")}{" "}
+                  <span dir="ltr" className="font-semibold text-foreground">
+                    {pendingEmail}
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => void resendConfirmation()}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
+                  {t("resendEmail")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingEmail(null);
+                    setMode("in");
+                  }}
+                  className="text-center text-xs font-medium text-muted-foreground"
+                >
+                  {t("backToSignIn")}
+                </button>
+              </div>
+            ) : channel === "email" ? (
               <>
+
                 <form onSubmit={submit} className="flex flex-col gap-3">
                   {mode === "up" && (
                     <input
