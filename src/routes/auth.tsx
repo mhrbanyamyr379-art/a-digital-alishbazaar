@@ -8,6 +8,8 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { normalizePhone, phoneAuthErrorKey } from "@/lib/phone";
+import { authErrorKey } from "@/lib/auth-errors";
+
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import logoAsset from "@/assets/logo.png.asset.json";
 
@@ -35,6 +37,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
 
   // --- Phone OTP state ---
   const [channel, setChannel] = useState<"email" | "phone">("email");
@@ -104,7 +108,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "up") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -113,19 +117,58 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success(t("saved"));
-        goNext();
+
+        // Supabase hides "already registered" behind a fake user with no identities.
+        if (data.user && (data.user.identities?.length ?? 0) === 0) {
+          toast.error(t("errEmailExists"));
+          setMode("in");
+          return;
+        }
+
+        if (data.session) {
+          // Confirmation not required — the user is signed in already.
+          toast.success(t("signInSuccess"));
+          goNext();
+          return;
+        }
+
+        // Confirmation required: no session yet, so do NOT claim they are in.
+        setPendingEmail(email);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (!data.session) throw new Error("no session");
         goNext();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("errorTitle"));
+      const key = authErrorKey(err);
+      if (key === "errEmailNotConfirmed") setPendingEmail(email);
+      toast.error(t(key));
     } finally {
       setLoading(false);
     }
   };
+
+  const resendConfirmation = async () => {
+    if (!pendingEmail) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: pendingEmail,
+        options: {
+          emailRedirectTo: next ? `${window.location.origin}${next}` : window.location.origin,
+        },
+      });
+      if (error) throw error;
+      toast.success(t("emailResent"));
+    } catch (err) {
+      toast.error(t(authErrorKey(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const google = async () => {
     const result = await lovable.auth.signInWithOAuth("google", {
@@ -193,8 +236,38 @@ function AuthPage() {
               </button>
             </div>
 
-            {channel === "email" ? (
+            {channel === "email" && pendingEmail ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm font-bold">{t("checkInboxTitle")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("checkInboxBody")}{" "}
+                  <span dir="ltr" className="font-semibold text-foreground">
+                    {pendingEmail}
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => void resendConfirmation()}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
+                  {t("resendEmail")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingEmail(null);
+                    setMode("in");
+                  }}
+                  className="text-center text-xs font-medium text-muted-foreground"
+                >
+                  {t("backToSignIn")}
+                </button>
+              </div>
+            ) : channel === "email" ? (
               <>
+
                 <form onSubmit={submit} className="flex flex-col gap-3">
                   {mode === "up" && (
                     <input
