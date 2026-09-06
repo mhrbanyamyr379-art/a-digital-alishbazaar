@@ -17,6 +17,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
+import { dbErrorKey } from "@/lib/db-errors";
+
 import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
 import { PROVINCES, provinceById } from "@/data/provinces";
 import { uploadImage } from "@/lib/storage";
