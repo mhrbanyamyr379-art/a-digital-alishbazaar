@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
+import { dbErrorKey } from "@/lib/db-errors";
+
 
 /**
  * Opens (or creates exactly once) the conversation between the signed-in buyer
@@ -40,7 +42,8 @@ export function useStartChat() {
       await qc.invalidateQueries({ queryKey: ["conversations", user.id] });
       navigate({ to: "/chat/$id", params: { id: convId } });
     } catch (err) {
-      toast.error(err instanceof Error && err.message ? err.message : t("errorTitle"));
+      toast.error(t(dbErrorKey(err)));
+
     } finally {
       setStarting(false);
     }

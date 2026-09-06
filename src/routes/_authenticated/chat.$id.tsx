@@ -356,7 +356,8 @@ function ChatThread() {
         setUploading(false);
         setPending((cur) => cur.map((x) => (x.tempId === p.tempId ? { ...x, status: "failed" } : x)));
         const msg = err instanceof Error ? err.message : "";
-        toast.error(msg === "blocked" ? t("cannotSendBlocked") : msg || t("failedToSend"));
+        toast.error(msg === "blocked" ? t("cannotSendBlocked") : t("failedToSend"));
+
       }
     },
     [id, qc, t, user],
