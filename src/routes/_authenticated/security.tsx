@@ -43,9 +43,10 @@ function SecurityPage() {
     const { error } = await supabase.auth.updateUser({ password: pw });
     setSaving(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(t(authErrorKey(error)));
       return;
     }
+
     setPw("");
     toast.success(t("passwordUpdated"));
   };

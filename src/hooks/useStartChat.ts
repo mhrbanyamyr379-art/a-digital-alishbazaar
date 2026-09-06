@@ -40,7 +40,8 @@ export function useStartChat() {
       await qc.invalidateQueries({ queryKey: ["conversations", user.id] });
       navigate({ to: "/chat/$id", params: { id: convId } });
     } catch (err) {
-      toast.error(err instanceof Error && err.message ? err.message : t("errorTitle"));
+      toast.error(t(dbErrorKey(err)));
+
     } finally {
       setStarting(false);
     }

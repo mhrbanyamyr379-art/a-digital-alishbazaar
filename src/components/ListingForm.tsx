@@ -223,7 +223,7 @@ export function ListingForm({
       toast.success(status === "draft" ? t("draftSaved") : mode === "edit" ? t("listingUpdated") : t("listingPublished"));
       navigate({ to: "/listing/$id", params: { id: listingId! } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("errorTitle"));
+      toast.error(t(dbErrorKey(err)));
     } finally {
       setSaving(false);
     }
