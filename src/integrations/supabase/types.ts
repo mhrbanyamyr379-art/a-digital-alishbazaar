@@ -204,6 +204,7 @@ export type Database = {
           rejection_reason: string | null
           seller_id: string
           status: Database["public"]["Enums"]["listing_status"]
+          subcategory: string | null
           tags: string[]
           title: string
           updated_at: string
@@ -230,6 +231,7 @@ export type Database = {
           rejection_reason?: string | null
           seller_id: string
           status?: Database["public"]["Enums"]["listing_status"]
+          subcategory?: string | null
           tags?: string[]
           title: string
           updated_at?: string
@@ -256,12 +258,21 @@ export type Database = {
           rejection_reason?: string | null
           seller_id?: string
           status?: Database["public"]["Enums"]["listing_status"]
+          subcategory?: string | null
           tags?: string[]
           title?: string
           updated_at?: string
           view_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_subcategory_fkey"
+            columns: ["category", "subcategory"]
+            isOneToOne: false
+            referencedRelation: "subcategories"
+            referencedColumns: ["category", "id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -550,6 +561,27 @@ export type Database = {
           rating?: number
           reviewer_id?: string
           seller_id?: string
+        }
+        Relationships: []
+      }
+      subcategories: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          position: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id: string
+          position?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          position?: number
         }
         Relationships: []
       }
