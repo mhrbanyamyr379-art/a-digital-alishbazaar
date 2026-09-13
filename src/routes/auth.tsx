@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Loader2, Phone as PhoneIcon, Mail } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2, Phone as PhoneIcon, Mail } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -24,7 +24,9 @@ export const Route = createFileRoute("/auth")({
 
 
 function AuthPage() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
+  const router = useRouter();
+  const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
   const { user } = useAuth();
   const navigate = useNavigate();
   const { next } = Route.useSearch();
@@ -185,14 +187,23 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col bg-primary text-primary-foreground">
       <div className="flex items-center justify-between p-4">
-        <Link to="/" className="flex items-center gap-2">
-          <img
-            src={logoAsset.url}
-            alt={t("appName")}
-            className="size-8 rounded-sm object-cover"
-          />
-          <span className="font-display text-lg font-black">{t("appName")}</span>
-        </Link>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => router.history.back()}
+            aria-label={t("back")}
+            className="flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+          >
+            <BackIcon className="size-5" />
+          </button>
+          <Link to="/" className="flex items-center gap-2">
+            <img
+              src={logoAsset.url}
+              alt={t("appName")}
+              className="size-8 rounded-sm object-cover"
+            />
+            <span className="font-display text-lg font-black">{t("appName")}</span>
+          </Link>
+        </div>
         <LanguageSwitcher />
       </div>
 
