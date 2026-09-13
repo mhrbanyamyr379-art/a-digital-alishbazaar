@@ -240,7 +240,16 @@ function MyListingsPage() {
                     {t("markSold")}
                   </button>
                 )}
-                {(expired || l.status === "sold" || l.status === "draft") && (
+                {l.status === "sold" && !expired && (
+                  <button
+                    onClick={() => setStatus(l.id, "active")}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
+                  >
+                    <RefreshCw className="size-3.5" />
+                    {t("markActive")}
+                  </button>
+                )}
+                {(expired || (l.status === "sold" && expired) || l.status === "draft") && (
                   <button
                     onClick={() => renew(l.id)}
                     className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
@@ -249,6 +258,7 @@ function MyListingsPage() {
                     {l.status === "draft" ? t("publishNow") : t("renew")}
                   </button>
                 )}
+
                 <button
                   onClick={() => setDeleteId(l.id)}
                   className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary"
