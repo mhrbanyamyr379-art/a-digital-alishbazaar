@@ -382,18 +382,27 @@ function ListingDetail() {
         </div>
       )}
 
-      {/* Sticky contact — Chat is always available */}
-      {user?.id !== l.seller_id && (
+      {/* Sticky contact — Chat stays available; sold listings say so first */}
+      {!isOwner && (
         <div className="fixed bottom-0 left-0 z-40 w-full border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          {isSold && (
+            <p className="mb-2 rounded-md bg-destructive/10 px-2 py-1.5 text-center text-[11px] font-bold text-destructive">
+              {t("soldNotice")}
+            </p>
+          )}
           <div className="flex items-center gap-2">
             <button
               onClick={() => startChat({ sellerId: l.seller_id, listingId: l.id })}
               disabled={starting}
-              className="flex flex-[2] items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground transition-transform active:scale-[0.98] disabled:opacity-60"
+              className={cn(
+                "flex flex-[2] items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-transform active:scale-[0.98] disabled:opacity-60",
+                isSold ? "bg-secondary text-foreground" : "bg-accent text-accent-foreground",
+              )}
             >
               {starting ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
               {t("chat")}
             </button>
+
             <ContactAction
               label={t("call")}
               icon={<Phone className="size-4" />}
