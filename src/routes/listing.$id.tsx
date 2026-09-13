@@ -59,12 +59,36 @@ function ListingDetail() {
   const navigate = useNavigate();
   const { startChat, starting } = useStartChat();
   const [active, setActive] = useState(0);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const qc = useQueryClient();
 
 
   const { data: l, isLoading, isError, refetch } = useQuery({
     queryKey: ["listing", id],
     queryFn: () => fetchListing(id),
   });
+
+  /** Flip between active and sold. Guarded so a stale UI can never write the same status twice. */
+  const setStatus = async (next: "active" | "sold") => {
+    if (!user || savingStatus || !l || l.status === next) return;
+    setSavingStatus(true);
+    const { error } = await supabase
+      .from("listings")
+      .update({ status: next })
+      .eq("id", id)
+      .eq("seller_id", user.id)
+      .neq("status", next);
+    setSavingStatus(false);
+    if (error) {
+      toast.error(t(dbErrorKey(error)));
+      return;
+    }
+    toast.success(t(next === "sold" ? "markSold" : "markActive"));
+    await refetch();
+    qc.invalidateQueries({ queryKey: ["my-listings", user.id] });
+    qc.invalidateQueries({ queryKey: ["seller-listings", l.seller_id] });
+  };
+
 
   const { data: favIds } = useFavoriteIds();
   const toggleFav = useToggleFavorite();
