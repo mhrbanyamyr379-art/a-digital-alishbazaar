@@ -73,6 +73,17 @@ const T: Dict = {
   markSold: { fa: "فروخته شد", ps: "پلورل شوی", en: "Mark as sold" },
   active: { fa: "فعال", ps: "فعال", en: "Active" },
   sold: { fa: "فروخته شده", ps: "پلورل شوی", en: "Sold" },
+  soldNotice: {
+    fa: "این آگهی فروخته شده و دیگر در دسترس نیست",
+    ps: "دا اعلان پلورل شوی او نور شتون نلري",
+    en: "This item has been sold and is no longer available",
+  },
+  soldByYou: {
+    fa: "این آگهی را فروخته شده علامت زده‌اید",
+    ps: "تاسو دا اعلان پلورل شوی نښه کړی",
+    en: "You marked this listing as sold",
+  },
+
   pending: { fa: "در انتظار", ps: "په تمه", en: "Pending" },
   emptyListings: { fa: "هیچ آگهی یافت نشد", ps: "هیڅ اعلان ونه موندل شو", en: "No listings found" },
   emptyFavorites: { fa: "هنوز موردی نشانه نکرده‌اید", ps: "تر اوسه مو څه نه دي خوښ کړي", en: "No saved items yet" },
