@@ -143,10 +143,13 @@ function ListingDetail() {
   const imgs = ((l.listing_images ?? []) as { id: string; url: string; position: number }[]).sort(
     (a, b) => a.position - b.position,
   );
+  const isSold = l.status === "sold";
+  const isOwner = user?.id === l.seller_id;
   const prov = provinceById(l.province);
   const cat = categoryById(l.category);
   const sub = subcategoryById(l.category, l.subcategory);
   const cond = CONDITIONS.find((c) => c.id === l.condition);
+
   const seller = l.seller as {
     id: string;
     display_name: string;
