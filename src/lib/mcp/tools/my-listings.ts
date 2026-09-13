@@ -15,7 +15,7 @@ export default defineTool({
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     let q = supabaseForUser(ctx)
       .from("listings")
-      .select("id, title, price, currency, category, province, status, view_count, favorites_count, created_at")
+      .select("id, title, price, currency, category, subcategory, province, status, view_count, favorites_count, created_at")
       .eq("seller_id", ctx.getUserId()!)
       .order("created_at", { ascending: false })
       .limit(limit ?? 20);
