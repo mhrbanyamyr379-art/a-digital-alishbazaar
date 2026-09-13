@@ -443,6 +443,21 @@ function SellerPage() {
         )}
       </section>
 
+      {/* Sold history — kept visible so buyers can see the seller's track record */}
+      {soldListings.length > 0 && (
+        <section className="px-4 pt-6">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            {t("soldListings")} · {toLocalDigits(soldListings.length, lang)}
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {soldListings.map((l, i) => (
+              <ListingCard key={l.id} listing={l} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
+
+
       {/* Reviews */}
       <section className="px-4 pt-6">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
