@@ -273,16 +273,36 @@ function ListingDetail() {
           ))}
         </div>
 
-        {user?.id === l.seller_id && (
-          <Link
-            to="/edit/$id"
-            params={{ id: l.id }}
-            className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold"
-          >
-            <Pencil className="size-4" />
-            {t("edit")}
-          </Link>
+        {isSold && (
+          <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
+            {isOwner ? t("soldByYou") : t("soldNotice")}
+          </div>
         )}
+
+        {isOwner && (
+          <div className="mt-4 flex gap-2">
+            <Link
+              to="/edit/$id"
+              params={{ id: l.id }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold"
+            >
+              <Pencil className="size-4" />
+              {t("edit")}
+            </Link>
+            {(l.status === "active" || isSold) && (
+              <button
+                type="button"
+                onClick={() => setStatus(isSold ? "active" : "sold")}
+                disabled={savingStatus}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold text-primary disabled:opacity-60"
+              >
+                {savingStatus ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                {isSold ? t("markActive") : t("markSold")}
+              </button>
+            )}
+          </div>
+        )}
+
 
         {l.description && (
           <div className="mt-5">
