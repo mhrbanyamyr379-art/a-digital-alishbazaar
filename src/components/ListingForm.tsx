@@ -629,7 +629,7 @@ export function ListingForm({
             <div className="font-display text-xl font-black">{formatPrice(Number(price) || 0, currency, lang)}</div>
             <h3 className="mt-1 font-bold">{title || "—"}</h3>
             <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <p>{cat ? locName(cat) : "—"}{condition ? ` · ${locName(CONDITIONS.find((c) => c.id === condition)!)}` : ""}</p>
+              <p>{cat ? locName(cat) : "—"}{subcategoryById(category, subcategory) ? ` · ${locName(subcategoryById(category, subcategory)!)}` : ""}{condition ? ` · ${locName(CONDITIONS.find((c) => c.id === condition)!)}` : ""}</p>
               <p>{prov ? locName(prov) : "—"}{city ? ` · ${city}` : ""}</p>
               <p>{t("contactMethod")}: {t(contactMethod === "both" ? "both" : contactMethod === "call" ? "callOnly" : "chatOnly")}</p>
               <p>{images.length} {t("photos")}</p>
