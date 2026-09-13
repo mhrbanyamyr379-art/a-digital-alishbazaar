@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, Pencil } from "lucide-react";
+import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, Pencil, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { dbErrorKey } from "@/lib/db-errors";
 import { formatPrice, timeAgo, toLocalDigits } from "@/lib/format";
 import { StorageImage } from "@/components/StorageImage";
 import { provinceById } from "@/data/provinces";
@@ -17,6 +18,7 @@ import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { ListingCard } from "@/components/ListingCard";
 import { useStartChat } from "@/hooks/useStartChat";
 import { cn } from "@/lib/utils";
+
 
 import {
   Dialog,
@@ -59,12 +61,36 @@ function ListingDetail() {
   const navigate = useNavigate();
   const { startChat, starting } = useStartChat();
   const [active, setActive] = useState(0);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const qc = useQueryClient();
 
 
   const { data: l, isLoading, isError, refetch } = useQuery({
     queryKey: ["listing", id],
     queryFn: () => fetchListing(id),
   });
+
+  /** Flip between active and sold. Guarded so a stale UI can never write the same status twice. */
+  const setStatus = async (next: "active" | "sold") => {
+    if (!user || savingStatus || !l || l.status === next) return;
+    setSavingStatus(true);
+    const { error } = await supabase
+      .from("listings")
+      .update({ status: next })
+      .eq("id", id)
+      .eq("seller_id", user.id)
+      .neq("status", next);
+    setSavingStatus(false);
+    if (error) {
+      toast.error(t(dbErrorKey(error)));
+      return;
+    }
+    toast.success(t(next === "sold" ? "markSold" : "markActive"));
+    await refetch();
+    qc.invalidateQueries({ queryKey: ["my-listings", user.id] });
+    qc.invalidateQueries({ queryKey: ["seller-listings", l.seller_id] });
+  };
+
 
   const { data: favIds } = useFavoriteIds();
   const toggleFav = useToggleFavorite();
@@ -143,10 +169,13 @@ function ListingDetail() {
   const imgs = ((l.listing_images ?? []) as { id: string; url: string; position: number }[]).sort(
     (a, b) => a.position - b.position,
   );
+  const isSold = l.status === "sold";
+  const isOwner = user?.id === l.seller_id;
   const prov = provinceById(l.province);
   const cat = categoryById(l.category);
   const sub = subcategoryById(l.category, l.subcategory);
   const cond = CONDITIONS.find((c) => c.id === l.condition);
+
   const seller = l.seller as {
     id: string;
     display_name: string;
@@ -273,16 +302,36 @@ function ListingDetail() {
           ))}
         </div>
 
-        {user?.id === l.seller_id && (
-          <Link
-            to="/edit/$id"
-            params={{ id: l.id }}
-            className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold"
-          >
-            <Pencil className="size-4" />
-            {t("edit")}
-          </Link>
+        {isSold && (
+          <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
+            {isOwner ? t("soldByYou") : t("soldNotice")}
+          </div>
         )}
+
+        {isOwner && (
+          <div className="mt-4 flex gap-2">
+            <Link
+              to="/edit/$id"
+              params={{ id: l.id }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold"
+            >
+              <Pencil className="size-4" />
+              {t("edit")}
+            </Link>
+            {(l.status === "active" || isSold) && (
+              <button
+                type="button"
+                onClick={() => setStatus(isSold ? "active" : "sold")}
+                disabled={savingStatus}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-sm font-bold text-primary disabled:opacity-60"
+              >
+                {savingStatus ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                {isSold ? t("markActive") : t("markSold")}
+              </button>
+            )}
+          </div>
+        )}
+
 
         {l.description && (
           <div className="mt-5">
@@ -333,18 +382,27 @@ function ListingDetail() {
         </div>
       )}
 
-      {/* Sticky contact — Chat is always available */}
-      {user?.id !== l.seller_id && (
+      {/* Sticky contact — Chat stays available; sold listings say so first */}
+      {!isOwner && (
         <div className="fixed bottom-0 left-0 z-40 w-full border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          {isSold && (
+            <p className="mb-2 rounded-md bg-destructive/10 px-2 py-1.5 text-center text-[11px] font-bold text-destructive">
+              {t("soldNotice")}
+            </p>
+          )}
           <div className="flex items-center gap-2">
             <button
               onClick={() => startChat({ sellerId: l.seller_id, listingId: l.id })}
               disabled={starting}
-              className="flex flex-[2] items-center justify-center gap-2 rounded-lg bg-accent py-3 text-sm font-bold text-accent-foreground transition-transform active:scale-[0.98] disabled:opacity-60"
+              className={cn(
+                "flex flex-[2] items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-transform active:scale-[0.98] disabled:opacity-60",
+                isSold ? "bg-secondary text-foreground" : "bg-accent text-accent-foreground",
+              )}
             >
               {starting ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
               {t("chat")}
             </button>
+
             <ContactAction
               label={t("call")}
               icon={<Phone className="size-4" />}

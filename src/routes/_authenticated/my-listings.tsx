@@ -104,9 +104,18 @@ function MyListingsPage() {
   ];
 
   const setStatus = async (id: string, status: "active" | "sold") => {
-    await supabase.from("listings").update({ status }).eq("id", id);
+    const current = rows.find((l) => l.id === id);
+    if (!current || current.status === status) return;
+    const { error } = await supabase
+      .from("listings")
+      .update({ status })
+      .eq("id", id)
+      .eq("seller_id", user!.id)
+      .neq("status", status);
     qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    toast.success(t("saved"));
+    qc.invalidateQueries({ queryKey: ["listing", id] });
+    if (error) toast.error(t("errorTitle"));
+    else toast.success(t(status === "sold" ? "markSold" : "markActive"));
   };
   const renew = async (id: string) => {
     await supabase
@@ -118,6 +127,7 @@ function MyListingsPage() {
       })
       .eq("id", id);
     qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
+    qc.invalidateQueries({ queryKey: ["listing", id] });
     toast.success(t("renewed"));
   };
   const remove = async (id: string) => {
@@ -125,6 +135,7 @@ function MyListingsPage() {
     qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
     toast.success(t("saved"));
   };
+
 
   const statusLabel = (l: Row) => {
     if (isExpired(l)) return t("statusExpired");
@@ -229,7 +240,16 @@ function MyListingsPage() {
                     {t("markSold")}
                   </button>
                 )}
-                {(expired || l.status === "sold" || l.status === "draft") && (
+                {l.status === "sold" && !expired && (
+                  <button
+                    onClick={() => setStatus(l.id, "active")}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
+                  >
+                    <RefreshCw className="size-3.5" />
+                    {t("markActive")}
+                  </button>
+                )}
+                {(expired || l.status === "draft") && (
                   <button
                     onClick={() => renew(l.id)}
                     className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
@@ -238,6 +258,7 @@ function MyListingsPage() {
                     {l.status === "draft" ? t("publishNow") : t("renew")}
                   </button>
                 )}
+
                 <button
                   onClick={() => setDeleteId(l.id)}
                   className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary"

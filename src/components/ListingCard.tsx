@@ -16,6 +16,7 @@ export interface ListingCardData {
   created_at: string;
   image?: string | null;
   is_featured?: boolean;
+  status?: string | null;
 }
 
 export function ListingCard({
@@ -31,6 +32,7 @@ export function ListingCard({
 }) {
   const { lang, locName, t } = useI18n();
   const prov = provinceById(listing.province);
+  const isSold = listing.status === "sold";
 
   return (
     <Link
@@ -45,9 +47,17 @@ export function ListingCard({
           path={listing.image}
           alt={listing.title}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className={cn(
+            "h-full w-full object-cover transition-transform duration-300 group-hover:scale-105",
+            isSold && "opacity-50 grayscale",
+          )}
         />
-        {listing.is_featured && (
+        {isSold && (
+          <span className="absolute inset-x-0 bottom-0 bg-destructive/90 py-1 text-center text-[11px] font-black uppercase tracking-wide text-destructive-foreground">
+            {t("sold")}
+          </span>
+        )}
+        {listing.is_featured && !isSold && (
           <span className="absolute top-2 end-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-sm">
             ★
           </span>
@@ -66,6 +76,7 @@ export function ListingCard({
           </button>
         )}
       </div>
+
       <div className="flex flex-1 flex-col gap-1 p-3">
         <div className="flex items-baseline gap-1.5">
           <span className="font-display text-base font-black leading-none tracking-tight">
