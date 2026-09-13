@@ -249,7 +249,7 @@ function MyListingsPage() {
                     {t("markActive")}
                   </button>
                 )}
-                {(expired || (l.status === "sold" && expired) || l.status === "draft") && (
+                {(expired || l.status === "draft") && (
                   <button
                     onClick={() => renew(l.id)}
                     className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
