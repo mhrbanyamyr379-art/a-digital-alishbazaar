@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, Pencil } from "lucide-react";
+import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, Pencil, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { dbErrorKey } from "@/lib/db-errors";
 import { formatPrice, timeAgo, toLocalDigits } from "@/lib/format";
 import { StorageImage } from "@/components/StorageImage";
 import { provinceById } from "@/data/provinces";
@@ -17,6 +18,7 @@ import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { ListingCard } from "@/components/ListingCard";
 import { useStartChat } from "@/hooks/useStartChat";
 import { cn } from "@/lib/utils";
+
 
 import {
   Dialog,
