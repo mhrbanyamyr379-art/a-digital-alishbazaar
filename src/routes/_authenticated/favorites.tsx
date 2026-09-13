@@ -34,6 +34,7 @@ function mapRow(l: {
   city: string | null;
   created_at: string;
   is_featured: boolean;
+  status?: string | null;
   listing_images: { url: string; position: number }[];
 }): ListingCardData {
   const first = (l.listing_images ?? []).sort((a, b) => a.position - b.position)[0];
@@ -46,6 +47,7 @@ function mapRow(l: {
     city: l.city,
     created_at: l.created_at,
     is_featured: l.is_featured,
+    status: l.status ?? null,
     image: first?.url ?? null,
   };
 }
@@ -72,7 +74,7 @@ function FavoritesPage() {
 
       const { data: rows, error: rowErr } = await supabase
         .from("listings")
-        .select("id,title,price,currency,province,city,created_at,is_featured,listing_images(url,position)")
+        .select("id,title,price,currency,province,city,created_at,is_featured,status,listing_images(url,position)")
         .in("id", ids);
       if (rowErr) throw rowErr;
 
