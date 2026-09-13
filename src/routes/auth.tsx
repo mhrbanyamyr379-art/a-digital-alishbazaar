@@ -24,7 +24,9 @@ export const Route = createFileRoute("/auth")({
 
 
 function AuthPage() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
+  const router = useRouter();
+  const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
   const { user } = useAuth();
   const navigate = useNavigate();
   const { next } = Route.useSearch();
