@@ -37,6 +37,10 @@
               "description": "Category slug filter.",
               "type": "string"
             },
+            "subcategory": {
+              "description": "Subcategory slug filter (belongs to the category).",
+              "type": "string"
+            },
             "province": {
               "description": "Province filter.",
               "type": "string"
@@ -157,6 +161,10 @@
             "category": {
               "type": "string",
               "minLength": 1
+            },
+            "subcategory": {
+              "description": "Subcategory slug that belongs to the category.",
+              "type": "string"
             },
             "province": {
               "type": "string",

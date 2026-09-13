@@ -12,6 +12,7 @@ export default defineTool({
     price: z.number().nonnegative().default(0),
     currency: z.enum(["AFN", "USD"]).default("AFN"),
     category: z.string().trim().min(1),
+    subcategory: z.string().trim().optional().describe("Subcategory slug that belongs to the category."),
     province: z.string().trim().min(1),
     city: z.string().trim().optional(),
     condition: z.enum(["new", "used"]).optional(),

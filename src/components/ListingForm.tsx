@@ -20,6 +20,7 @@ import { useI18n } from "@/lib/i18n";
 import { dbErrorKey } from "@/lib/db-errors";
 
 import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
+import { subcategoriesFor, subcategoryById } from "@/data/subcategories";
 import { PROVINCES, provinceById } from "@/data/provinces";
 import { uploadImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
@@ -54,6 +55,7 @@ export interface ListingFormInitial {
   currency: string;
   negotiable: boolean;
   category: string;
+  subcategory: string;
   condition: string;
   province: string;
   city: string;
@@ -81,6 +83,7 @@ export function ListingForm({
   const [currency, setCurrency] = useState(initial?.currency ?? "AFN");
   const [negotiable, setNegotiable] = useState(initial?.negotiable ?? false);
   const [category, setCategory] = useState(initial?.category ?? "");
+  const [subcategory, setSubcategory] = useState(initial?.subcategory ?? "");
   const [condition, setCondition] = useState(initial?.condition ?? "");
   const [province, setProvince] = useState(initial?.province ?? "");
   const [city, setCity] = useState(initial?.city ?? "");
@@ -99,6 +102,7 @@ export function ListingForm({
   const dragIndex = useRef<number | null>(null);
 
   const cat = categoryById(category);
+  const subs = subcategoriesFor(category);
   const prov = provinceById(province);
   const errors = validate();
 
@@ -106,6 +110,8 @@ export function ListingForm({
     const e: Record<string, string> = {};
     if (title.trim().length < 5) e.title = t("titleTooShort");
     if (!category) e.category = t("requiredField");
+    else if (subs.length > 0 && !subcategoryById(category, subcategory))
+      e.subcategory = t("requiredField");
     if (!price || Number(price) <= 0 || Number.isNaN(Number(price))) e.price = t("priceInvalid");
     if (!province) e.province = t("requiredField");
     if (images.length === 0) e.images = t("imageRequired");
@@ -113,7 +119,7 @@ export function ListingForm({
   }
 
   const stepValid = (idx: number) => {
-    if (idx === 0) return !errors.title && !errors.category;
+    if (idx === 0) return !errors.title && !errors.category && !errors.subcategory;
     if (idx === 1) return !errors.price;
     if (idx === 2) return !errors.images;
     if (idx === 3) return !errors.province;
@@ -175,6 +181,7 @@ export function ListingForm({
         currency,
         negotiable,
         category,
+        subcategory: subcategory || null,
         condition: condition || null,
         province,
         city: city || null,
@@ -271,7 +278,10 @@ export function ListingForm({
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => setCategory(c.id)}
+                  onClick={() => {
+                    setCategory(c.id);
+                    setSubcategory("");
+                  }}
                   className={cn(
                     "flex flex-col items-center gap-1 rounded-lg border p-2.5 text-xs font-semibold transition-colors",
                     category === c.id ? "border-accent bg-accent/10" : "border-border",
@@ -282,7 +292,35 @@ export function ListingForm({
                 </button>
               ))}
             </div>
+            {errors.category && <p className="mt-1 text-xs text-destructive">{errors.category}</p>}
           </div>
+
+          {subs.length > 0 && (
+            <div>
+              <label className="mb-1.5 block text-sm font-bold">{t("subcategory")}</label>
+              <div className="flex flex-wrap gap-2">
+                {subs.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setSubcategory(s.id)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                      subcategory === s.id ? "border-accent bg-accent/10" : "border-border",
+                    )}
+                  >
+                    {locName(s)}
+                  </button>
+                ))}
+              </div>
+              {errors.subcategory && !subcategory && (
+                <p className="mt-1 text-xs text-destructive">{errors.subcategory}</p>
+              )}
+            </div>
+          )}
+          {!category && (
+            <p className="text-xs text-muted-foreground">{t("selectCategoryFirst")}</p>
+          )}
           {cat?.conditions && (
             <div>
               <label className="mb-1.5 block text-sm font-bold">
@@ -591,7 +629,7 @@ export function ListingForm({
             <div className="font-display text-xl font-black">{formatPrice(Number(price) || 0, currency, lang)}</div>
             <h3 className="mt-1 font-bold">{title || "—"}</h3>
             <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <p>{cat ? locName(cat) : "—"}{condition ? ` · ${locName(CONDITIONS.find((c) => c.id === condition)!)}` : ""}</p>
+              <p>{cat ? locName(cat) : "—"}{subcategoryById(category, subcategory) ? ` · ${locName(subcategoryById(category, subcategory)!)}` : ""}{condition ? ` · ${locName(CONDITIONS.find((c) => c.id === condition)!)}` : ""}</p>
               <p>{prov ? locName(prov) : "—"}{city ? ` · ${city}` : ""}</p>
               <p>{t("contactMethod")}: {t(contactMethod === "both" ? "both" : contactMethod === "call" ? "callOnly" : "chatOnly")}</p>
               <p>{images.length} {t("photos")}</p>

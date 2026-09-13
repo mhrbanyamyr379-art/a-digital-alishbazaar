@@ -11,6 +11,7 @@ import { formatPrice, timeAgo, toLocalDigits } from "@/lib/format";
 import { StorageImage } from "@/components/StorageImage";
 import { provinceById } from "@/data/provinces";
 import { categoryById, CONDITIONS } from "@/data/categories";
+import { subcategoryById } from "@/data/subcategories";
 import { TopBar } from "@/components/TopBar";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { ListingCard } from "@/components/ListingCard";
@@ -82,12 +83,12 @@ function ListingDetail() {
   }, [l?.id]);
 
   const { data: related } = useQuery({
-    queryKey: ["related", l?.id, l?.category, l?.province],
+    queryKey: ["related", l?.id, l?.category, l?.subcategory, l?.province],
     enabled: !!l,
     queryFn: async () => {
       const { data } = await supabase
         .from("listings")
-        .select("id,title,price,currency,province,city,created_at,is_featured,listing_images(url,position)")
+        .select("id,title,price,currency,province,city,subcategory,created_at,is_featured,listing_images(url,position)")
         .eq("status", "active")
         .eq("category", l!.category)
         .neq("id", l!.id)
@@ -95,7 +96,11 @@ function ListingDetail() {
         .limit(8);
       const rows = data ?? [];
       // Prioritize same-province results client-side
-      rows.sort((a, b) => Number(b.province === l!.province) - Number(a.province === l!.province));
+      rows.sort(
+        (a, b) =>
+          Number(b.subcategory === l!.subcategory) - Number(a.subcategory === l!.subcategory) ||
+          Number(b.province === l!.province) - Number(a.province === l!.province),
+      );
       return rows.slice(0, 6).map((r) => {
         const imgs = (r.listing_images ?? []) as { url: string; position: number }[];
         const first = imgs.sort((x, y) => x.position - y.position)[0];
@@ -140,6 +145,7 @@ function ListingDetail() {
   );
   const prov = provinceById(l.province);
   const cat = categoryById(l.category);
+  const sub = subcategoryById(l.category, l.subcategory);
   const cond = CONDITIONS.find((c) => c.id === l.condition);
   const seller = l.seller as {
     id: string;
@@ -249,6 +255,15 @@ function ListingDetail() {
               <cat.icon className="size-3.5" />
               {locName(cat)}
             </span>
+          )}
+          {sub && (
+            <Link
+              to="/"
+              search={{ cat: l.category, sub: sub.id }}
+              className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold"
+            >
+              {locName(sub)}
+            </Link>
           )}
           {cond && <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">{locName(cond)}</span>}
           {(l.tags ?? []).map((tg: string) => (
