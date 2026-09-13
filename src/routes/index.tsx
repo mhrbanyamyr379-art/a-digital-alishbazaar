@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
+import { subcategoriesFor, subcategoryById } from "@/data/subcategories";
 import { PROVINCES, provinceById } from "@/data/provinces";
 import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/components/ListingCard";
 import { BottomNav } from "@/components/BottomNav";
@@ -32,6 +33,7 @@ import {
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
   cat: fallback(z.string(), "").default(""),
+  sub: fallback(z.string(), "").default(""),
   prov: fallback(z.string(), "").default(""),
   city: fallback(z.string(), "").default(""),
   cond: fallback(z.string(), "").default(""),
@@ -74,6 +76,7 @@ async function fetchListings(params: SearchParams, page: number): Promise<{
     }
   }
   if (params.cat) query = query.eq("category", params.cat);
+  if (params.sub) query = query.eq("subcategory", params.sub);
   if (params.prov) query = query.eq("province", params.prov);
   if (params.city) query = query.eq("city", params.city);
   if (params.cond) query = query.eq("condition", params.cond);
@@ -170,6 +173,7 @@ function Home() {
   const hasAnyFilter =
     !!search.q ||
     !!search.cat ||
+    !!search.sub ||
     !!search.prov ||
     !!search.city ||
     !!search.cond ||
@@ -264,7 +268,7 @@ function Home() {
       {/* Category chips */}
       <nav className="no-scrollbar sticky top-[calc(3.25rem+5.5rem)] z-40 flex items-center gap-2 overflow-x-auto border-b border-border bg-card px-4 py-3">
         <button
-          onClick={() => setParam({ cat: "" })}
+          onClick={() => setParam({ cat: "", sub: "" })}
           className={cn(
             "flex-none rounded-full px-4 py-1.5 text-xs font-bold transition-colors",
             !search.cat ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
@@ -275,7 +279,7 @@ function Home() {
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
-            onClick={() => setParam({ cat: search.cat === c.id ? "" : c.id })}
+            onClick={() => setParam({ cat: search.cat === c.id ? "" : c.id, sub: "" })}
             className={cn(
               "flex flex-none items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition-colors",
               search.cat === c.id ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
@@ -287,9 +291,38 @@ function Home() {
         ))}
       </nav>
 
+      {/* Subcategory chips — only when a main category is selected */}
+      {subcategoriesFor(search.cat).length > 0 && (
+        <nav className="no-scrollbar flex items-center gap-2 overflow-x-auto border-b border-border bg-background px-4 py-2.5">
+          <button
+            onClick={() => setParam({ sub: "" })}
+            className={cn(
+              "flex-none rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+              !search.sub ? "border-accent bg-accent/10 text-foreground" : "border-border text-muted-foreground",
+            )}
+          >
+            {t("allSubcategories")}
+          </button>
+          {subcategoriesFor(search.cat).map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setParam({ sub: search.sub === s.id ? "" : s.id })}
+              className={cn(
+                "flex-none whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                search.sub === s.id
+                  ? "border-accent bg-accent/10 text-foreground"
+                  : "border-border text-muted-foreground",
+              )}
+            >
+              {locName(s)}
+            </button>
+          ))}
+        </nav>
+      )}
+
       {/* Discovery — shown only when browsing without filters */}
       {!hasAnyFilter && (
-        <DiscoverySections onPickCategory={(id) => setParam({ cat: id })} />
+        <DiscoverySections onPickCategory={(id) => setParam({ cat: id, sub: "" })} />
       )}
 
       {/* Toolbar */}
@@ -310,6 +343,7 @@ function Home() {
             setParam({
               q: "",
               cat: "",
+              sub: "",
               prov: "",
               city: "",
               cond: "",
@@ -396,7 +430,11 @@ function ActiveFilterChips({
   if (search.q) chips.push({ key: "q", label: `"${search.q}"`, clear: { q: "" } });
   if (search.cat) {
     const c = categoryById(search.cat);
-    if (c) chips.push({ key: "cat", label: locName(c), clear: { cat: "" } });
+    if (c) chips.push({ key: "cat", label: locName(c), clear: { cat: "", sub: "" } });
+  }
+  if (search.sub) {
+    const sc = subcategoryById(search.cat, search.sub);
+    if (sc) chips.push({ key: "sub", label: locName(sc), clear: { sub: "" } });
   }
   if (search.prov) {
     const p = provinceById(search.prov);
