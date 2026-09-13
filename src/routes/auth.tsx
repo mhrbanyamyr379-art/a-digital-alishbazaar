@@ -185,14 +185,23 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col bg-primary text-primary-foreground">
       <div className="flex items-center justify-between p-4">
-        <Link to="/" className="flex items-center gap-2">
-          <img
-            src={logoAsset.url}
-            alt={t("appName")}
-            className="size-8 rounded-sm object-cover"
-          />
-          <span className="font-display text-lg font-black">{t("appName")}</span>
-        </Link>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => router.history.back()}
+            aria-label={t("back")}
+            className="flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+          >
+            <BackIcon className="size-5" />
+          </button>
+          <Link to="/" className="flex items-center gap-2">
+            <img
+              src={logoAsset.url}
+              alt={t("appName")}
+              className="size-8 rounded-sm object-cover"
+            />
+            <span className="font-display text-lg font-black">{t("appName")}</span>
+          </Link>
+        </div>
         <LanguageSwitcher />
       </div>
 
