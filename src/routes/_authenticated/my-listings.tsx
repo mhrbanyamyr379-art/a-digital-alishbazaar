@@ -80,9 +80,10 @@ function MyListingsPage() {
   const { t, lang } = useI18n();
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { data: listings } = useMyListings();
+  const { data: listings, isLoading, error, refetch } = useMyListings();
   const [filter, setFilter] = useState<Filter>("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const rows = listings ?? [];
   const matches = (l: Row, f: Filter) => {
