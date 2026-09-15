@@ -98,7 +98,7 @@ function ListingDetail() {
 
   useEffect(() => {
     if (!l) return;
-    supabase.rpc("increment_listing_views", { _listing_id: id }).then(() => {});
+    if (user) supabase.rpc("increment_listing_views", { _listing_id: id }).then(() => {});
     if (user) {
       supabase
         .from("recently_viewed")
