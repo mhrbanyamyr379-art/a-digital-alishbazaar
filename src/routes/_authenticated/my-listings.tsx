@@ -253,7 +253,8 @@ function MyListingsPage() {
                 {l.status === "active" && !expired && (
                   <button
                     onClick={() => setStatus(l.id, "sold")}
-                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold"
+                    disabled={busyId === l.id}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50"
                   >
                     <Check className="size-3.5" />
                     {t("markSold")}
@@ -262,7 +263,8 @@ function MyListingsPage() {
                 {l.status === "sold" && !expired && (
                   <button
                     onClick={() => setStatus(l.id, "active")}
-                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
+                    disabled={busyId === l.id}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary disabled:opacity-50"
                   >
                     <RefreshCw className="size-3.5" />
                     {t("markActive")}
@@ -271,7 +273,8 @@ function MyListingsPage() {
                 {(expired || l.status === "draft") && (
                   <button
                     onClick={() => renew(l.id)}
-                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
+                    disabled={busyId === l.id}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary disabled:opacity-50"
                   >
                     <RefreshCw className="size-3.5" />
                     {l.status === "draft" ? t("publishNow") : t("renew")}
@@ -280,7 +283,8 @@ function MyListingsPage() {
 
                 <button
                   onClick={() => setDeleteId(l.id)}
-                  className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary"
+                  disabled={busyId === l.id}
+                  className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary disabled:opacity-50"
                 >
                   <Trash2 className="size-3.5" />
                   {t("delete")}
