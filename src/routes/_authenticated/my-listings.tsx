@@ -104,37 +104,54 @@ function MyListingsPage() {
     { id: "expired", label: t("statusExpired") },
   ];
 
+  /** Refresh every view that can show this listing after a write. */
+  const invalidate = (id?: string) => {
+    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
+    qc.invalidateQueries({ queryKey: ["listings"] });
+    qc.invalidateQueries({ queryKey: ["favorites"] });
+    if (id) qc.invalidateQueries({ queryKey: ["listing", id] });
+  };
+
   const setStatus = async (id: string, status: "active" | "sold") => {
     const current = rows.find((l) => l.id === id);
-    if (!current || current.status === status) return;
+    if (!current || current.status === status || busyId) return;
+    setBusyId(id);
     const { error } = await supabase
       .from("listings")
       .update({ status })
       .eq("id", id)
       .eq("seller_id", user!.id)
       .neq("status", status);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    qc.invalidateQueries({ queryKey: ["listing", id] });
-    if (error) toast.error(t("errorTitle"));
+    setBusyId(null);
+    invalidate(id);
+    if (error) toast.error(t(dbErrorKey(error)));
     else toast.success(t(status === "sold" ? "markSold" : "markActive"));
   };
   const renew = async (id: string) => {
-    await supabase
+    if (busyId) return;
+    setBusyId(id);
+    const { error } = await supabase
       .from("listings")
       .update({
         status: "active",
         published_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 30 * 864e5).toISOString(),
       })
-      .eq("id", id);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    qc.invalidateQueries({ queryKey: ["listing", id] });
-    toast.success(t("renewed"));
+      .eq("id", id)
+      .eq("seller_id", user!.id);
+    setBusyId(null);
+    invalidate(id);
+    if (error) toast.error(t(dbErrorKey(error)));
+    else toast.success(t("renewed"));
   };
   const remove = async (id: string) => {
-    await supabase.from("listings").delete().eq("id", id);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    toast.success(t("saved"));
+    if (busyId) return;
+    setBusyId(id);
+    const { error } = await supabase.from("listings").delete().eq("id", id).eq("seller_id", user!.id);
+    setBusyId(null);
+    invalidate(id);
+    if (error) toast.error(t(dbErrorKey(error)));
+    else toast.success(t("deleted"));
   };
 
 
