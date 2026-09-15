@@ -28,23 +28,27 @@ function RecentPage() {
   const { t, lang } = useI18n();
   const { user } = useAuth();
 
-  const { data: recent } = useQuery({
+  const { data: recent, isLoading, error, refetch } = useQuery({
     queryKey: ["recent", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: rv } = await supabase
+      const { data: rv, error: rvErr } = await supabase
         .from("recently_viewed")
         .select("listing_id,viewed_at")
         .eq("user_id", user!.id)
         .order("viewed_at", { ascending: false })
         .limit(30);
+      if (rvErr) throw rvErr;
       const ids = (rv ?? []).map((r) => r.listing_id);
       if (!ids.length) return [];
-      const { data } = await supabase
+      const { data, error: lErr } = await supabase
         .from("listings")
-        .select("id,title,price,currency,listing_images(url,position)")
+        .select("id,title,price,currency,status,listing_images(url,position)")
         .in("id", ids);
-      return data ?? [];
+      if (lErr) throw lErr;
+      // Keep the most-recently-viewed order; `in()` returns rows unordered.
+      const byId = new Map((data ?? []).map((l) => [l.id, l]));
+      return ids.map((id) => byId.get(id)).filter(Boolean) as NonNullable<typeof data>;
     },
   });
 
