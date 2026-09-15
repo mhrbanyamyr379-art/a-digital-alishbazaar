@@ -323,6 +323,7 @@ const T: Dict = {
   inbox: { fa: "صندوق", ps: "صندوق", en: "Inbox" },
   emptyArchived: { fa: "بایگانی خالی است", ps: "ارشیف تش دی", en: "No archived chats" },
   messageDeleted: { fa: "پیام حذف شد", ps: "پیغام ړنګ شو", en: "Message deleted" },
+  listingDeleted: { fa: "آگهی حذف شد", ps: "اعلان ړنګ شو", en: "Listing deleted" },
   imageMessage: { fa: "📷 عکس", ps: "📷 انځور", en: "📷 Photo" },
   aboutListing: { fa: "درباره این آگهی", ps: "د دې اعلان په اړه", en: "About this listing" },
   read: { fa: "خوانده شد", ps: "لوستل شو", en: "Read" },

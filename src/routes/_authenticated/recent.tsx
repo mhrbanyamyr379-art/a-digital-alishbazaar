@@ -28,23 +28,27 @@ function RecentPage() {
   const { t, lang } = useI18n();
   const { user } = useAuth();
 
-  const { data: recent } = useQuery({
+  const { data: recent, isLoading, error, refetch } = useQuery({
     queryKey: ["recent", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: rv } = await supabase
+      const { data: rv, error: rvErr } = await supabase
         .from("recently_viewed")
         .select("listing_id,viewed_at")
         .eq("user_id", user!.id)
         .order("viewed_at", { ascending: false })
         .limit(30);
+      if (rvErr) throw rvErr;
       const ids = (rv ?? []).map((r) => r.listing_id);
       if (!ids.length) return [];
-      const { data } = await supabase
+      const { data, error: lErr } = await supabase
         .from("listings")
-        .select("id,title,price,currency,listing_images(url,position)")
+        .select("id,title,price,currency,status,listing_images(url,position)")
         .in("id", ids);
-      return data ?? [];
+      if (lErr) throw lErr;
+      // Keep the most-recently-viewed order; `in()` returns rows unordered.
+      const byId = new Map((data ?? []).map((l) => [l.id, l]));
+      return ids.map((id) => byId.get(id)).filter(Boolean) as NonNullable<typeof data>;
     },
   });
 
@@ -70,10 +74,33 @@ function RecentPage() {
             <div className="min-w-0">
               <p className="truncate text-sm font-bold">{l.title}</p>
               <p className="text-sm font-black text-accent">{formatPrice(Number(l.price), l.currency, lang)}</p>
+              {l.status === "sold" && (
+                <span className="mt-1 inline-block rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-bold text-destructive">
+                  {t("sold")}
+                </span>
+              )}
             </div>
           </Link>
         ))}
-        {recent && recent.length === 0 && (
+
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-20 animate-pulse rounded-xl bg-secondary" />
+          ))}
+
+        {error && !isLoading && (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
+            <button
+              onClick={() => refetch()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {t("retry")}
+            </button>
+          </div>
+        )}
+
+        {recent && !error && recent.length === 0 && (
           <p className="py-16 text-center text-sm text-muted-foreground">{t("emptyListings")}</p>
         )}
       </div>

@@ -42,7 +42,7 @@ function ChatListPage() {
   const [tab, setTab] = useState<"inbox" | "archived">("inbox");
   const [q, setQ] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["conversations", user?.id],
     enabled: !!user,
     queryFn: async () => {
@@ -163,7 +163,18 @@ function ChatListPage() {
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="mb-2 h-16 animate-pulse rounded-xl bg-secondary" />
           ))}
-        {!isLoading && filtered.length === 0 && (
+        {error && !isLoading && (
+          <div className="flex flex-col items-center gap-3 py-20 text-center">
+            <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
+            <button
+              onClick={() => refetch()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {t("retry")}
+            </button>
+          </div>
+        )}
+        {!isLoading && !error && filtered.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-20 text-center">
             <div className="flex size-16 items-center justify-center rounded-full bg-secondary">
               <MessageCircle className="size-7 text-muted-foreground" />

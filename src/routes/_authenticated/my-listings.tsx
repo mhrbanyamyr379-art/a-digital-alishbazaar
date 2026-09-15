@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits, formatPrice } from "@/lib/format";
+import { dbErrorKey } from "@/lib/db-errors";
 import { BottomNav } from "@/components/BottomNav";
 import { TopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -80,9 +81,10 @@ function MyListingsPage() {
   const { t, lang } = useI18n();
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { data: listings } = useMyListings();
+  const { data: listings, isLoading, error, refetch } = useMyListings();
   const [filter, setFilter] = useState<Filter>("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const rows = listings ?? [];
   const matches = (l: Row, f: Filter) => {
@@ -103,37 +105,54 @@ function MyListingsPage() {
     { id: "expired", label: t("statusExpired") },
   ];
 
+  /** Refresh every view that can show this listing after a write. */
+  const invalidate = (id?: string) => {
+    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
+    qc.invalidateQueries({ queryKey: ["listings"] });
+    qc.invalidateQueries({ queryKey: ["favorites"] });
+    if (id) qc.invalidateQueries({ queryKey: ["listing", id] });
+  };
+
   const setStatus = async (id: string, status: "active" | "sold") => {
     const current = rows.find((l) => l.id === id);
-    if (!current || current.status === status) return;
+    if (!current || current.status === status || busyId) return;
+    setBusyId(id);
     const { error } = await supabase
       .from("listings")
       .update({ status })
       .eq("id", id)
       .eq("seller_id", user!.id)
       .neq("status", status);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    qc.invalidateQueries({ queryKey: ["listing", id] });
-    if (error) toast.error(t("errorTitle"));
+    setBusyId(null);
+    invalidate(id);
+    if (error) toast.error(t(dbErrorKey(error)));
     else toast.success(t(status === "sold" ? "markSold" : "markActive"));
   };
   const renew = async (id: string) => {
-    await supabase
+    if (busyId) return;
+    setBusyId(id);
+    const { error } = await supabase
       .from("listings")
       .update({
         status: "active",
         published_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 30 * 864e5).toISOString(),
       })
-      .eq("id", id);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    qc.invalidateQueries({ queryKey: ["listing", id] });
-    toast.success(t("renewed"));
+      .eq("id", id)
+      .eq("seller_id", user!.id);
+    setBusyId(null);
+    invalidate(id);
+    if (error) toast.error(t(dbErrorKey(error)));
+    else toast.success(t("renewed"));
   };
   const remove = async (id: string) => {
-    await supabase.from("listings").delete().eq("id", id);
-    qc.invalidateQueries({ queryKey: ["my-listings", user?.id] });
-    toast.success(t("saved"));
+    if (busyId) return;
+    setBusyId(id);
+    const { error } = await supabase.from("listings").delete().eq("id", id).eq("seller_id", user!.id);
+    setBusyId(null);
+    invalidate(id);
+    if (error) toast.error(t(dbErrorKey(error)));
+    else toast.success(t("listingDeleted"));
   };
 
 
@@ -234,7 +253,8 @@ function MyListingsPage() {
                 {l.status === "active" && !expired && (
                   <button
                     onClick={() => setStatus(l.id, "sold")}
-                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold"
+                    disabled={busyId === l.id}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50"
                   >
                     <Check className="size-3.5" />
                     {t("markSold")}
@@ -243,7 +263,8 @@ function MyListingsPage() {
                 {l.status === "sold" && !expired && (
                   <button
                     onClick={() => setStatus(l.id, "active")}
-                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
+                    disabled={busyId === l.id}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary disabled:opacity-50"
                   >
                     <RefreshCw className="size-3.5" />
                     {t("markActive")}
@@ -252,7 +273,8 @@ function MyListingsPage() {
                 {(expired || l.status === "draft") && (
                   <button
                     onClick={() => renew(l.id)}
-                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary"
+                    disabled={busyId === l.id}
+                    className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-primary disabled:opacity-50"
                   >
                     <RefreshCw className="size-3.5" />
                     {l.status === "draft" ? t("publishNow") : t("renew")}
@@ -261,7 +283,8 @@ function MyListingsPage() {
 
                 <button
                   onClick={() => setDeleteId(l.id)}
-                  className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary"
+                  disabled={busyId === l.id}
+                  className="ms-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-secondary disabled:opacity-50"
                 >
                   <Trash2 className="size-3.5" />
                   {t("delete")}
@@ -270,8 +293,33 @@ function MyListingsPage() {
             </div>
           );
         })}
-        {listings && visible.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">{t("emptyListings")}</p>
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-secondary" />
+          ))}
+
+        {error && !isLoading && (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
+            <button
+              onClick={() => refetch()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {t("retry")}
+            </button>
+          </div>
+        )}
+
+        {listings && !error && visible.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <p className="text-sm font-semibold text-muted-foreground">{t("emptyListings")}</p>
+            <Link
+              to="/sell"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground"
+            >
+              {t("sell")}
+            </Link>
+          </div>
         )}
       </div>
 
