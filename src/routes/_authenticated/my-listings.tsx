@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits, formatPrice } from "@/lib/format";
+import { dbErrorKey } from "@/lib/db-errors";
 import { BottomNav } from "@/components/BottomNav";
 import { TopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
