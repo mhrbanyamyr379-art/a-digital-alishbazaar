@@ -152,7 +152,7 @@ function MyListingsPage() {
     setBusyId(null);
     invalidate(id);
     if (error) toast.error(t(dbErrorKey(error)));
-    else toast.success(t("deleted"));
+    else toast.success(t("listingDeleted"));
   };
 
 
@@ -289,8 +289,33 @@ function MyListingsPage() {
             </div>
           );
         })}
-        {listings && visible.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">{t("emptyListings")}</p>
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-secondary" />
+          ))}
+
+        {error && !isLoading && (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
+            <button
+              onClick={() => refetch()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {t("retry")}
+            </button>
+          </div>
+        )}
+
+        {listings && !error && visible.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <p className="text-sm font-semibold text-muted-foreground">{t("emptyListings")}</p>
+            <Link
+              to="/sell"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-bold text-accent-foreground"
+            >
+              {t("sell")}
+            </Link>
+          </div>
         )}
       </div>
 
