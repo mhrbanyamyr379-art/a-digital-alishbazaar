@@ -36,17 +36,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadExtras = async (uid: string) => {
+    const cols =
+      "id,display_name,avatar_url,bio,province,rating_avg,rating_count,is_banned,created_at,last_seen";
     const [{ data: prof }, { data: roles }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "id,display_name,avatar_url,bio,province,rating_avg,rating_count,is_banned,created_at,last_seen",
-        )
-        .eq("id", uid)
-        .maybeSingle(),
+      supabase.from("profiles").select(cols).eq("id", uid).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
-    setProfile((prof as Profile) ?? null);
+
+    // Accounts created before the profile bootstrap existed have no profile row;
+    // create it once so seller pages, chat and reviews always show a name.
+    if (!prof) {
+      await supabase.rpc("ensure_profile" as never);
+      const { data: created } = await supabase
+        .from("profiles")
+        .select(cols)
+        .eq("id", uid)
+        .maybeSingle();
+      setProfile((created as Profile) ?? null);
+    } else {
+      setProfile(prof as Profile);
+    }
     setIsAdmin((roles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "moderator"));
   };
 

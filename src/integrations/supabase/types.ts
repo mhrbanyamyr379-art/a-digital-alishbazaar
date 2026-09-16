@@ -732,6 +732,7 @@ export type Database = {
         Args: { _body: string; _message_id: string }
         Returns: undefined
       }
+      ensure_profile: { Args: never; Returns: undefined }
       get_my_phone: { Args: never; Returns: string }
       get_or_create_conversation: {
         Args: { _listing_id: string; _seller_id: string }
