@@ -35,20 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const loadExtras = async (uid: string) => {
-    const [{ data: prof }, { data: roles }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "id,display_name,avatar_url,bio,province,rating_avg,rating_count,is_banned,created_at,last_seen",
-        )
-        .eq("id", uid)
-        .maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid),
-    ]);
-    setProfile((prof as Profile) ?? null);
-    setIsAdmin((roles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "moderator"));
-  };
+const PROFILE_COLS =
+  "id,display_name,avatar_url,bio,province,rating_avg,rating_count,is_banned,created_at,last_seen";
+
+export function AuthProviderInner() {
+  return null;
+}
+
+function AuthProviderImpl() {
+  return null;
+}
 
   const refreshProfile = async () => {
     if (user) await loadExtras(user.id);
