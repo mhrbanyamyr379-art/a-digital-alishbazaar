@@ -328,7 +328,7 @@ function Home() {
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 px-4 pt-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {data ? `${toLocalDigits(totalCount, lang)} ${t("results")}` : t("latest")}
+          {data ? `${toLocalDigits(totalCount, lang)}${hasNextPage ? "+" : ""} ${t("results")}` : t("latest")}
           {activeProv ? ` · ${locName(activeProv)}` : ""}
         </p>
         <FiltersSheet search={search} onApply={setParam} />
