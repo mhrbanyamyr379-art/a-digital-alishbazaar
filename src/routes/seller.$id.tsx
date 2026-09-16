@@ -79,7 +79,7 @@ function SellerPage() {
     },
   });
 
-  const { data: listings, isLoading: listingsLoading } = useQuery({
+  const { data: listings, isLoading: listingsLoading, error: listingsError, refetch: refetchListings } = useQuery({
     queryKey: ["seller-listings", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -422,6 +422,16 @@ function SellerPage() {
             {[0, 1, 2, 3].map((i) => (
               <ListingCardSkeleton key={i} />
             ))}
+          </div>
+        ) : listingsError ? (
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card/50 py-12 text-center">
+            <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
+            <button
+              onClick={() => refetchListings()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              {t("retry")}
+            </button>
           </div>
         ) : filteredSorted.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 py-12 text-center">
