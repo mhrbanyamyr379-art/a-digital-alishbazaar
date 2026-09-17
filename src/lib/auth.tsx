@@ -12,7 +12,8 @@ export interface Profile {
   province: string | null;
   rating_avg: number;
   rating_count: number;
-  is_banned: boolean;
+  /** Moderation state is staff-only; not selectable by the Data API. */
+  is_banned?: boolean;
   created_at: string;
 }
 
