@@ -320,10 +320,13 @@ function Home() {
         </nav>
       )}
 
-      {/* Discovery — shown only when browsing without filters */}
+      {/* Category grid — shown only when browsing without filters */}
       {!hasAnyFilter && (
-        <DiscoverySections onPickCategory={(id) => setParam({ cat: id, sub: "" })} />
+        <CategoryGrid onPickCategory={(id) => setParam({ cat: id, sub: "" })} />
       )}
+
+      {/* Discovery — shown only when browsing without filters */}
+      {!hasAnyFilter && <DiscoverySections />}
 
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 px-4 pt-4">

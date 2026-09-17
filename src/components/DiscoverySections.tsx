@@ -39,8 +39,8 @@ export function CategoryGrid({ onPickCategory }: { onPickCategory: (id: string) 
   );
 }
 
-export function DiscoverySections({ onPickCategory }: { onPickCategory: (id: string) => void }) {
-  const { t, locName } = useI18n();
+export function DiscoverySections() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const featured = useFeaturedListings();
   const viewed = useRecentlyViewed();
