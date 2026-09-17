@@ -15,7 +15,7 @@ import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/compon
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SearchBar } from "@/components/SearchBar";
-import { DiscoverySections } from "@/components/DiscoverySections";
+import { DiscoverySections, CategoryGrid } from "@/components/DiscoverySections";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { StorageImage } from "@/components/StorageImage";
