@@ -12,7 +12,8 @@ export interface Profile {
   province: string | null;
   rating_avg: number;
   rating_count: number;
-  is_banned: boolean;
+  /** Moderation state is staff-only; not selectable by the Data API. */
+  is_banned?: boolean;
   created_at: string;
 }
 
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadExtras = async (uid: string) => {
     const cols =
-      "id,display_name,avatar_url,bio,province,rating_avg,rating_count,is_banned,created_at,last_seen";
+      "id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,last_seen";
     const [{ data: prof }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select(cols).eq("id", uid).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),

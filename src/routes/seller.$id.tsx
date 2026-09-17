@@ -71,7 +71,7 @@ function SellerPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,is_banned,created_at,updated_at")
+        .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,updated_at")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
