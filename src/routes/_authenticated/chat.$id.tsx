@@ -200,12 +200,7 @@ function ChatThread() {
     queryKey: ["blocked-me", otherId, user?.id],
     enabled: !!user && !!otherId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("blocks")
-        .select("id")
-        .eq("blocker_id", otherId!)
-        .eq("blocked_id", user!.id)
-        .maybeSingle();
+      const { data } = await supabase.rpc("am_i_blocked_by", { _other_id: otherId! });
       return !!data;
     },
   });
