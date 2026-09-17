@@ -325,11 +325,6 @@ function Home() {
         </nav>
       )}
 
-      {/* Category grid — shown only when browsing without filters */}
-      {!hasAnyFilter && (
-        <CategoryGrid onPickCategory={(id) => setParam({ cat: id, sub: "" })} />
-      )}
-
       {/* Discovery — shown only when browsing without filters */}
       {!hasAnyFilter && <DiscoverySections />}
 
