@@ -720,6 +720,7 @@ export type Database = {
         Args: { _note?: string; _report_id: string; _status: string }
         Returns: undefined
       }
+      am_i_blocked_by: { Args: { _other_id: string }; Returns: boolean }
       delete_message_for_everyone: {
         Args: { _message_id: string }
         Returns: undefined
