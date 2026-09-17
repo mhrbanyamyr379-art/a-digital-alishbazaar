@@ -15,7 +15,7 @@ import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/compon
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SearchBar } from "@/components/SearchBar";
-import { DiscoverySections } from "@/components/DiscoverySections";
+import { DiscoverySections, CategoryGrid } from "@/components/DiscoverySections";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { StorageImage } from "@/components/StorageImage";
@@ -265,6 +265,11 @@ function Home() {
         </div>
       </header>
 
+      {/* Category grid — shown only when browsing without filters */}
+      {!hasAnyFilter && (
+        <CategoryGrid onPickCategory={(id) => setParam({ cat: id, sub: "" })} />
+      )}
+
       {/* Category chips */}
       <nav className="no-scrollbar sticky top-[calc(3.25rem+5.5rem)] z-40 flex items-center gap-2 overflow-x-auto border-b border-border bg-card px-4 py-3">
         <button
@@ -321,9 +326,7 @@ function Home() {
       )}
 
       {/* Discovery — shown only when browsing without filters */}
-      {!hasAnyFilter && (
-        <DiscoverySections onPickCategory={(id) => setParam({ cat: id, sub: "" })} />
-      )}
+      {!hasAnyFilter && <DiscoverySections />}
 
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 px-4 pt-4">

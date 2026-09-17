@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles, Clock, Flame, ChevronRight } from "lucide-react";
+import { Sparkles, Clock, ChevronRight, Flame } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { CATEGORIES } from "@/data/categories";
 import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/components/ListingCard";
@@ -12,8 +12,35 @@ import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-export function DiscoverySections({ onPickCategory }: { onPickCategory: (id: string) => void }) {
+export function CategoryGrid({ onPickCategory }: { onPickCategory: (id: string) => void }) {
   const { t, locName } = useI18n();
+
+  return (
+    <section>
+      <SectionHeader icon={<Flame className="size-4 text-accent" />} title={t("popularCategories")} />
+      <div className="grid grid-cols-4 gap-2 px-4 pb-1 pt-3 sm:grid-cols-6 sm:gap-3 lg:grid-cols-8">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => onPickCategory(c.id)}
+            className={cn(
+              "flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-2 text-center transition-all sm:p-3",
+              "hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-md",
+            )}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <c.icon className="size-6" />
+            </div>
+            <span className="line-clamp-2 text-[11px] font-bold leading-tight">{locName(c)}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function DiscoverySections() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const featured = useFeaturedListings();
   const viewed = useRecentlyViewed();
@@ -26,28 +53,6 @@ export function DiscoverySections({ onPickCategory }: { onPickCategory: (id: str
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      {/* Popular categories */}
-      <section>
-        <SectionHeader icon={<Flame className="size-4 text-accent" />} title={t("popularCategories")} />
-        <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 pb-1 pt-3">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onPickCategory(c.id)}
-              className={cn(
-                "flex w-24 flex-none flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-all",
-                "hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-md",
-              )}
-            >
-              <div className="flex size-12 items-center justify-center rounded-full bg-accent/10 text-accent">
-                <c.icon className="size-6" />
-              </div>
-              <span className="line-clamp-2 text-[11px] font-bold leading-tight">{locName(c)}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
       {/* Featured strip */}
       {(featured.isLoading || (featured.data?.length ?? 0) > 0) && (
         <section>
