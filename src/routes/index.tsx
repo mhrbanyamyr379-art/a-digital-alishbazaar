@@ -265,6 +265,11 @@ function Home() {
         </div>
       </header>
 
+      {/* Category grid — shown only when browsing without filters */}
+      {!hasAnyFilter && (
+        <CategoryGrid onPickCategory={(id) => setParam({ cat: id, sub: "" })} />
+      )}
+
       {/* Category chips */}
       <nav className="no-scrollbar sticky top-[calc(3.25rem+5.5rem)] z-40 flex items-center gap-2 overflow-x-auto border-b border-border bg-card px-4 py-3">
         <button
