@@ -28,7 +28,9 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   const body = await response.clone().text();
   if (!isH3SwallowedErrorBody(body)) return response;
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+  const captured = consumeLastCapturedError();
+  if (isClientAbort(captured)) return new Response(null, { status: 499 });
+  console.error(captured ?? new Error(`h3 swallowed SSR error: ${body}`));
   return new Response(renderErrorPage(), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -44,13 +46,27 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// A client that navigates away (or follows a redirect) mid-render closes the
+// socket; Node surfaces that as `aborted` / ECONNRESET. It is not an app error.
+function isClientAbort(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const err = value as { code?: unknown; message?: unknown; cause?: unknown };
+  if (err.code === "ECONNRESET" || err.code === "ABORT_ERR") return true;
+  if (typeof err.message === "string" && /aborted/i.test(err.message)) return true;
+  return err.cause ? isClientAbort(err.cause) : false;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
+      if (request.signal?.aborted) return response;
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
+      if (request.signal?.aborted || isClientAbort(error)) {
+        return new Response(null, { status: 499 });
+      }
       console.error(error);
       return new Response(renderErrorPage(), {
         status: 500,
