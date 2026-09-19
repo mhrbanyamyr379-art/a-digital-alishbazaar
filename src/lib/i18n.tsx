@@ -108,6 +108,19 @@ const T: Dict = {
   loading: { fa: "بارگذاری...", ps: "بارول کیږي...", en: "Loading..." },
   errorTitle: { fa: "خطایی رخ داد", ps: "یوه ستونزه رامنځته شوه", en: "Something went wrong" },
   retry: { fa: "تلاش دوباره", ps: "بیا هڅه", en: "Try again" },
+  pageNotFound: { fa: "صفحه یافت نشد", ps: "پاڼه ونه موندل شوه", en: "Page not found" },
+  pageNotFoundDesc: {
+    fa: "صفحه‌ای که می‌جویید وجود ندارد یا انتقال یافته است.",
+    ps: "هغه پاڼه چې تاسو یې لټوئ شتون نلري یا لیږدول شوې ده.",
+    en: "The page you're looking for doesn't exist or has been moved.",
+  },
+  goHome: { fa: "بازگشت به خانه", ps: "کور ته ورشئ", en: "Go home" },
+  pageLoadFailed: { fa: "این صفحه بارگذاری نشد", ps: "دا پاڼه بار نه شوه", en: "This page didn't load" },
+  pageLoadFailedDesc: {
+    fa: "مشکلی از طرف ما پیش آمد. دوباره تلاش کنید یا به خانه بازگردید.",
+    ps: "زموږ په اړخ کې ستونزه رامنځته شوه. بیا هڅه وکړئ یا کور ته ستون شئ.",
+    en: "Something went wrong on our end. You can try refreshing or head back home.",
+  },
   // Phone OTP auth
   phoneTab: { fa: "شماره تلفن", ps: "د تلیفون شمېره", en: "Phone" },
   emailTab: { fa: "ایمیل", ps: "ایمیل", en: "Email" },
