@@ -158,10 +158,16 @@ function ListingDetail() {
       <div className="min-h-screen bg-background">
         <TopBar />
         <div className="flex flex-col items-center gap-3 py-24 text-center">
-          <p className="text-sm text-muted-foreground">{t("emptyListings")}</p>
-          <button onClick={() => refetch()} className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
-            {t("retry")}
-          </button>
+          <p className="text-sm text-muted-foreground">{t(isError ? "errorTitle" : "notFoundRecord")}</p>
+          {isError ? (
+            <button onClick={() => refetch()} className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+              {t("retry")}
+            </button>
+          ) : (
+            <Link to="/" className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+              {t("goHome")}
+            </Link>
+          )}
         </div>
       </div>
     );
