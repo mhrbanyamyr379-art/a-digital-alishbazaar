@@ -542,3 +542,13 @@ export function useI18n() {
   if (!ctx) throw new Error("useI18n must be used within I18nProvider");
   return ctx;
 }
+
+/** Translate outside the provider (used by the root error boundary). */
+export function tStandalone(key: keyof typeof T): string {
+  let lang: Lang = "fa";
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("ab-lang") as Lang | null;
+    if (stored && LANGS.some((l) => l.id === stored)) lang = stored;
+  }
+  return T[key]?.[lang] ?? String(key);
+}
