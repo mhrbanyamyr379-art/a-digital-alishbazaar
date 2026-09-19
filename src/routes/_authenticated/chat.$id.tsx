@@ -544,17 +544,21 @@ function ChatThread() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background p-6 text-center">
         <AlertCircle className="size-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
+        <p className="text-sm text-muted-foreground">
+          {convError || msgsError ? t("errorTitle") : t("notFoundRecord")}
+        </p>
         <div className="flex gap-2">
-          <button
-            onClick={() => {
-              refetchConv();
-              refetchMsgs();
-            }}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-          >
-            {t("retry")}
-          </button>
+          {(convError || msgsError) && (
+            <button
+              onClick={() => {
+                refetchConv();
+                refetchMsgs();
+              }}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+            >
+              {t("retry")}
+            </button>
+          )}
           <button
             onClick={() => navigate({ to: "/chat" })}
             className="rounded-lg border border-border px-4 py-2 text-sm font-bold"
