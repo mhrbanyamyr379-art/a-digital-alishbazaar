@@ -70,12 +70,20 @@ function SellerPage() {
     queryKey: ["seller", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,updated_at")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      return {
+        ...data,
+        id: data.id as string,
+        display_name: data.display_name ?? "",
+        rating_avg: Number(data.rating_avg ?? 0),
+        rating_count: data.rating_count ?? 0,
+        created_at: data.created_at ?? new Date().toISOString(),
+      };
     },
   });
 

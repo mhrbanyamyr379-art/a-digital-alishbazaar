@@ -61,13 +61,17 @@ function ChatListPage() {
 
       const [{ data: profs }, { data: lists }] = await Promise.all([
         otherIds.length
-          ? supabase.from("profiles").select("id,display_name,avatar_url,last_seen").in("id", otherIds)
+          ? supabase.from("public_profiles").select("id,display_name,avatar_url,last_seen").in("id", otherIds)
           : Promise.resolve({ data: [] as { id: string; display_name: string; avatar_url: string | null; last_seen: string | null }[] }),
         listingIds.length
           ? supabase.from("listings").select("id,title").in("id", listingIds)
           : Promise.resolve({ data: [] as { id: string; title: string }[] }),
       ]);
-      const pMap = new Map((profs ?? []).map((p) => [p.id, p]));
+      const pMap = new Map(
+        (profs ?? [])
+          .filter((p) => p.id != null)
+          .map((p) => [p.id as string, { ...p, id: p.id as string, display_name: p.display_name ?? "" }]),
+      );
       const lMap = new Map((lists ?? []).map((l) => [l.id, l.title]));
 
       return (convs ?? []).map((c: Record<string, unknown>): Conv => {
