@@ -56,6 +56,7 @@ export interface ListingFormInitial {
   negotiable: boolean;
   category: string;
   subcategory: string;
+  custom_subcategory: string;
   condition: string;
   province: string;
   city: string;
@@ -84,6 +85,7 @@ export function ListingForm({
   const [negotiable, setNegotiable] = useState(initial?.negotiable ?? false);
   const [category, setCategory] = useState(initial?.category ?? "");
   const [subcategory, setSubcategory] = useState(initial?.subcategory ?? "");
+  const [customSubcategory, setCustomSubcategory] = useState(initial?.custom_subcategory ?? "");
   const [condition, setCondition] = useState(initial?.condition ?? "");
   const [province, setProvince] = useState(initial?.province ?? "");
   const [city, setCity] = useState(initial?.city ?? "");
@@ -110,7 +112,11 @@ export function ListingForm({
     const e: Record<string, string> = {};
     if (title.trim().length < 5) e.title = t("titleTooShort");
     if (!category) e.category = t("requiredField");
-    else if (subs.length > 0 && !subcategoryById(category, subcategory))
+    else if (
+      subs.length > 0 &&
+      !subcategoryById(category, subcategory) &&
+      customSubcategory.trim().length < 2
+    )
       e.subcategory = t("requiredField");
     if (!price || Number(price) <= 0 || Number.isNaN(Number(price))) e.price = t("priceInvalid");
     if (!province) e.province = t("requiredField");
@@ -182,6 +188,7 @@ export function ListingForm({
         negotiable,
         category,
         subcategory: subcategory || null,
+        custom_subcategory: customSubcategory.trim() || null,
         condition: condition || null,
         province,
         city: city || null,
@@ -281,6 +288,7 @@ export function ListingForm({
                   onClick={() => {
                     setCategory(c.id);
                     setSubcategory("");
+                    setCustomSubcategory("");
                   }}
                   className={cn(
                     "flex flex-col items-center gap-1 rounded-lg border p-2.5 text-xs font-semibold transition-colors",
@@ -299,11 +307,14 @@ export function ListingForm({
             <div>
               <label className="mb-1.5 block text-sm font-bold">{t("subcategory")}</label>
               <div className="flex flex-wrap gap-2">
-                {subs.map((s) => (
+                {subs.filter((s) => s.id !== "other").map((s) => (
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => setSubcategory(s.id)}
+                    onClick={() => {
+                      setSubcategory(s.id);
+                      setCustomSubcategory("");
+                    }}
                     className={cn(
                       "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
                       subcategory === s.id ? "border-accent bg-accent/10" : "border-border",
@@ -313,7 +324,22 @@ export function ListingForm({
                   </button>
                 ))}
               </div>
-              {errors.subcategory && !subcategory && (
+              <div className="mt-3">
+                <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                  {t("customSubcategory")}
+                </label>
+                <input
+                  value={customSubcategory}
+                  onChange={(e) => {
+                    setCustomSubcategory(e.target.value);
+                    if (e.target.value) setSubcategory("");
+                  }}
+                  className={field}
+                  maxLength={60}
+                  placeholder={t("customSubcategoryPlaceholder")}
+                />
+              </div>
+              {errors.subcategory && !subcategory && customSubcategory.trim().length < 2 && (
                 <p className="mt-1 text-xs text-destructive">{errors.subcategory}</p>
               )}
             </div>
@@ -629,7 +655,7 @@ export function ListingForm({
             <div className="font-display text-xl font-black">{formatPrice(Number(price) || 0, currency, lang)}</div>
             <h3 className="mt-1 font-bold">{title || "—"}</h3>
             <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <p>{cat ? locName(cat) : "—"}{subcategoryById(category, subcategory) ? ` · ${locName(subcategoryById(category, subcategory)!)}` : ""}{condition ? ` · ${locName(CONDITIONS.find((c) => c.id === condition)!)}` : ""}</p>
+              <p>{cat ? locName(cat) : "—"}{subcategoryById(category, subcategory) ? ` · ${locName(subcategoryById(category, subcategory)!)}` : customSubcategory.trim() ? ` · ${customSubcategory.trim()}` : ""}{condition ? ` · ${locName(CONDITIONS.find((c) => c.id === condition)!)}` : ""}</p>
               <p>{prov ? locName(prov) : "—"}{city ? ` · ${city}` : ""}</p>
               <p>{t("contactMethod")}: {t(contactMethod === "both" ? "both" : contactMethod === "call" ? "callOnly" : "chatOnly")}</p>
               <p>{images.length} {t("photos")}</p>

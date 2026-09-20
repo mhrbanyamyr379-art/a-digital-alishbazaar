@@ -40,6 +40,8 @@ const T: Dict = {
   maxPrice: { fa: "حداکثر قیمت", ps: "اعظمي بیه", en: "Max price" },
   category: { fa: "دسته", ps: "کټګوري", en: "Category" },
   subcategory: { fa: "زیردسته", ps: "فرعي کټګوري", en: "Subcategory" },
+  customSubcategory: { fa: "زیردسته دلخواه", ps: "خپله فرعي کټګوري", en: "Custom subcategory" },
+  customSubcategoryPlaceholder: { fa: "نام زیردسته را بنویسید", ps: "د فرعي کټګورۍ نوم ولیکئ", en: "Type a subcategory name" },
   allSubcategories: { fa: "همه زیردسته‌ها", ps: "ټولې فرعي کټګورۍ", en: "All subcategories" },
   selectCategoryFirst: { fa: "اول دسته را انتخاب کنید", ps: "لومړی کټګوري وټاکئ", en: "Select a category first" },
   province: { fa: "ولایت", ps: "ولایت", en: "Province" },
