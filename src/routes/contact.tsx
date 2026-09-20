@@ -12,13 +12,13 @@ export const Route = createFileRoute("/contact")({
   component: ContactPage,
   head: () => ({
     meta: [
-      { title: "Contact Afghan Bazaar — Support on Telegram" },
+      { title: "Contact Alish — Support on Telegram" },
       {
         name: "description",
-        content: "Contact the Afghan Bazaar support team on our official Telegram channel for help with listings, messages and your account.",
+        content: "Contact the Alish support team on our official Telegram channel for help with listings, messages and your account.",
       },
-      { property: "og:title", content: "Contact Afghan Bazaar — Support on Telegram" },
-      { property: "og:description", content: "Reach Afghan Bazaar support on the official Telegram channel." },
+      { property: "og:title", content: "Contact Alish — Support on Telegram" },
+      { property: "og:description", content: "Reach Alish support on the official Telegram channel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

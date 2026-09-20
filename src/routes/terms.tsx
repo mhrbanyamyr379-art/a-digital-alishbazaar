@@ -9,10 +9,10 @@ export const Route = createFileRoute("/terms")({
   component: TermsPage,
   head: () => ({
     meta: [
-      { title: "Terms of Use — Afghan Bazaar" },
-      { name: "description", content: "The rules for using Afghan Bazaar: acceptable listings, user conduct, and account responsibilities." },
-      { property: "og:title", content: "Terms of Use — Afghan Bazaar" },
-      { property: "og:description", content: "Rules for buying, selling and messaging on Afghan Bazaar." },
+      { title: "Terms of Use — Alish" },
+      { name: "description", content: "The rules for using Alish: acceptable listings, user conduct, and account responsibilities." },
+      { property: "og:title", content: "Terms of Use — Alish" },
+      { property: "og:description", content: "Rules for buying, selling and messaging on Alish." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -23,9 +23,9 @@ const SECTIONS: { h: { fa: string; ps: string; en: string }; p: { fa: string; ps
   {
     h: { fa: "استفاده از خدمات", ps: "د خدمتونو کارول", en: "Using the service" },
     p: {
-      fa: "با استفاده از بازار افغان می‌پذیرید که اطلاعات درست ارائه دهید و تنها اقلام مجاز را آگهی کنید.",
-      ps: "د افغان بازار په کارولو سره منئ چې سم معلومات ورکړئ او یوازې اجازه لرونکي توکي اعلان کړئ.",
-      en: "By using Afghan Bazaar you agree to provide accurate information and to list only permitted items.",
+      fa: "با استفاده از الیش می‌پذیرید که اطلاعات درست ارائه دهید و تنها اقلام مجاز را آگهی کنید.",
+      ps: "د الیش په کارولو سره منئ چې سم معلومات ورکړئ او یوازې اجازه لرونکي توکي اعلان کړئ.",
+      en: "By using Alish you agree to provide accurate information and to list only permitted items.",
     },
   },
   {
@@ -39,9 +39,9 @@ const SECTIONS: { h: { fa: string; ps: string; en: string }; p: { fa: string; ps
   {
     h: { fa: "معاملات بین کاربران", ps: "د کاروونکو ترمنځ معاملې", en: "Transactions between users" },
     p: {
-      fa: "بازار افغان طرف معامله نیست؛ پیش از پرداخت، کالا و فروشنده را به‌دقت بررسی کنید.",
-      ps: "افغان بازار د معاملې اړخ نه دی؛ د پیسو له ورکړې مخکې توکی او پلورونکی وګورئ.",
-      en: "Afghan Bazaar is not a party to any deal. Always inspect the item and seller before paying.",
+      fa: "الیش طرف معامله نیست؛ پیش از پرداخت، کالا و فروشنده را به‌دقت بررسی کنید.",
+      ps: "الیش د معاملې اړخ نه دی؛ د پیسو له ورکړې مخکې توکی او پلورونکی وګورئ.",
+      en: "Alish is not a party to any deal. Always inspect the item and seller before paying.",
     },
   },
   {

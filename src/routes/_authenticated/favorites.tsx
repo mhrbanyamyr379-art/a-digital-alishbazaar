@@ -15,10 +15,10 @@ export const Route = createFileRoute("/_authenticated/favorites")({
   component: FavoritesPage,
   head: () => ({
     meta: [
-      { title: "Saved listings — Afghan Bazaar" },
-      { name: "description", content: "Your saved listings on Afghan Bazaar: revisit the ads you bookmarked across Afghanistan." },
-      { property: "og:title", content: "Saved listings — Afghan Bazaar" },
-      { property: "og:description", content: "Your saved listings on Afghan Bazaar." },
+      { title: "Saved listings — Alish" },
+      { name: "description", content: "Your saved listings on Alish: revisit the ads you bookmarked across Afghanistan." },
+      { property: "og:title", content: "Saved listings — Alish" },
+      { property: "og:description", content: "Your saved listings on Alish." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

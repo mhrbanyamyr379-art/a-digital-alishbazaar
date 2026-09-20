@@ -12,7 +12,7 @@ export default defineMcp({
   title: "Afghan Marketplace Hub",
   version: "0.1.0",
   instructions:
-    "Tools for Afghan Bazaar, an Afghanistan marketplace. Search and read listings, manage the signed-in user's own listings, and review their chat conversations.",
+    "Tools for Alish, an Afghanistan marketplace. Search and read listings, manage the signed-in user's own listings, and review their chat conversations.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",

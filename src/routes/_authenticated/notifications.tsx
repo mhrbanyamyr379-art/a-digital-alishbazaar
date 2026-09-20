@@ -17,10 +17,10 @@ export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
   head: () => ({
     meta: [
-      { title: "Notifications — Afghan Bazaar" },
-      { name: "description", content: "Messages, saved-listing alerts and listing updates from your Afghan Bazaar account." },
-      { property: "og:title", content: "Notifications — Afghan Bazaar" },
-      { property: "og:description", content: "Messages and listing updates from your Afghan Bazaar account." },
+      { title: "Notifications — Alish" },
+      { name: "description", content: "Messages, saved-listing alerts and listing updates from your Alish account." },
+      { property: "og:title", content: "Notifications — Alish" },
+      { property: "og:description", content: "Messages and listing updates from your Alish account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

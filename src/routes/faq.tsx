@@ -9,13 +9,13 @@ export const Route = createFileRoute("/faq")({
   component: FaqPage,
   head: () => ({
     meta: [
-      { title: "FAQ — Afghan Bazaar" },
+      { title: "FAQ — Alish" },
       {
         name: "description",
-        content: "Answers to common questions about posting ads, messaging sellers, safety and account settings on Afghan Bazaar.",
+        content: "Answers to common questions about posting ads, messaging sellers, safety and account settings on Alish.",
       },
-      { property: "og:title", content: "FAQ — Afghan Bazaar" },
-      { property: "og:description", content: "Common questions about using Afghan Bazaar." },
+      { property: "og:title", content: "FAQ — Alish" },
+      { property: "og:description", content: "Common questions about using Alish." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

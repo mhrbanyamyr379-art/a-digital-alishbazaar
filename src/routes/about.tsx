@@ -10,12 +10,12 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
   head: () => ({
     meta: [
-      { title: "About Afghan Bazaar — Afghanistan's Marketplace" },
+      { title: "About Alish — Afghanistan's Marketplace" },
       {
         name: "description",
-        content: "Learn about Afghan Bazaar, the online marketplace for buying and selling across all 34 provinces of Afghanistan in Dari, Pashto and English.",
+        content: "Learn about Alish, the online marketplace for buying and selling across all 34 provinces of Afghanistan in Dari, Pashto and English.",
       },
-      { property: "og:title", content: "About Afghan Bazaar" },
+      { property: "og:title", content: "About Alish" },
       { property: "og:description", content: "Afghanistan's marketplace in Dari, Pashto and English." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

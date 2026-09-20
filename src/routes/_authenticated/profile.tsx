@@ -65,10 +65,10 @@ export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
   head: () => ({
     meta: [
-      { title: "My account — Afghan Bazaar" },
-      { name: "description", content: "Manage your Afghan Bazaar account: profile, listings, favorites, notifications, language, theme and support." },
-      { property: "og:title", content: "My account — Afghan Bazaar" },
-      { property: "og:description", content: "Manage your Afghan Bazaar profile, listings and settings." },
+      { title: "My account — Alish" },
+      { name: "description", content: "Manage your Alish account: profile, listings, favorites, notifications, language, theme and support." },
+      { property: "og:title", content: "My account — Alish" },
+      { property: "og:description", content: "Manage your Alish profile, listings and settings." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

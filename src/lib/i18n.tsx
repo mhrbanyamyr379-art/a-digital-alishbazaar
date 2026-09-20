@@ -11,7 +11,7 @@ export const LANGS: { id: Lang; label: string; native: string; dir: "rtl" | "ltr
 type Dict = Record<string, { fa: string; ps: string; en: string }>;
 
 const T: Dict = {
-  appName: { fa: "بازار افغان", ps: "افغان بازار", en: "Afghan Bazaar" },
+  appName: { fa: "الیش", ps: "الیش", en: "Alish" },
   tagline: { fa: "بازار آنلاین افغانستان", ps: "د افغانستان آنلاین بازار", en: "Afghanistan's Marketplace" },
   search: { fa: "چه می‌جویید؟", ps: "څه لټوئ؟", en: "What are you looking for?" },
   allProvinces: { fa: "همه ولایات", ps: "ټول ولایات", en: "All provinces" },
@@ -443,7 +443,7 @@ const T: Dict = {
   contactUs: { fa: "تماس با ما", ps: "زموږ سره اړیکه", en: "Contact us" },
   reportProblem: { fa: "گزارش مشکل", ps: "د ستونزې راپور", en: "Report a problem" },
   faqTitle: { fa: "سوالات متداول", ps: "ډېرې پوښتل شوې پوښتنې", en: "Frequently asked questions" },
-  aboutApp: { fa: "درباره بازار افغان", ps: "د افغان بازار په اړه", en: "About Afghan Bazaar" },
+  aboutApp: { fa: "درباره الیش", ps: "د الیش په اړه", en: "About Alish" },
   termsOfUse: { fa: "شرایط استفاده", ps: "د کارونې شرایط", en: "Terms of use" },
   privacyPolicy: { fa: "سیاست حریم خصوصی", ps: "د محرمیت پالیسي", en: "Privacy policy" },
   appVersion: { fa: "نسخه برنامه", ps: "د اپ نسخه", en: "App version" },
@@ -465,9 +465,9 @@ const T: Dict = {
   },
   accountDeleted: { fa: "حساب شما حذف شد", ps: "ستاسو حساب ړنګ شو", en: "Your account has been deleted" },
   telegramOfficial: {
-    fa: "تلگرام رسمی بازار افغان",
-    ps: "د افغان بازار رسمي ټلګرام",
-    en: "Official Afghan Bazaar Telegram",
+    fa: "تلگرام رسمی الیش",
+    ps: "د الیش رسمي ټلګرام",
+    en: "Official Alish Telegram",
   },
   telegramDesc: {
     fa: "برای پشتیبانی و پرسش‌ها در تلگرام با ما در تماس شوید.",
@@ -490,9 +490,9 @@ const T: Dict = {
     en: "Your phone number is only shown to people you chat with, or through the call button on your listings.",
   },
   aboutBody: {
-    fa: "بازار افغان یک بازار آنلاین برای خرید و فروش در سراسر ۳۴ ولایت افغانستان است؛ ساده، امن و به سه زبان دری، پشتو و انگلیسی.",
-    ps: "افغان بازار د افغانستان په ۳۴ ولایتونو کې د پیر او پلور لپاره آنلاین بازار دی؛ ساده، خوندي او په دري، پښتو او انګلیسي.",
-    en: "Afghan Bazaar is an online marketplace for buying and selling across all 34 provinces of Afghanistan — simple, safe, and available in Dari, Pashto and English.",
+    fa: "الیش یک بازار آنلاین برای خرید و فروش در سراسر ۳۴ ولایت افغانستان است؛ ساده، امن و به سه زبان دری، پشتو و انگلیسی.",
+    ps: "الیش د افغانستان په ۳۴ ولایتونو کې د پیر او پلور لپاره آنلاین بازار دی؛ ساده، خوندي او په دري، پښتو او انګلیسي.",
+    en: "Alish is an online marketplace for buying and selling across all 34 provinces of Afghanistan — simple, safe, and available in Dari, Pashto and English.",
   },
 };
 

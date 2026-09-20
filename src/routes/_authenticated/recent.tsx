@@ -14,10 +14,10 @@ export const Route = createFileRoute("/_authenticated/recent")({
   component: RecentPage,
   head: () => ({
     meta: [
-      { title: "Recently viewed — Afghan Bazaar" },
-      { name: "description", content: "The Afghan Bazaar listings you looked at recently, ready to revisit." },
-      { property: "og:title", content: "Recently viewed — Afghan Bazaar" },
-      { property: "og:description", content: "Listings you recently viewed on Afghan Bazaar." },
+      { title: "Recently viewed — Alish" },
+      { name: "description", content: "The Alish listings you looked at recently, ready to revisit." },
+      { property: "og:title", content: "Recently viewed — Alish" },
+      { property: "og:description", content: "Listings you recently viewed on Alish." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
