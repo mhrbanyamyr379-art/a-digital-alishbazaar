@@ -42,7 +42,7 @@ async function fetchListing(id: string) {
   if (!data) return null;
   const isAuthed = !!(await supabase.auth.getSession()).data.session;
   const { data: seller } = await supabase
-    .from("public_profiles")
+    .from("profiles")
     .select("id,display_name,avatar_url,rating_avg,rating_count")
     .eq("id", data.seller_id)
     .maybeSingle();
