@@ -608,48 +608,7 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          display_name: string | null
-          id: string | null
-          is_banned: boolean | null
-          last_seen: string | null
-          province: string | null
-          rating_avg: number | null
-          rating_count: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          id?: string | null
-          is_banned?: boolean | null
-          last_seen?: string | null
-          province?: string | null
-          rating_avg?: number | null
-          rating_count?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          id?: string | null
-          is_banned?: boolean | null
-          last_seen?: string | null
-          province?: string | null
-          rating_avg?: number | null
-          rating_count?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       admin_list_audit: {
