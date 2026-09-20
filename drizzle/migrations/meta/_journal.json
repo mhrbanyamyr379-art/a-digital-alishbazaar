@@ -36,6 +36,13 @@
       "when": 1789876898826,
       "tag": "0004_fix_profiles_phone_exposure_and_definer_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789876920888,
+      "tag": "0005_public_profiles_add_updated_at",
+      "breakpoints": true
     }
   ]
 }

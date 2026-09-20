@@ -70,7 +70,7 @@ function SellerPage() {
     queryKey: ["seller", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,updated_at")
         .eq("id", id)
         .maybeSingle();

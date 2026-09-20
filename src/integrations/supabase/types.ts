@@ -620,6 +620,7 @@ export type Database = {
           province: string | null
           rating_avg: number | null
           rating_count: number | null
+          updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -632,6 +633,7 @@ export type Database = {
           province?: string | null
           rating_avg?: number | null
           rating_count?: number | null
+          updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -644,6 +646,7 @@ export type Database = {
           province?: string | null
           rating_avg?: number | null
           rating_count?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }

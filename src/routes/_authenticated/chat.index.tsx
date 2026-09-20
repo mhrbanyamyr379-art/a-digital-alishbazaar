@@ -61,7 +61,7 @@ function ChatListPage() {
 
       const [{ data: profs }, { data: lists }] = await Promise.all([
         otherIds.length
-          ? supabase.from("profiles").select("id,display_name,avatar_url,last_seen").in("id", otherIds)
+          ? supabase.from("public_profiles").select("id,display_name,avatar_url,last_seen").in("id", otherIds)
           : Promise.resolve({ data: [] as { id: string; display_name: string; avatar_url: string | null; last_seen: string | null }[] }),
         listingIds.length
           ? supabase.from("listings").select("id,title").in("id", listingIds)
