@@ -50,6 +50,13 @@
       "when": 1789882123883,
       "tag": "0006_fix_definer_helpers_view_and_listing_image_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789890511324,
+      "tag": "0007_add_custom_listing_subcategory",
+      "breakpoints": true
     }
   ]
 }

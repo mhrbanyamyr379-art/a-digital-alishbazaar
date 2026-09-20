@@ -190,6 +190,7 @@ export type Database = {
           contact_method: string
           created_at: string
           currency: string
+          custom_subcategory: string | null
           description: string
           expires_at: string | null
           favorites_count: number
@@ -217,6 +218,7 @@ export type Database = {
           contact_method?: string
           created_at?: string
           currency?: string
+          custom_subcategory?: string | null
           description?: string
           expires_at?: string | null
           favorites_count?: number
@@ -244,6 +246,7 @@ export type Database = {
           contact_method?: string
           created_at?: string
           currency?: string
+          custom_subcategory?: string | null
           description?: string
           expires_at?: string | null
           favorites_count?: number
