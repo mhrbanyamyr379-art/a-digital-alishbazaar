@@ -1,19 +1,23 @@
 -- 1. blocks: scope policies to authenticated and to the blocker only
 DROP POLICY IF EXISTS "Users manage own blocks" ON public.blocks;
 
+DROP POLICY IF EXISTS "Users view own blocks" ON public.blocks;
 CREATE POLICY "Users view own blocks"
 ON public.blocks FOR SELECT TO authenticated
 USING (auth.uid() = blocker_id);
 
+DROP POLICY IF EXISTS "Users create own blocks" ON public.blocks;
 CREATE POLICY "Users create own blocks"
 ON public.blocks FOR INSERT TO authenticated
 WITH CHECK (auth.uid() = blocker_id);
 
+DROP POLICY IF EXISTS "Users update own blocks" ON public.blocks;
 CREATE POLICY "Users update own blocks"
 ON public.blocks FOR UPDATE TO authenticated
 USING (auth.uid() = blocker_id)
 WITH CHECK (auth.uid() = blocker_id);
 
+DROP POLICY IF EXISTS "Users delete own blocks" ON public.blocks;
 CREATE POLICY "Users delete own blocks"
 ON public.blocks FOR DELETE TO authenticated
 USING (auth.uid() = blocker_id);
@@ -25,6 +29,7 @@ GRANT ALL ON public.blocks TO service_role;
 -- 2. profiles: public read is limited to non-sensitive columns only
 DROP POLICY IF EXISTS "Profiles are public" ON public.profiles;
 
+DROP POLICY IF EXISTS "Public profile fields are viewable" ON public.profiles;
 CREATE POLICY "Public profile fields are viewable"
 ON public.profiles FOR SELECT TO anon, authenticated
 USING (true);
