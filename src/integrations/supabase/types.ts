@@ -608,7 +608,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          is_banned: boolean | null
+          last_seen: string | null
+          province: string | null
+          rating_avg: number | null
+          rating_count: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_banned?: boolean | null
+          last_seen?: string | null
+          province?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_banned?: boolean | null
+          last_seen?: string | null
+          province?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_list_audit: {
