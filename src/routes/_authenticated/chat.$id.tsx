@@ -148,7 +148,7 @@ function ChatThread() {
     enabled: !!otherId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("public_profiles")
+        .from("profiles")
         .select("id,display_name,avatar_url,last_seen")
         .eq("id", otherId!)
         .maybeSingle();

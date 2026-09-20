@@ -43,6 +43,13 @@
       "when": 1789876920888,
       "tag": "0005_public_profiles_add_updated_at",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789882123883,
+      "tag": "0006_fix_definer_helpers_view_and_listing_image_reads",
+      "breakpoints": true
     }
   ]
 }

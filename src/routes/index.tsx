@@ -120,7 +120,7 @@ async function fetchListings(params: SearchParams, page: number): Promise<{
   if (params.rating > 0 && rows.length > 0) {
     const sellerIds = Array.from(new Set(rows.map((r) => r.seller_id)));
     const { data: profs } = await supabase
-      .from("public_profiles")
+      .from("profiles")
       .select("id,rating_avg")
       .in("id", sellerIds);
     const allowed = new Set((profs ?? []).filter((p) => Number(p.rating_avg) >= params.rating).map((p) => p.id));
