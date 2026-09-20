@@ -70,6 +70,8 @@ function EditPage() {
     province: data.province,
     city: data.city ?? "",
     contact_method: (data.contact_method as "call" | "chat" | "both") ?? "both",
+    contact_phone: data.contact_phone ?? "",
+    contact_whatsapp: data.contact_whatsapp ?? "",
     tags: data.tags ?? [],
     status: data.status,
     images: imgs.map((im) => ({ url: im.url })),

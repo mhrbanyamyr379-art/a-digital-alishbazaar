@@ -188,6 +188,8 @@ export type Database = {
           city: string | null
           condition: string | null
           contact_method: string
+          contact_phone: string | null
+          contact_whatsapp: string | null
           created_at: string
           currency: string
           custom_subcategory: string | null
@@ -216,6 +218,8 @@ export type Database = {
           city?: string | null
           condition?: string | null
           contact_method?: string
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           created_at?: string
           currency?: string
           custom_subcategory?: string | null
@@ -244,6 +248,8 @@ export type Database = {
           city?: string | null
           condition?: string | null
           contact_method?: string
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           created_at?: string
           currency?: string
           custom_subcategory?: string | null
