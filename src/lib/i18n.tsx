@@ -127,6 +127,7 @@ const T: Dict = {
   phoneTab: { fa: "شماره تلفن", ps: "د تلیفون شمېره", en: "Phone" },
   emailTab: { fa: "ایمیل", ps: "ایمیل", en: "Email" },
   phoneNumber: { fa: "شماره تلفن", ps: "د تلیفون شمېره", en: "Phone number" },
+  whatsappNumber: { fa: "شماره واتساپ", ps: "د واټساپ شمېره", en: "WhatsApp number" },
   phoneHint: {
     fa: "مثال: 0700123456 یا 93700123456+",
     ps: "بېلګه: 0700123456 یا 93700123456+",

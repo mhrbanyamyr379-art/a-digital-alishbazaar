@@ -191,8 +191,11 @@ function ListingDetail() {
     phone: string | null;
   } | null;
 
-  const phoneDigits = (seller?.phone ?? "").replace(/[^\d+]/g, "");
-  const waNumber = phoneDigits.replace(/^\+/, "").replace(/^0/, "93");
+  const listingPhone = (l.contact_phone as string | null) ?? seller?.phone ?? null;
+  const listingWhatsapp =
+    (l.contact_whatsapp as string | null) ?? (l.contact_phone as string | null) ?? seller?.phone ?? null;
+  const phoneDigits = (listingPhone ?? "").replace(/[^\d+]/g, "");
+  const waNumber = (listingWhatsapp ?? "").replace(/[^\d+]/g, "").replace(/^\+/, "").replace(/^0/, "93");
   const shareText = `${l.title} — ${window.location.origin}/listing/${l.id}`;
 
 

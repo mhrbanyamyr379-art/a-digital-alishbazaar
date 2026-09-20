@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { dbErrorKey } from "@/lib/db-errors";
+import { normalizePhone } from "@/lib/phone";
 
 import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
 import { subcategoriesFor, subcategoryById } from "@/data/subcategories";
@@ -61,6 +62,8 @@ export interface ListingFormInitial {
   province: string;
   city: string;
   contact_method: ContactMethod;
+  contact_phone: string;
+  contact_whatsapp: string;
   tags: string[];
   status: string;
   images: { url: string }[];
@@ -90,6 +93,22 @@ export function ListingForm({
   const [province, setProvince] = useState(initial?.province ?? "");
   const [city, setCity] = useState(initial?.city ?? "");
   const [contactMethod, setContactMethod] = useState<ContactMethod>(initial?.contact_method ?? "both");
+  const [contactPhone, setContactPhone] = useState(initial?.contact_phone ?? "");
+  const [contactWhatsapp, setContactWhatsapp] = useState(initial?.contact_whatsapp ?? "");
+
+  // Prefill phone fields from the seller's profile number (create mode only).
+  useEffect(() => {
+    if (mode !== "create" || !user) return;
+    supabase
+      .rpc("get_my_phone")
+      .then(({ data }) => {
+        const p = (data as unknown as string | null) ?? null;
+        if (p) {
+          setContactPhone((v) => v || p);
+          setContactWhatsapp((v) => v || p);
+        }
+      });
+  }, [mode, user]);
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [images, setImages] = useState<ImgItem[]>(
@@ -121,6 +140,12 @@ export function ListingForm({
     if (!price || Number(price) <= 0 || Number.isNaN(Number(price))) e.price = t("priceInvalid");
     if (!province) e.province = t("requiredField");
     if (images.length === 0) e.images = t("imageRequired");
+    if (contactMethod !== "chat") {
+      if (!contactPhone.trim()) e.contactPhone = t("requiredField");
+      else if (!normalizePhone(contactPhone)) e.contactPhone = t("errInvalidPhone");
+    }
+    if (contactWhatsapp.trim() && !normalizePhone(contactWhatsapp))
+      e.contactWhatsapp = t("errInvalidPhone");
     return e;
   }
 
@@ -128,7 +153,7 @@ export function ListingForm({
     if (idx === 0) return !errors.title && !errors.category && !errors.subcategory;
     if (idx === 1) return !errors.price;
     if (idx === 2) return !errors.images;
-    if (idx === 3) return !errors.province;
+    if (idx === 3) return !errors.province && !errors.contactPhone && !errors.contactWhatsapp;
     return true;
   };
 
@@ -193,6 +218,9 @@ export function ListingForm({
         province,
         city: city || null,
         contact_method: contactMethod,
+        contact_phone: contactMethod === "chat" ? null : normalizePhone(contactPhone),
+        contact_whatsapp:
+          contactMethod === "chat" ? null : contactWhatsapp.trim() ? normalizePhone(contactWhatsapp) : null,
         tags,
         status,
       };
@@ -638,6 +666,46 @@ export function ListingForm({
               ))}
             </div>
           </div>
+
+          {contactMethod !== "chat" && (
+            <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-bold">{t("phoneNumber")}</label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  dir="ltr"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="+93700123456"
+                  maxLength={16}
+                  className={cn(field, "text-left")}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">{t("phoneHint")}</p>
+                {contactPhone.length > 0 && errors.contactPhone && (
+                  <p className="mt-1 text-xs text-destructive">{errors.contactPhone}</p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-bold">
+                  {t("whatsappNumber")} <span className="text-muted-foreground">({t("optional")})</span>
+                </label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  dir="ltr"
+                  value={contactWhatsapp}
+                  onChange={(e) => setContactWhatsapp(e.target.value)}
+                  placeholder="+93700123456"
+                  maxLength={16}
+                  className={cn(field, "text-left")}
+                />
+                {contactWhatsapp.length > 0 && errors.contactWhatsapp && (
+                  <p className="mt-1 text-xs text-destructive">{errors.contactWhatsapp}</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -658,6 +726,12 @@ export function ListingForm({
               <p>{cat ? locName(cat) : "—"}{subcategoryById(category, subcategory) ? ` · ${locName(subcategoryById(category, subcategory)!)}` : customSubcategory.trim() ? ` · ${customSubcategory.trim()}` : ""}{condition ? ` · ${locName(CONDITIONS.find((c) => c.id === condition)!)}` : ""}</p>
               <p>{prov ? locName(prov) : "—"}{city ? ` · ${city}` : ""}</p>
               <p>{t("contactMethod")}: {t(contactMethod === "both" ? "both" : contactMethod === "call" ? "callOnly" : "chatOnly")}</p>
+              {contactMethod !== "chat" && normalizePhone(contactPhone) && (
+                <p dir="ltr" className="text-left">
+                  {t("phoneNumber")}: {normalizePhone(contactPhone)}
+                  {normalizePhone(contactWhatsapp) ? ` · ${t("whatsapp")}: ${normalizePhone(contactWhatsapp)}` : ""}
+                </p>
+              )}
               <p>{images.length} {t("photos")}</p>
             </div>
             {tags.length > 0 && (
