@@ -29,10 +29,10 @@ export const Route = createFileRoute("/_authenticated/my-listings")({
   component: MyListingsPage,
   head: () => ({
     meta: [
-      { title: "My listings — Afghan Bazaar" },
-      { name: "description", content: "Manage your Afghan Bazaar ads: active, pending, sold, rejected and expired listings." },
-      { property: "og:title", content: "My listings — Afghan Bazaar" },
-      { property: "og:description", content: "Manage your Afghan Bazaar ads in one place." },
+      { title: "My listings — Alish" },
+      { name: "description", content: "Manage your Alish ads: active, pending, sold, rejected and expired listings." },
+      { property: "og:title", content: "My listings — Alish" },
+      { property: "og:description", content: "Manage your Alish ads in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

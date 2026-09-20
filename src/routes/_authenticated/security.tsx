@@ -17,10 +17,10 @@ export const Route = createFileRoute("/_authenticated/security")({
   component: SecurityPage,
   head: () => ({
     meta: [
-      { title: "Account security — Afghan Bazaar" },
-      { name: "description", content: "Review your Afghan Bazaar sign-in details and change your password." },
-      { property: "og:title", content: "Account security — Afghan Bazaar" },
-      { property: "og:description", content: "Manage your Afghan Bazaar sign-in details and password." },
+      { title: "Account security — Alish" },
+      { name: "description", content: "Review your Alish sign-in details and change your password." },
+      { property: "og:title", content: "Account security — Alish" },
+      { property: "og:description", content: "Manage your Alish sign-in details and password." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

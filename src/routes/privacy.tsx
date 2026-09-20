@@ -9,10 +9,10 @@ export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Afghan Bazaar" },
-      { name: "description", content: "How Afghan Bazaar collects, uses and protects your personal data, including your phone number and messages." },
-      { property: "og:title", content: "Privacy Policy — Afghan Bazaar" },
-      { property: "og:description", content: "How Afghan Bazaar handles and protects your data." },
+      { title: "Privacy Policy — Alish" },
+      { name: "description", content: "How Alish collects, uses and protects your personal data, including your phone number and messages." },
+      { property: "og:title", content: "Privacy Policy — Alish" },
+      { property: "og:description", content: "How Alish handles and protects your data." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

@@ -86,7 +86,7 @@ function Consent() {
           Connect {clientName} to your account
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {clientName} will be able to read and manage your listings and conversations on Afghan Bazaar as you.
+          {clientName} will be able to read and manage your listings and conversations on Alish as you.
         </p>
         {error && (
           <p role="alert" className="mt-3 text-sm text-destructive">

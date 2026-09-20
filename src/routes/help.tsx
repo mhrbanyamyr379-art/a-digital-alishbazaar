@@ -12,13 +12,13 @@ export const Route = createFileRoute("/help")({
   component: HelpPage,
   head: () => ({
     meta: [
-      { title: "Help Center — Afghan Bazaar" },
+      { title: "Help Center — Alish" },
       {
         name: "description",
-        content: "Get help with buying, selling, messaging and account safety on Afghan Bazaar.",
+        content: "Get help with buying, selling, messaging and account safety on Alish.",
       },
-      { property: "og:title", content: "Help Center — Afghan Bazaar" },
-      { property: "og:description", content: "Help with buying, selling and staying safe on Afghan Bazaar." },
+      { property: "og:title", content: "Help Center — Alish" },
+      { property: "og:description", content: "Help with buying, selling and staying safe on Alish." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
