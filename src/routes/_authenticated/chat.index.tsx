@@ -67,7 +67,11 @@ function ChatListPage() {
           ? supabase.from("listings").select("id,title").in("id", listingIds)
           : Promise.resolve({ data: [] as { id: string; title: string }[] }),
       ]);
-      const pMap = new Map((profs ?? []).map((p) => [p.id, p]));
+      const pMap = new Map(
+        (profs ?? [])
+          .filter((p) => p.id != null)
+          .map((p) => [p.id as string, { ...p, id: p.id as string, display_name: p.display_name ?? "" }]),
+      );
       const lMap = new Map((lists ?? []).map((l) => [l.id, l.title]));
 
       return (convs ?? []).map((c: Record<string, unknown>): Conv => {

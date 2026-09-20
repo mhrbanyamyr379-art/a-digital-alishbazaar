@@ -75,7 +75,15 @@ function SellerPage() {
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      return {
+        ...data,
+        id: data.id as string,
+        display_name: data.display_name ?? "",
+        rating_avg: Number(data.rating_avg ?? 0),
+        rating_count: data.rating_count ?? 0,
+        created_at: data.created_at ?? new Date().toISOString(),
+      };
     },
   });
 
