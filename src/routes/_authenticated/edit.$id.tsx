@@ -65,6 +65,7 @@ function EditPage() {
     negotiable: data.negotiable,
     category: data.category,
     subcategory: data.subcategory ?? "",
+    custom_subcategory: data.custom_subcategory ?? "",
     condition: data.condition ?? "",
     province: data.province,
     city: data.city ?? "",
