@@ -22,6 +22,13 @@
       "when": 1789695188386,
       "tag": "0002_allow_internal_counter_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789876139110,
+      "tag": "0003_enable_realtime_publication",
+      "breakpoints": true
     }
   ]
 }
