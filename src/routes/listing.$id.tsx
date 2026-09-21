@@ -5,6 +5,7 @@ import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, 
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { dbErrorKey } from "@/lib/db-errors";
@@ -32,15 +33,23 @@ export const Route = createFileRoute("/listing/$id")({
   component: ListingDetail,
 });
 
+type ListingRow = Database["public"]["Tables"]["listings"]["Row"] & {
+  listing_images: { id: string; url: string; position: number }[] | null;
+};
+
+/** Columns any visitor may read. Seller contact numbers are signed-in only. */
+const PUBLIC_LISTING_COLS =
+  "id,seller_id,title,description,price,currency,negotiable,category,subcategory,custom_subcategory,condition,province,city,status,view_count,is_featured,created_at,updated_at,contact_method,tags,published_at,expires_at,favorites_count";
+
 async function fetchListing(id: string) {
-  const { data, error } = await supabase
-    .from("listings")
-    .select("*, listing_images(id,url,position)")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
   const isAuthed = !!(await supabase.auth.getSession()).data.session;
+  const cols = isAuthed
+    ? `${PUBLIC_LISTING_COLS},contact_phone,contact_whatsapp, listing_images(id,url,position)`
+    : `${PUBLIC_LISTING_COLS}, listing_images(id,url,position)`;
+  const { data: row, error } = await supabase.from("listings").select(cols).eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!row) return null;
+  const data = row as unknown as ListingRow;
   const { data: seller } = await supabase
     .from("profiles")
     .select("id,display_name,avatar_url,rating_avg,rating_count")
