@@ -32,6 +32,10 @@ export const Route = createFileRoute("/listing/$id")({
   component: ListingDetail,
 });
 
+type ListingRow = Database["public"]["Tables"]["listings"]["Row"] & {
+  listing_images: { id: string; url: string; position: number }[] | null;
+};
+
 /** Columns any visitor may read. Seller contact numbers are signed-in only. */
 const PUBLIC_LISTING_COLS =
   "id,seller_id,title,description,price,currency,negotiable,category,subcategory,custom_subcategory,condition,province,city,status,view_count,is_featured,created_at,updated_at,contact_method,tags,published_at,expires_at,favorites_count";
