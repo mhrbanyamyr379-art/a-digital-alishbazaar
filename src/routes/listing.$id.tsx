@@ -44,7 +44,7 @@ async function fetchListing(id: string) {
   const { data: row, error } = await supabase.from("listings").select(cols).eq("id", id).maybeSingle();
   if (error) throw error;
   if (!row) return null;
-  const data = row as unknown as Record<string, unknown> & { seller_id: string };
+  const data = row as unknown as ListingRow;
   const { data: seller } = await supabase
     .from("profiles")
     .select("id,display_name,avatar_url,rating_avg,rating_count")
