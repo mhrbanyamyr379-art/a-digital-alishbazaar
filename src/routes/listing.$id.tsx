@@ -32,15 +32,19 @@ export const Route = createFileRoute("/listing/$id")({
   component: ListingDetail,
 });
 
+/** Columns any visitor may read. Seller contact numbers are signed-in only. */
+const PUBLIC_LISTING_COLS =
+  "id,seller_id,title,description,price,currency,negotiable,category,subcategory,custom_subcategory,condition,province,city,status,view_count,is_featured,created_at,updated_at,contact_method,tags,published_at,expires_at,favorites_count";
+
 async function fetchListing(id: string) {
-  const { data, error } = await supabase
-    .from("listings")
-    .select("*, listing_images(id,url,position)")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
   const isAuthed = !!(await supabase.auth.getSession()).data.session;
+  const cols = isAuthed
+    ? `${PUBLIC_LISTING_COLS},contact_phone,contact_whatsapp, listing_images(id,url,position)`
+    : `${PUBLIC_LISTING_COLS}, listing_images(id,url,position)`;
+  const { data: row, error } = await supabase.from("listings").select(cols).eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!row) return null;
+  const data = row as unknown as Record<string, unknown> & { seller_id: string };
   const { data: seller } = await supabase
     .from("profiles")
     .select("id,display_name,avatar_url,rating_avg,rating_count")
