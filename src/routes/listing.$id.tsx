@@ -5,6 +5,7 @@ import { Heart, Share2, Flag, Phone, MessageCircle, Star, Eye, MapPin, Loader2, 
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { dbErrorKey } from "@/lib/db-errors";
