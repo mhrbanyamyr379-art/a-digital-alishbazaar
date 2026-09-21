@@ -78,6 +78,13 @@
       "when": 1789952813527,
       "tag": "0010_column_scope_anon_listing_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789953055092,
+      "tag": "0011_revoke_internal_require_moderator_execute",
+      "breakpoints": true
     }
   ]
 }
