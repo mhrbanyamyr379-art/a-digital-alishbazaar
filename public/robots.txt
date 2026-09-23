@@ -6,4 +6,4 @@ Disallow: /chat
 Disallow: /post
 Disallow: /favorites
 
-Sitemap: https://afghan-bazaar-digital.lovable.app/sitemap.xml
+Sitemap: https://a-digital-alishbazaar.lovable.app/sitemap.xml

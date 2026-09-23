@@ -17,7 +17,23 @@ export const Route = createFileRoute("/faq")({
       { property: "og:title", content: "FAQ — Alish" },
       { property: "og:description", content: "Common questions about using Alish." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://a-digital-alishbazaar.lovable.app/faq" },
       { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: "https://a-digital-alishbazaar.lovable.app/faq" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: ITEMS.map((it) => ({
+            "@type": "Question",
+            name: it.q.en,
+            acceptedAnswer: { "@type": "Answer", text: it.a.en },
+          })),
+        }),
+      },
     ],
   }),
 });

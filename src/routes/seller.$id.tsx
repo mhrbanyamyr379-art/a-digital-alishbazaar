@@ -31,8 +31,45 @@ import { useStartChat } from "@/hooks/useStartChat";
 import { cn } from "@/lib/utils";
 
 
+const SITE_URL = "https://a-digital-alishbazaar.lovable.app";
+
+async function fetchSellerMeta(id: string) {
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id,display_name,bio,province")
+      .eq("id", id)
+      .maybeSingle();
+    return (data as { id: string; display_name: string | null; bio: string | null; province: string | null } | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/seller/$id")({
   component: SellerPage,
+  loader: ({ params }) => fetchSellerMeta(params.id),
+  head: ({ params, loaderData }) => {
+    const url = `${SITE_URL}/seller/${params.id}`;
+    const name = loaderData?.display_name?.trim() || "Seller";
+    const title = `${name} — Seller on Alish الیش`;
+    const province = loaderData?.province ? provinceById(loaderData.province)?.en : null;
+    const description =
+      loaderData?.bio?.replace(/\s+/g, " ").trim().slice(0, 155) ||
+      `Browse ads posted by ${name}${province ? ` in ${province}` : ""} on Alish, Afghanistan's marketplace.`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "profile" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
 });
 
 interface Review {
