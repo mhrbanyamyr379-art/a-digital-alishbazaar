@@ -1,6 +1,7 @@
 import { useEffect, useState, type ImgHTMLAttributes } from "react";
 import { ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { signActiveListingImage } from "@/lib/listing-images.functions";
 import { cn } from "@/lib/utils";
 
 const SIGNED_TTL_SECONDS = 3600;
@@ -17,11 +18,22 @@ async function getSignedUrl(bucket: string, path: string): Promise<string | null
   const p = supabase.storage
     .from(bucket)
     .createSignedUrl(path, SIGNED_TTL_SECONDS)
-    .then(({ data, error }) => {
+    .then(async ({ data, error }) => {
+      let url = error ? null : (data?.signedUrl ?? null);
+      // Signed-out shoppers have no direct read access to the private listings
+      // bucket; fall back to the server, which only signs photos of active ads.
+      if (!url && bucket === "listings") {
+        try {
+          const res = await signActiveListingImage({ data: { path } });
+          url = res?.url ?? null;
+        } catch {
+          url = null;
+        }
+      }
       inflight.delete(key);
-      if (error || !data?.signedUrl) return null;
-      cache.set(key, { url: data.signedUrl, expires: now + SIGNED_TTL_SECONDS * 1000 });
-      return data.signedUrl;
+      if (!url) return null;
+      cache.set(key, { url, expires: now + SIGNED_TTL_SECONDS * 1000 });
+      return url;
     })
     .catch(() => {
       inflight.delete(key);
@@ -30,6 +42,7 @@ async function getSignedUrl(bucket: string, path: string): Promise<string | null
   inflight.set(key, p);
   return p;
 }
+
 
 interface Props extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
   bucket: "listings" | "avatars" | "chat-images";
