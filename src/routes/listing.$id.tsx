@@ -29,8 +29,91 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+const SITE_URL = "https://a-digital-alishbazaar.lovable.app";
+
+async function fetchListingMeta(id: string) {
+  try {
+    const { data } = await supabase
+      .from("listings")
+      .select("id,title,description,price,currency,category,province,status")
+      .eq("id", id)
+      .maybeSingle();
+    return (data as {
+      id: string;
+      title: string;
+      description: string | null;
+      price: number | null;
+      currency: string | null;
+      category: string | null;
+      province: string | null;
+      status: string | null;
+    } | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/listing/$id")({
   component: ListingDetail,
+  loader: ({ params }) => fetchListingMeta(params.id),
+  head: ({ params, loaderData }) => {
+    const url = `${SITE_URL}/listing/${params.id}`;
+    if (!loaderData) {
+      return {
+        meta: [
+          { title: "Listing — Alish الیش" },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const cat = loaderData.category ? categoryById(loaderData.category) : null;
+    const catName = cat ? cat.name.en : null;
+    const title = `${loaderData.title}${catName ? ` — ${catName}` : ""} | Alish الیش`;
+    const priceText =
+      loaderData.price != null ? `${loaderData.price} ${loaderData.currency ?? ""}`.trim() : null;
+    const description =
+      (loaderData.description?.replace(/\s+/g, " ").trim().slice(0, 155) ||
+        `${loaderData.title}${priceText ? ` for ${priceText}` : ""} on Alish, Afghanistan's marketplace.`);
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: loaderData.title,
+            description,
+            category: catName ?? undefined,
+            url,
+            offers:
+              loaderData.price != null
+                ? {
+                    "@type": "Offer",
+                    price: loaderData.price,
+                    priceCurrency: loaderData.currency ?? "AFN",
+                    availability:
+                      loaderData.status === "active"
+                        ? "https://schema.org/InStock"
+                        : "https://schema.org/OutOfStock",
+                    url,
+                  }
+                : undefined,
+          }),
+        },
+      ],
+    };
+  },
 });
 
 type ListingRow = Database["public"]["Tables"]["listings"]["Row"] & {
