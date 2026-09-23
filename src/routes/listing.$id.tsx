@@ -68,7 +68,7 @@ export const Route = createFileRoute("/listing/$id")({
       };
     }
     const cat = loaderData.category ? categoryById(loaderData.category) : null;
-    const catName = cat ? cat.name.en : null;
+    const catName = cat ? cat.en : null;
     const title = `${loaderData.title}${catName ? ` — ${catName}` : ""} | Alish الیش`;
     const priceText =
       loaderData.price != null ? `${loaderData.price} ${loaderData.currency ?? ""}`.trim() : null;

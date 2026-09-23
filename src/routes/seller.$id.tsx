@@ -53,7 +53,7 @@ export const Route = createFileRoute("/seller/$id")({
     const url = `${SITE_URL}/seller/${params.id}`;
     const name = loaderData?.display_name?.trim() || "Seller";
     const title = `${name} — Seller on Alish الیش`;
-    const province = loaderData?.province ? provinceById(loaderData.province)?.name.en : null;
+    const province = loaderData?.province ? provinceById(loaderData.province)?.en : null;
     const description =
       loaderData?.bio?.replace(/\s+/g, " ").trim().slice(0, 155) ||
       `Browse ads posted by ${name}${province ? ` in ${province}` : ""} on Alish, Afghanistan's marketplace.`;
