@@ -60,6 +60,7 @@ const T: Dict = {
   typeMessage: { fa: "پیام بنویسید...", ps: "پیغام ولیکئ...", en: "Type a message..." },
   call: { fa: "تماس", ps: "زنګ", en: "Call" },
   share: { fa: "اشتراک", ps: "شریکول", en: "Share" },
+  linkCopied: { fa: "لینک کاپی شد", ps: "لینک کاپي شو", en: "Link copied" },
   report: { fa: "گزارش", ps: "راپور", en: "Report" },
   reportReason: { fa: "دلیل گزارش", ps: "د راپور دلیل", en: "Reason for report" },
   submit: { fa: "ارسال", ps: "لیږل", en: "Submit" },
