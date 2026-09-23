@@ -46,9 +46,45 @@ const searchSchema = z.object({
 
 type SearchParams = z.infer<typeof searchSchema>;
 
+const SITE_URL = "https://a-digital-alishbazaar.lovable.app";
+const HOME_TITLE = "Alish الیش — Afghanistan's Marketplace for Cars, Property, Phones & More";
+const HOME_DESC =
+  "Buy and sell locally across all 34 Afghan provinces on Alish: cars, property, phones, electronics, furniture and jobs. Free ads in Dari, Pashto and English.";
+
 export const Route = createFileRoute("/")({
   validateSearch: zodValidator(searchSchema),
   component: Home,
+  head: () => ({
+    meta: [
+      { title: HOME_TITLE },
+      { name: "description", content: HOME_DESC },
+      { property: "og:title", content: HOME_TITLE },
+      { property: "og:description", content: HOME_DESC },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: SITE_URL + "/" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: SITE_URL + "/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Alish الیش",
+          url: SITE_URL + "/",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate: SITE_URL + "/?q={search_term_string}",
+            },
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
+    ],
+  }),
 });
 
 const PAGE = 24;
