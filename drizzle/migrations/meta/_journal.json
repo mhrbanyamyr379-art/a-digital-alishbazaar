@@ -92,6 +92,13 @@
       "when": 1789953140885,
       "tag": "0012_fix_profiles_replica_identity_for_column_publication",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790139379451,
+      "tag": "0013_bind_avatar_reads_to_profile",
+      "breakpoints": true
     }
   ]
 }
