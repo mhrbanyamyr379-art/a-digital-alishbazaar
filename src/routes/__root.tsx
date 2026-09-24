@@ -84,6 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Alish is Afghanistan's trusted online marketplace. Buy and sell cars, property, phones, electronics and more across all 34 provinces. Dari, Pashto & English.",
       },
       { name: "author", content: "Alish" },
+      { name: "google-site-verification", content: "IG-H3nn8dKbD3JoQFxLkuk2BscK4Hrw5RacNGsYH9B8" },
       { property: "og:title", content: "Alish — Buy & Sell across Afghanistan" },
       {
         property: "og:description",
