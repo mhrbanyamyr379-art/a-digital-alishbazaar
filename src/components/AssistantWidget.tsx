@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useRouterState } from "@tanstack/react-router";
-import { Bot, RotateCcw, X } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
+
+import assistantAvatar from "@/assets/assistant-avatar.png.asset.json";
 
 import {
   Conversation,
@@ -53,9 +55,9 @@ export function AssistantWidget() {
           type="button"
           aria-label="Alish Assistant"
           onClick={() => setOpen(true)}
-          className="fixed bottom-36 end-4 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl ring-4 ring-background transition-transform active:scale-95"
+          className="fixed bottom-36 end-4 z-50 size-12 overflow-hidden rounded-full shadow-xl ring-2 ring-background transition-transform active:scale-95"
         >
-          <Bot className="size-7" />
+          <img src={assistantAvatar.url} alt="" className="size-full" />
         </button>
       )}
       {open && <AssistantPanel onClose={() => setOpen(false)} />}
@@ -122,9 +124,11 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
       className="fixed inset-x-2 bottom-2 top-16 z-[60] flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:inset-x-auto sm:end-4 sm:bottom-4 sm:top-auto sm:h-[600px] sm:w-[400px]"
     >
       <div className="flex items-center gap-3 border-b border-border bg-primary px-4 py-3 text-primary-foreground">
-        <div className="flex size-9 items-center justify-center rounded-full bg-primary-foreground/15">
-          <Bot className="size-5" />
-        </div>
+        <img
+          src={assistantAvatar.url}
+          alt=""
+          className="size-9 shrink-0 rounded-full bg-primary-foreground/15"
+        />
         <div className="flex-1 font-display text-sm font-black">{tx("title")}</div>
         <button
           type="button"
