@@ -3,7 +3,11 @@ import { ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { signActiveListingImage } from "@/lib/listing-images.functions";
 import { signAvatarImage } from "@/lib/avatar-images.functions";
-...
+import { cn } from "@/lib/utils";
+
+const SIGNED_TTL_SECONDS = 3600;
+const cache = new Map<string, { url: string; expires: number }>();
+const inflight = new Map<string, Promise<string | null>>();
 async function getSignedUrl(bucket: string, path: string): Promise<string | null> {
   const key = `${bucket}/${path}`;
   const now = Date.now();
