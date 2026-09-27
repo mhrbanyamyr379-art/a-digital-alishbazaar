@@ -30,6 +30,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedRecentRouteImport } from './routes/_authenticated/recent'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedSellRouteImport } from './routes/_authenticated/sell'
+import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -144,6 +145,11 @@ const AuthenticatedSellRoute = AuthenticatedSellRouteImport.update({
   path: '/sell',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiAssistantRoute = ApiAssistantRouteImport.update({
+  id: '/api/assistant',
+  path: '/api/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ListingIdRoute = ListingIdRouteImport.update({
   id: '/listing/$id',
   path: '/listing/$id',
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/recent': typeof AuthenticatedRecentRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/sell': typeof AuthenticatedSellRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/recent': typeof AuthenticatedRecentRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/sell': typeof AuthenticatedSellRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/_authenticated/recent': typeof AuthenticatedRecentRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/sell': typeof AuthenticatedSellRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/recent'
     | '/security'
     | '/sell'
+    | '/api/assistant'
     | '/listing/$id'
     | '/seller/$id'
     | '/.lovable/oauth/consent'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/recent'
     | '/security'
     | '/sell'
+    | '/api/assistant'
     | '/listing/$id'
     | '/seller/$id'
     | '/.lovable/oauth/consent'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recent'
     | '/_authenticated/security'
     | '/_authenticated/sell'
+    | '/api/assistant'
     | '/listing/$id'
     | '/seller/$id'
     | '/.lovable/oauth/consent'
@@ -371,6 +383,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiAssistantRoute: typeof ApiAssistantRoute
   ListingIdRoute: typeof ListingIdRoute
   SellerIdRoute: typeof SellerIdRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -526,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSellRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/assistant': {
+      id: '/api/assistant'
+      path: '/api/assistant'
+      fullPath: '/api/assistant'
+      preLoaderRoute: typeof ApiAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/listing/$id': {
       id: '/listing/$id'
       path: '/listing/$id'
@@ -634,6 +654,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiAssistantRoute: ApiAssistantRoute,
   ListingIdRoute: ListingIdRoute,
   SellerIdRoute: SellerIdRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
