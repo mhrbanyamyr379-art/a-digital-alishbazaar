@@ -2,18 +2,9 @@ import { useEffect, useState, type ImgHTMLAttributes } from "react";
 import { ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { signActiveListingImage } from "@/lib/listing-images.functions";
-import { cn } from "@/lib/utils";
-
-const SIGNED_TTL_SECONDS = 3600;
-const cache = new Map<string, { url: string; expires: number }>();
-const inflight = new Map<string, Promise<string | null>>();
-
+import { signAvatarImage } from "@/lib/avatar-images.functions";
+...
 async function getSignedUrl(bucket: string, path: string): Promise<string | null> {
-  // Avatars live in a public bucket (profile photos are shown to everyone);
-  // serve them straight from the public URL, no signing needed.
-  if (bucket === "avatars") {
-    return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-  }
   const key = `${bucket}/${path}`;
   const now = Date.now();
   const hit = cache.get(key);
@@ -25,11 +16,19 @@ async function getSignedUrl(bucket: string, path: string): Promise<string | null
     .createSignedUrl(path, SIGNED_TTL_SECONDS)
     .then(async ({ data, error }) => {
       let url = error ? null : (data?.signedUrl ?? null);
-      // Signed-out shoppers have no direct read access to the private listings
-      // bucket; fall back to the server, which only signs photos of active ads.
+      // Direct read access is owner-only; fall back to the server, which only
+      // signs listing photos of active ads or photos used as a profile avatar.
       if (!url && bucket === "listings") {
         try {
           const res = await signActiveListingImage({ data: { path } });
+          url = res?.url ?? null;
+        } catch {
+          url = null;
+        }
+      }
+      if (!url && bucket === "avatars") {
+        try {
+          const res = await signAvatarImage({ data: { path } });
           url = res?.url ?? null;
         } catch {
           url = null;
