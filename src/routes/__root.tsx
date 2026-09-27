@@ -16,6 +16,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider, useI18n, tStandalone } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
+import { AssistantWidget } from "@/components/AssistantWidget";
 
 function NotFoundComponent() {
   const { t } = useI18n();
@@ -154,6 +155,7 @@ function RootComponent() {
           <AuthProvider>
             <AuthInvalidator />
             <Outlet />
+            <AssistantWidget />
             <Toaster position="top-center" richColors />
           </AuthProvider>
         </I18nProvider>
