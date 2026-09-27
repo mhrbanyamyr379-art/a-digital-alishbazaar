@@ -29,6 +29,8 @@ export const Route = createFileRoute("/api/assistant")({
         try {
           body = await request.json();
         } catch {
+          // Client closed the connection mid-request (e.g. panel closed): not an error.
+          if (request.signal.aborted) return new Response(null, { status: 499 });
           return new Response("Bad request", { status: 400 });
         }
         const messages = Array.isArray(body.messages) ? body.messages.slice(-30) : [];
@@ -111,7 +113,10 @@ export const Route = createFileRoute("/api/assistant")({
           },
         });
 
-        const res = result.toUIMessageStreamResponse({ originalMessages: messages });
+        const res = result.toUIMessageStreamResponse({
+          originalMessages: messages,
+          onError: () => (request.signal.aborted ? "aborted" : "error"),
+        });
         if (runId) res.headers.set(RUN_ID, runId);
         return res;
       },
