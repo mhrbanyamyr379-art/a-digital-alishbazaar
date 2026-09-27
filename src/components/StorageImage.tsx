@@ -9,6 +9,11 @@ const cache = new Map<string, { url: string; expires: number }>();
 const inflight = new Map<string, Promise<string | null>>();
 
 async function getSignedUrl(bucket: string, path: string): Promise<string | null> {
+  // Avatars live in a public bucket (profile photos are shown to everyone);
+  // serve them straight from the public URL, no signing needed.
+  if (bucket === "avatars") {
+    return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  }
   const key = `${bucket}/${path}`;
   const now = Date.now();
   const hit = cache.get(key);
