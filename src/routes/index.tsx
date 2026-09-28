@@ -203,7 +203,7 @@ function Home() {
   const toggleFav = useToggleFavorite();
 
   const setParam = (patch: Partial<SearchParams>) =>
-    navigate({ search: (prev: SearchParams) => ({ ...prev, ...patch }) });
+    navigate({ search: (prev: SearchParams) => ({ ...prev, ...patch }), replace: true });
 
   const activeProv = provinceById(search.prov);
   const hasAnyFilter =

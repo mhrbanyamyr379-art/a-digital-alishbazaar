@@ -31,8 +31,8 @@ function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
   const goNext = () => {
-    if (next) window.location.href = next;
-    else navigate({ to: "/" });
+    if (next) window.location.replace(next);
+    else navigate({ to: "/", replace: true });
   };
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");

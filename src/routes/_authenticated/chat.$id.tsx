@@ -452,7 +452,7 @@ function ChatThread() {
     qc.invalidateQueries({ queryKey: ["conv", id] });
     qc.invalidateQueries({ queryKey: ["conversations", user.id] });
     qc.invalidateQueries({ queryKey: ["unread-total", user.id] });
-    if (!archived) navigate({ to: "/chat" });
+    if (!archived) navigate({ to: "/chat", replace: true });
   };
 
   const doBlock = async () => {
@@ -560,7 +560,7 @@ function ChatThread() {
             </button>
           )}
           <button
-            onClick={() => navigate({ to: "/chat" })}
+            onClick={() => navigate({ to: "/chat", replace: true })}
             className="rounded-lg border border-border px-4 py-2 text-sm font-bold"
           >
             {t("back")}
@@ -575,7 +575,7 @@ function ChatThread() {
       {/* Header */}
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur">
         <button
-          onClick={() => navigate({ to: "/chat" })}
+          onClick={() => navigate({ to: "/chat", replace: true })}
           className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-secondary"
           aria-label={t("back")}
         >
