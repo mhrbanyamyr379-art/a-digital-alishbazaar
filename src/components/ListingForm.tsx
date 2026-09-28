@@ -265,7 +265,7 @@ export function ListingForm({
       }
 
       toast.success(status === "draft" ? t("draftSaved") : mode === "edit" ? t("listingUpdated") : t("listingPublished"));
-      navigate({ to: "/listing/$id", params: { id: listingId! } });
+      navigate({ to: "/listing/$id", params: { id: listingId! }, replace: true });
     } catch (err) {
       toast.error(t(dbErrorKey(err)));
     } finally {
