@@ -18,6 +18,7 @@ You help with:
 - Safety: meet in public places, inspect items before paying, never send money in advance, beware of too-good-to-be-true prices, report suspicious ads with the report button.
 - Site help: accounts (email or Google sign-in), messages, favorites, notifications, marking ads as sold, editing ads, language switching.
 Category ids: ${cats}.
+Images: users may attach photos. Describe what you see, identify the item, estimate its condition and a fair price range in AFN, suggest a listing title/description and category, or answer their question about it. If a photo is unclear, blurry, or you cannot analyze it, say so politely and ask for a clearer photo. Never identify real people from their faces.
 Prices are usually in AFN (افغانی) or USD. Never invent listings, phone numbers or policies. Stay on topic politely.`;
 }
 
@@ -35,6 +36,15 @@ export const Route = createFileRoute("/api/assistant")({
         }
         const messages = Array.isArray(body.messages) ? body.messages.slice(-30) : [];
         if (!messages.length) return new Response("Bad request", { status: 400 });
+        // Only accept small inline image data; keep photos only in the latest messages.
+        messages.forEach((m, idx) => {
+          const recent = idx >= messages.length - 6;
+          m.parts = (m.parts ?? []).map((p) => {
+            if (p.type !== "file") return p;
+            const ok = recent && m.role === "user" && typeof p.url === "string" && /^data:image\/(jpeg|png|webp|gif);base64,/.test(p.url) && p.url.length < 4_000_000;
+            return ok ? p : { type: "text" as const, text: "[image]" };
+          });
+        });
         const lang = ["fa", "ps", "en"].includes(body.lang ?? "") ? body.lang! : "fa";
 
         const apiKey = process.env["LOVABLE_API_KEY"];
