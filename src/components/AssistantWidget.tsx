@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useRouterState } from "@tanstack/react-router";
-import { ImagePlus, RotateCcw, X } from "lucide-react";
+import { ImagePlus, RotateCcw, SendHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 
 import assistantAvatar from "@/assets/assistant-avatar.png.asset.json";
@@ -300,8 +300,10 @@ function SubmitButton({ status, onStop, busy, hasText }: { status: ChatStatus; o
       status={status}
       onStop={onStop}
       disabled={!busy && empty}
-      className="size-10 rounded-full bg-primary text-primary-foreground shadow-md transition-transform active:scale-90 disabled:opacity-40 rtl:-scale-x-100"
-    />
+      className="size-10 rounded-full bg-primary text-primary-foreground shadow-md transition-transform active:scale-90 disabled:opacity-40"
+    >
+      {busy ? undefined : <SendHorizontal className="size-5 rtl:-scale-x-100" />}
+    </PromptInputSubmit>
   );
 }
 
