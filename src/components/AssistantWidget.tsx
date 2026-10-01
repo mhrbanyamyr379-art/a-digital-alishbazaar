@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useRouterState } from "@tanstack/react-router";
-import { RotateCcw, X } from "lucide-react";
+import { ImagePlus, RotateCcw, SendHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 
 import assistantAvatar from "@/assets/assistant-avatar.png.asset.json";
@@ -15,8 +15,12 @@ import {
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import {
   PromptInput,
+  PromptInputButton,
   PromptInputFooter,
+  PromptInputHeader,
   PromptInputSubmit,
+  PromptInputTools,
+  usePromptInputAttachments,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
@@ -38,6 +42,10 @@ const TXT = {
   clear: { fa: "گفتگوی جدید", ps: "نوې خبرې", en: "New chat" },
   err: { fa: "خطا در پاسخ. دوباره تلاش کنید.", ps: "ځواب کې ستونزه. بیا هڅه وکړئ.", en: "Something went wrong. Please try again." },
   busy: { fa: "درخواست‌ها زیاد است، کمی بعد تلاش کنید.", ps: "ډېرې غوښتنې، لږ وروسته هڅه وکړئ.", en: "Too many requests, try again shortly." },
+  attach: { fa: "افزودن عکس", ps: "انځور زیات کړئ", en: "Add photo" },
+  imgOnly: { fa: "فقط عکس قابل ارسال است (حداکثر ۳ عکس، هر کدام تا ۱۰ مگابایت).", ps: "یوازې انځور (تر ۳ پورې، هر یو تر ۱۰ MB).", en: "Photos only (up to 3, 10 MB each)." },
+  imgBad: { fa: "این عکس قابل خواندن نیست. عکس دیگری انتخاب کنید.", ps: "دا انځور نه لوستل کېږي. بل انځور وټاکئ.", en: "This photo can't be read. Please choose another." },
+  photoQ: { fa: "این عکس را بررسی کن.", ps: "دا انځور وګوره.", en: "Please look at this photo." },
   s1: { fa: "موتر کرولا در کابل می‌خواهم", ps: "په کابل کې کرولا موټر غواړم", en: "Find a Corolla in Kabul" },
   s2: { fa: "چطور آگهی ثبت کنم؟", ps: "څنګه اعلان ثبت کړم؟", en: "How do I post an ad?" },
   s3: { fa: "نکات امنیتی خرید", ps: "د پېرلو خوندیتوب لارښوونې", en: "Safe buying tips" },
@@ -101,17 +109,29 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
       try {
         localStorage.setItem(KEY, JSON.stringify(messages));
       } catch {
-        /* ignore */
+        // Storage full (photos): keep the text history only.
+        try {
+          localStorage.setItem(KEY, JSON.stringify(stripFiles(messages)));
+        } catch {
+          /* ignore */
+        }
       }
       taRef.current?.focus();
     }
   }, [messages, status]);
 
   const busy = status === "submitted" || status === "streaming";
-  const send = (text: string) => {
-    if (!text.trim() || busy) return;
-    sendMessage({ text: text.trim() });
+  const send = async (text: string, files: { url: string; mediaType: string; filename?: string }[] = []) => {
+    if ((!text.trim() && !files.length) || busy) return;
+    let parts: { type: "file"; url: string; mediaType: string; filename?: string }[] = [];
+    try {
+      parts = await Promise.all(files.map(async (f) => ({ type: "file" as const, mediaType: "image/jpeg", filename: f.filename, url: await shrink(f.url) })));
+    } catch {
+      toast.error(tx("imgBad"));
+      return;
+    }
     setInput("");
+    sendMessage({ text: text.trim() || tx("photoQ"), files: parts });
   };
   const last = messages[messages.length - 1];
   const waiting =
@@ -179,6 +199,8 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
                 }
               >
                 {m.parts.map((p, i) => {
+                  if (p.type === "file" && p.mediaType?.startsWith("image/"))
+                    return <img key={i} src={p.url} alt="" className="max-h-56 w-full max-w-60 rounded-lg object-cover" />;
                   if (p.type === "text")
                     return m.role === "user" ? (
                       <p key={i} className="whitespace-pre-wrap">{p.text}</p>
@@ -205,7 +227,18 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
       </Conversation>
 
       <div className="border-t border-border p-2">
-        <PromptInput onSubmit={(msg) => send(msg.text ?? "")}>
+        <PromptInput
+          accept="image/*"
+          multiple
+          maxFiles={3}
+          maxFileSize={10 * 1024 * 1024}
+          onError={() => toast.error(tx("imgOnly"))}
+          onSubmit={(msg) => send(msg.text ?? "", msg.files ?? [])}
+          className="[&_[data-slot=input-group]]:rounded-3xl"
+        >
+          <PromptInputHeader className="empty:hidden p-0">
+            <AttachmentPreviews />
+          </PromptInputHeader>
           <PromptInputTextarea
             ref={taRef}
             autoFocus
@@ -213,11 +246,85 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
             placeholder={tx("placeholder")}
             onChange={(e) => setInput(e.target.value)}
           />
-          <PromptInputFooter className="justify-end">
-            <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !input.trim()} />
+          <PromptInputFooter className="justify-between">
+            <PromptInputTools>
+              <AttachButton label={tx("attach")} />
+            </PromptInputTools>
+            <SubmitButton status={status} onStop={stop} busy={busy} hasText={!!input.trim()} />
           </PromptInputFooter>
         </PromptInput>
       </div>
     </div>
   );
+}
+
+
+type ChatStatus = "submitted" | "streaming" | "ready" | "error";
+
+function AttachButton({ label }: { label: string }) {
+  const a = usePromptInputAttachments();
+  return (
+    <PromptInputButton aria-label={label} title={label} onClick={() => a.openFileDialog()} className="rounded-full text-primary">
+      <ImagePlus className="size-5" />
+    </PromptInputButton>
+  );
+}
+
+function AttachmentPreviews() {
+  const a = usePromptInputAttachments();
+  if (!a.files.length) return null;
+  return (
+    <div className="flex gap-2 overflow-x-auto px-3 pt-3">
+      {a.files.map((f) => (
+        <div key={f.id} className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-border">
+          <img src={f.url} alt="" className="size-full object-cover" />
+          <button
+            type="button"
+            aria-label="Remove"
+            onClick={() => a.remove(f.id)}
+            className="absolute end-0.5 top-0.5 rounded-full bg-background/90 p-0.5 text-foreground shadow"
+          >
+            <X className="size-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SubmitButton({ status, onStop, busy, hasText }: { status: ChatStatus; onStop: () => void; busy: boolean; hasText: boolean }) {
+  const a = usePromptInputAttachments();
+  const empty = !hasText && a.files.length === 0;
+  return (
+    <PromptInputSubmit
+      status={status}
+      onStop={onStop}
+      disabled={!busy && empty}
+      className="size-10 rounded-full bg-primary text-primary-foreground shadow-md transition-transform active:scale-90 disabled:opacity-40"
+    >
+      {busy ? undefined : <SendHorizontal className="size-5 rtl:-scale-x-100" />}
+    </PromptInputSubmit>
+  );
+}
+
+// Resize a picked photo to a small JPEG data URL so it uploads fast on mobile networks.
+async function shrink(src: string, max = 1024): Promise<string> {
+  const img = new Image();
+  img.src = src;
+  await img.decode();
+  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const ctx = c.getContext("2d");
+  if (!ctx) throw new Error("no canvas");
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.8);
+}
+
+function stripFiles(msgs: UIMessage[]): UIMessage[] {
+  return msgs.map((m) => ({
+    ...m,
+    parts: m.parts.map((p) => (p.type === "file" ? { type: "text" as const, text: "🖼️" } : p)),
+  }));
 }
