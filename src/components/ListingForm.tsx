@@ -250,11 +250,18 @@ export function ListingForm({
       }
 
       // Upload any new images, then rewrite ordering
-      const orderedPaths: string[] = [];
-      for (const im of images) {
-        if (im.existing && im.url) orderedPaths.push(im.url);
-        else if (im.file) orderedPaths.push(await uploadImage("listings", user.id, listingId!, im.file));
-      }
+      // Upload all new photos at the same time (order preserved).
+      const orderedPaths: string[] = (
+        await Promise.all(
+          images.map((im) =>
+            im.existing && im.url
+              ? Promise.resolve(im.url)
+              : im.file
+                ? uploadImage("listings", user.id, listingId!, im.file)
+                : Promise.resolve(null),
+          ),
+        )
+      ).filter((p): p is string => !!p);
       // Replace image rows to reflect current order/set
       await supabase.from("listing_images").delete().eq("listing_id", listingId!);
       if (orderedPaths.length > 0) {
@@ -571,7 +578,10 @@ export function ListingForm({
                   accept="image/*"
                   multiple
                   className="hidden"
-                  onChange={(e) => addFiles(e.target.files)}
+                  onChange={(e) => {
+                    addFiles(e.target.files);
+                    e.currentTarget.value = "";
+                  }}
                 />
               </label>
             )}
