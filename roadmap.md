@@ -1,1 +1,1 @@
-- [ ] Google Search Console setup (SEO finding gsc:gsc): connect, META verify, submit sitemap
+- [x] Google Search Console setup (SEO finding gsc:gsc): connect, META verify, submit sitemap
