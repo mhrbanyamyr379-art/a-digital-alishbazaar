@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { ImagePlus, RotateCcw, SendHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,6 +46,7 @@ const TXT = {
   busy: { fa: "درخواست‌ها زیاد است، کمی بعد تلاش کنید.", ps: "ډېرې غوښتنې، لږ وروسته هڅه وکړئ.", en: "Too many requests, try again shortly." },
   attach: { fa: "افزودن عکس", ps: "انځور زیات کړئ", en: "Add photo" },
   imgOnly: { fa: "فقط عکس قابل ارسال است (حداکثر ۳ عکس، هر کدام تا ۱۰ مگابایت).", ps: "یوازې انځور (تر ۳ پورې، هر یو تر ۱۰ MB).", en: "Photos only (up to 3, 10 MB each)." },
+  signIn: { fa: "برای استفاده از دستیار هوشمند، لطفاً وارد حساب خود شوید.", ps: "د هوښیار مرستیال لپاره، مهرباني وکړئ خپل حساب ته ننوځئ.", en: "Please sign in to use the smart assistant." },
   imgBad: { fa: "این عکس قابل خواندن نیست. عکس دیگری انتخاب کنید.", ps: "دا انځور نه لوستل کېږي. بل انځور وټاکئ.", en: "This photo can't be read. Please choose another." },
   photoQ: { fa: "این عکس را بررسی کن.", ps: "دا انځور وګوره.", en: "Please look at this photo." },
   s1: { fa: "موتر کرولا در کابل می‌خواهم", ps: "په کابل کې کرولا موټر غواړم", en: "Find a Corolla in Kabul" },
@@ -76,6 +79,8 @@ export function AssistantWidget() {
 function AssistantPanel({ onClose }: { onClose: () => void }) {
   const { lang, dir } = useI18n();
   const tx = (k: keyof typeof TXT) => TXT[k][lang];
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   const [input, setInput] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
   const langRef = useRef(lang);
@@ -90,7 +95,15 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
   }, []);
 
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: "/api/assistant", body: () => ({ lang: langRef.current }) }),
+    () => new DefaultChatTransport({
+        api: "/api/assistant",
+        body: () => ({ lang: langRef.current }),
+        headers: async (): Promise<Record<string, string>> => {
+          const { data } = await supabase.auth.getSession();
+          const tok = data.session?.access_token;
+          return tok ? { Authorization: `Bearer ${tok}` } : {};
+        },
+      }),
     [],
   );
 
@@ -123,6 +136,11 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
   const busy = status === "submitted" || status === "streaming";
   const send = async (text: string, files: { url: string; mediaType: string; filename?: string }[] = []) => {
     if ((!text.trim() && !files.length) || busy) return;
+    if (!authUser) {
+      toast.error(tx("signIn"));
+      navigate({ to: "/auth", search: { next: window.location.pathname } });
+      return;
+    }
     let parts: { type: "file"; url: string; mediaType: string; filename?: string }[] = [];
     try {
       parts = await Promise.all(files.map(async (f) => ({ type: "file" as const, mediaType: "image/jpeg", filename: f.filename, url: await shrink(f.url) })));
