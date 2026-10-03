@@ -26,6 +26,17 @@ export const Route = createFileRoute("/api/assistant")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Signed-in users only: verify the caller's session before any AI spend.
+        const auth = request.headers.get("authorization") ?? "";
+        const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+        if (!token) return new Response("Unauthorized", { status: 401 });
+        {
+          const authDb = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          });
+          const { data: claims, error: authErr } = await authDb.auth.getClaims(token);
+          if (authErr || !claims?.claims?.sub) return new Response("Unauthorized", { status: 401 });
+        }
         let body: { messages?: UIMessage[]; lang?: string };
         try {
           body = await request.json();
@@ -34,7 +45,19 @@ export const Route = createFileRoute("/api/assistant")({
           if (request.signal.aborted) return new Response(null, { status: 499 });
           return new Response("Bad request", { status: 400 });
         }
-        const messages = Array.isArray(body.messages) ? body.messages.slice(-30) : [];
+        // Never trust caller-chosen roles: only user/assistant turns, with text/file parts only
+        // (no system turns, no tool/reasoning parts injected into the model context).
+        const messages: UIMessage[] = (Array.isArray(body.messages) ? body.messages.slice(-30) : [])
+          .filter((m) => m && (m.role === "user" || m.role === "assistant") && Array.isArray(m.parts))
+          .map((m, i) => ({
+            id: typeof m.id === "string" ? m.id.slice(0, 100) : `m${i}`,
+            role: m.role,
+            parts: m.parts
+              .filter((p) => p && (p.type === "text" || (p.type === "file" && m.role === "user")))
+              .map((p) => (p.type === "text" ? { type: "text" as const, text: String(p.text ?? "").slice(0, 8000) } : p)),
+          }))
+          .filter((m) => m.parts.length > 0);
+        if (messages.length && messages[messages.length - 1].role !== "user") return new Response("Bad request", { status: 400 });
         if (!messages.length) return new Response("Bad request", { status: 400 });
         // Only accept small inline image data; keep photos only in the latest messages.
         messages.forEach((m, idx) => {

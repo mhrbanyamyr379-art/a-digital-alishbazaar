@@ -16,7 +16,7 @@ import logoAsset from "@/assets/logo.png.asset.json";
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { next?: string } => {
     const n =
-      typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined;
+      typeof s.next === "string" && /^\/(?![\/\\])[^\\\s]*$/.test(s.next) ? s.next : undefined;
     return n ? { next: n } : {};
   },
   component: AuthPage,
@@ -31,7 +31,11 @@ function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
   const goNext = () => {
-    if (next) window.location.replace(next);
+    if (next) {
+      const u = new URL(next, window.location.origin);
+      if (u.origin === window.location.origin) window.location.replace(u.pathname + u.search + u.hash);
+      else navigate({ to: "/", replace: true });
+    }
     else navigate({ to: "/", replace: true });
   };
   const [mode, setMode] = useState<"in" | "up">("in");
