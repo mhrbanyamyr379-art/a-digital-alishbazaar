@@ -534,6 +534,7 @@ function ListingDetail() {
               icon={<Phone className="size-4" />}
               href={phoneDigits ? `tel:${phoneDigits}` : null}
               disabledMsg={t("noPhone")}
+              variant="call"
             />
             <ContactAction
               label={t("whatsapp")}
@@ -541,6 +542,7 @@ function ListingDetail() {
               href={waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(shareText)}` : null}
               disabledMsg={t("noPhone")}
               external
+              variant="whatsapp"
             />
             <ContactAction
               label={t("telegram")}
@@ -552,6 +554,7 @@ function ListingDetail() {
               }
               disabledMsg={t("noPhone")}
               external
+              variant="telegram"
             />
           </div>
         </div>
