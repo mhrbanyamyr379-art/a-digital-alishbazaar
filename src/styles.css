@@ -45,6 +45,11 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  --color-contact-call: var(--contact-call);
+  --color-contact-whatsapp: var(--contact-whatsapp);
+  --color-contact-telegram: var(--contact-telegram);
+  --color-contact-on-brand: var(--contact-on-brand);
+
   --font-sans: "Inter", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Vazirmatn", ui-monospace, monospace;
@@ -96,6 +101,12 @@
   --sidebar-accent-foreground: hsl(38 25% 96%);
   --sidebar-border: hsl(170 30% 26%);
   --sidebar-ring: hsl(18 60% 50%);
+
+  /* Contact action brand colors (same in light & dark) */
+  --contact-call: hsl(142 71% 37%);      /* emerald 600 #16a34a */
+  --contact-whatsapp: hsl(142 71% 49%);   /* WhatsApp green #25D366 */
+  --contact-telegram: hsl(199 84% 49%);   /* Telegram blue #229ED9 */
+  --contact-on-brand: hsl(0 0% 100%);     /* icon color on brand fills */
 }
 
 .dark {
