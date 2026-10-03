@@ -586,12 +586,14 @@ function ContactAction({
   href,
   disabledMsg,
   external,
+  variant,
 }: {
   label: string;
   icon: React.ReactNode;
   href: string | null;
   disabledMsg: string;
   external?: boolean;
+  variant: "call" | "whatsapp" | "telegram";
 }) {
   if (!href) {
     return (
@@ -605,12 +607,21 @@ function ContactAction({
       </button>
     );
   }
+  const brandClass = {
+    call: "bg-contact-call",
+    whatsapp: "bg-contact-whatsapp",
+    telegram: "bg-contact-telegram",
+  }[variant];
   return (
     <a
       href={href}
       aria-label={label}
+      title={label}
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border transition-colors hover:bg-secondary"
+      className={cn(
+        "flex size-12 shrink-0 items-center justify-center rounded-lg text-contact-on-brand transition-transform active:scale-95",
+        brandClass,
+      )}
     >
       {icon}
     </a>

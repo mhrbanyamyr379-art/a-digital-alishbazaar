@@ -45,6 +45,11 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  --color-contact-call: var(--contact-call);
+  --color-contact-whatsapp: var(--contact-whatsapp);
+  --color-contact-telegram: var(--contact-telegram);
+  --color-contact-on-brand: var(--contact-on-brand);
+
   --font-sans: "Inter", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Vazirmatn", ui-monospace, monospace;
