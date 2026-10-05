@@ -150,7 +150,7 @@ export const Route = createFileRoute("/api/assistant")({
           system: systemPrompt(lang, origin),
           messages: await convertToModelMessages(messages),
           abortSignal: request.signal,
-          stopWhen: stepCountIs(4),
+          stopWhen: stepCountIs(5),
           tools: {
             search_listings: tool({
               description: "Search active Alish marketplace listings. Use null for unknown filters.",

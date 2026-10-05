@@ -52,6 +52,7 @@ const TXT = {
   s1: { fa: "موتر کرولا در کابل می‌خواهم", ps: "په کابل کې کرولا موټر غواړم", en: "Find a Corolla in Kabul" },
   s2: { fa: "چطور آگهی ثبت کنم؟", ps: "څنګه اعلان ثبت کړم؟", en: "How do I post an ad?" },
   s3: { fa: "نکات امنیتی خرید", ps: "د پېرلو خوندیتوب لارښوونې", en: "Safe buying tips" },
+  s4: { fa: "قیمت مناسب برای فروش موبایلم چقدر است؟", ps: "زما د موبایل مناسبه بیه څومره ده؟", en: "What's a fair price for my phone?" },
 } as const;
 
 export function AssistantWidget() {
@@ -195,7 +196,7 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
           </Message>
           {messages.length === 0 && (
             <div className="flex flex-wrap gap-2">
-              {(["s1", "s2", "s3"] as const).map((k) => (
+              {(["s1", "s2", "s3", "s4"] as const).map((k) => (
                 <button
                   key={k}
                   type="button"
@@ -221,9 +222,11 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
                     return <img key={i} src={p.url} alt="" className="max-h-56 w-full max-w-60 rounded-lg object-cover" />;
                   if (p.type === "text")
                     return m.role === "user" ? (
-                      <p key={i} className="whitespace-pre-wrap">{p.text}</p>
+                      <p key={i} dir="auto" className="whitespace-pre-wrap break-words text-start">{p.text}</p>
                     ) : (
-                      <MessageResponse key={i}>{p.text}</MessageResponse>
+                      <div key={i} dir="auto" className="break-words text-start leading-7 [&_a]:font-bold [&_a]:text-primary [&_a]:underline">
+                        <MessageResponse>{p.text}</MessageResponse>
+                      </div>
                     );
                   if (p.type.startsWith("tool-")) {
                     const tp = p as { state: "input-streaming" | "input-available" | "output-available" | "output-error"; type: `tool-${string}` };
