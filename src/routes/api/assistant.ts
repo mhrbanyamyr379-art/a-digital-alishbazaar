@@ -3,23 +3,67 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { CATEGORIES } from "@/data/categories";
+import { CATEGORIES, CONDITIONS } from "@/data/categories";
+import { SUBCATEGORIES } from "@/data/subcategories";
+import { PROVINCES } from "@/data/provinces";
 
 const RUN_ID = "X-Lovable-AIG-Run-ID";
 
-function systemPrompt(lang: string, origin: string) {
-  const cats = CATEGORIES.map((c) => `${c.id} (${c.fa} / ${c.en})`).join(", ");
-  return `You are "دستیار الیش" (Alish Assistant), the friendly smart helper of Alish (الیش), Afghanistan's online marketplace for buying and selling across all 34 provinces.
-Always reply in the same language the user writes in (Dari, Pashto or English). The user's interface language is "${lang}" (fa=Dari, ps=Pashto, en=English); use it when unclear. Keep answers short, warm and practical. Use markdown lightly.
+// Map a province given in any language (id, English, Dari, Pashto) to its stored id.
+function provinceId(v: string | null): string | null {
+  if (!v) return null;
+  const s = v.trim().toLowerCase();
+  const p = PROVINCES.find((p) => [p.id, p.en.toLowerCase(), p.fa, p.ps].includes(s))
+    ?? PROVINCES.find((p) => p.en.toLowerCase().includes(s) || p.fa.includes(v.trim()) || s.includes(p.en.toLowerCase()));
+  return p?.id ?? null;
+}
 
-You help with:
-- Finding items: use the search_listings tool whenever the user wants to buy/find something. Link each result as [title](${origin}/listing/ID) with its price and province. If nothing is found, say so and suggest broadening the search.
-- Selling: help write attractive titles and descriptions, suggest fair prices, and explain posting: press "چیزی بفروشید" (Sell something), choose category, add photos, price, province and contact method (call, chat, or both).
-- Safety: meet in public places, inspect items before paying, never send money in advance, beware of too-good-to-be-true prices, report suspicious ads with the report button.
-- Site help: accounts (email or Google sign-in), messages, favorites, notifications, marking ads as sold, editing ads, language switching.
-Category ids: ${cats}.
-Images: users may attach photos. Describe what you see, identify the item, estimate its condition and a fair price range in AFN, suggest a listing title/description and category, or answer their question about it. If a photo is unclear, blurry, or you cannot analyze it, say so politely and ask for a clearer photo. Never identify real people from their faces.
-Prices are usually in AFN (افغانی) or USD. Never invent listings, phone numbers or policies. Stay on topic politely.`;
+function systemPrompt(lang: string, origin: string) {
+  const cats = CATEGORIES.map((c) => {
+    const subs = (SUBCATEGORIES[c.id] ?? []).map((s) => `${s.id}=${s.en}/${s.fa}`).join("; ");
+    return `- ${c.id} (${c.en} / ${c.fa} / ${c.ps}): ${subs}`;
+  }).join("\n");
+  const provs = PROVINCES.map((p) => `${p.id}=${p.fa}`).join(", ");
+  const conds = CONDITIONS.map((c) => `${c.id}=${c.fa}/${c.en}`).join(", ");
+  return `You are "دستیار الیش" (Alish Assistant), the smart helper of Alish (الیش), Afghanistan's online marketplace for buying and selling across all 34 provinces.
+
+LANGUAGE
+- Detect the language of the user's LATEST message and reply in exactly that language: Dari/Persian (فارسی/دری), Pashto (پښتو) or English. Pashto uses letters like ټ ډ ړ ښ ږ ګ ځ څ ې ۍ ئ — if present, reply in Pashto. If the message has no clear language (e.g. only a photo or a number), use the interface language "${lang}" (fa=Dari, ps=Pashto, en=English).
+- Use Afghan Dari vocabulary (موتر, ولایت, افغانی), not Iranian Persian.
+
+STYLE
+- Short, natural, warm and practical. Usually 1–5 sentences or a short list. No filler, no repeating the question.
+- For how-to questions (buying, selling, posting an ad, searching) give clear numbered steps.
+- Use light markdown only (bold, lists, links). No tables or headings.
+- Use the conversation history: remember what the user already said (item, budget, province) and do not ask again.
+
+ACCURACY
+- Never invent listings, prices of specific ads, phone numbers, sellers, features or policies.
+- If the request is ambiguous and a search would be pointless, ask ONE short, specific question (e.g. which province, or what budget). Otherwise act directly.
+
+FINDING ITEMS
+- Whenever the user wants to buy/find something, call search_listings. Map their words to category/subcategory ids, province id, city, price range, condition. Translate keywords so the title search matches (try a short core word, e.g. "کرولا" or "Corolla").
+- If no results, retry once with fewer filters (drop query or city), then tell the user honestly and suggest broadening or saving time by checking back later.
+- Show results as a short list: [title](${origin}/listing/ID) — price currency — province/city. Max 6.
+- To contact a seller, tell them to open the ad and use the Call / WhatsApp / Telegram / Message buttons.
+
+SITE GUIDE
+- Post an ad: 1) sign in 2) press "چیزی بفروشید" (Sell) 3) choose category and subcategory (or type a custom one) 4) title, description, price (AFN or USD), negotiable, condition 5) up to 10 photos 6) province and city 7) contact method: call only, call & message (phone + optional WhatsApp), or message only 8) publish.
+- Edit/sold: "آگهی‌های من" (My listings) → edit, or mark as Sold.
+- Search: search bar on the home page, then filter by category, subcategory, province and price.
+- Other: email or Google sign-in, messages between users, favorites, notifications, language switch (Dari/Pashto/English), report button on suspicious ads.
+- Safety: meet in public places, inspect before paying, never pay in advance, beware too-cheap prices, report scams.
+
+PHOTOS
+- Users may attach photos with or without text. Describe what you see, identify the item, estimate condition and a realistic price range in AFN for Afghanistan, and suggest a category, title and short description for an ad — or answer the user's specific question about the photo.
+- If a photo is blurry, dark or unclear, say so politely and ask for a clearer one. Never identify real people from faces.
+
+DATA
+Categories (id: subcategory ids):
+${cats}
+Province ids: ${provs}
+Condition ids: ${conds}
+Stay on marketplace topics politely.`;
 }
 
 export const Route = createFileRoute("/api/assistant")({
@@ -106,32 +150,45 @@ export const Route = createFileRoute("/api/assistant")({
           system: systemPrompt(lang, origin),
           messages: await convertToModelMessages(messages),
           abortSignal: request.signal,
-          stopWhen: stepCountIs(4),
+          stopWhen: stepCountIs(5),
           tools: {
             search_listings: tool({
-              description: "Search active Alish marketplace listings.",
+              description: "Search active Alish marketplace listings. Use null for unknown filters.",
               inputSchema: z.object({
-                query: z.string().nullable().describe("Keyword in the title, in the user's language or English"),
+                query: z.string().nullable().describe("Short keyword matched in title/description, in the user's language or English"),
                 category: z.string().nullable().describe("Category id"),
-                province: z.string().nullable().describe("Province name, e.g. Kabul / کابل"),
+                subcategory: z.string().nullable().describe("Subcategory id"),
+                province: z.string().nullable().describe("Province id, e.g. kabul"),
+                city: z.string().nullable().describe("City or district name"),
+                condition: z.string().nullable().describe("Condition id"),
+                currency: z.enum(["AFN", "USD"]).nullable(),
                 maxPrice: z.number().nullable(),
                 minPrice: z.number().nullable(),
+                sort: z.enum(["newest", "price_low", "price_high"]).nullable(),
               }),
-              execute: async ({ query, category, province, maxPrice, minPrice }) => {
+              execute: async ({ query, category, subcategory, province, city, condition, currency, maxPrice, minPrice, sort }) => {
                 let q = db
                   .from("listings")
-                  .select("id,title,price,currency,category,province,city,condition")
-                  .eq("status", "active")
-                  .order("created_at", { ascending: false })
-                  .limit(8);
-                if (query) q = q.ilike("title", `%${query}%`);
+                  .select("id,title,price,currency,negotiable,category,subcategory,custom_subcategory,province,city,condition,created_at")
+                  .eq("status", "active");
+                q = sort === "price_low" ? q.order("price", { ascending: true })
+                  : sort === "price_high" ? q.order("price", { ascending: false })
+                  : q.order("created_at", { ascending: false });
+                q = q.limit(8);
+                const clean = (s: string) => s.replace(/[%,()]/g, " ").trim().slice(0, 60);
+                if (query && clean(query)) { const k = clean(query); q = q.or(`title.ilike.%${k}%,description.ilike.%${k}%`); }
                 if (category) q = q.eq("category", category);
-                if (province) q = q.ilike("province", `%${province}%`);
+                if (subcategory) q = q.eq("subcategory", subcategory);
+                const pid = provinceId(province);
+                if (pid) q = q.eq("province", pid);
+                if (city && clean(city)) q = q.ilike("city", `%${clean(city)}%`);
+                if (condition) q = q.eq("condition", condition);
+                if (currency) q = q.eq("currency", currency);
                 if (typeof minPrice === "number") q = q.gte("price", minPrice);
                 if (typeof maxPrice === "number") q = q.lte("price", maxPrice);
                 const { data, error } = await q;
                 if (error) return { error: "search failed", listings: [] };
-                return { listings: data ?? [] };
+                return { count: data?.length ?? 0, listings: data ?? [] };
               },
             }),
           },
