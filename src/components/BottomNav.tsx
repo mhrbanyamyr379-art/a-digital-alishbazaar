@@ -11,6 +11,7 @@ export function BottomNav() {
   const { user } = useAuth();
   const { unreadChats } = useUnreadTotal();
   const unreadNotifs = useUnreadNotifications();
+  const onChat = path.startsWith("/chat");
 
   const items = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
@@ -24,7 +25,10 @@ export function BottomNav() {
       <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2">
         <Link
           to="/sell"
-          className="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-display text-sm font-black text-accent-foreground shadow-2xl shadow-accent/40 ring-4 ring-background transition-transform active:scale-95"
+          className={cn(
+            "flex min-h-11 items-center gap-2 rounded-full bg-accent font-display text-sm font-black text-accent-foreground shadow-xl shadow-accent/30 ring-4 ring-background transition-transform active:scale-95",
+            onChat ? "px-4 py-2.5" : "px-6 py-3",
+          )}
         >
           <Plus className="size-5" />
           {t("sellSomething")}

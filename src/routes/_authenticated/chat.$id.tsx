@@ -32,9 +32,20 @@ import { StorageImage } from "@/components/StorageImage";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { PresenceLabel, isOnline } from "@/components/Presence";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/chat/$id")({
   component: ChatThread,
+  head: () => ({
+    meta: [
+      { title: "Conversation — Alish" },
+      { name: "description", content: "A private marketplace conversation on Alish." },
+      { property: "og:title", content: "Conversation — Alish" },
+      { property: "og:description", content: "A private marketplace conversation on Alish." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
 });
 
 interface Msg {
@@ -528,14 +539,16 @@ function ChatThread() {
 
   if (convLoading || msgsLoading) {
     return (
-      <div className="min-h-screen space-y-3 bg-background p-4">
-        <div className="h-12 animate-pulse rounded-xl bg-secondary" />
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className={cn("h-10 w-2/3 animate-pulse rounded-2xl bg-secondary", i % 2 ? "ms-auto" : "")}
-          />
-        ))}
+      <div className="min-h-screen bg-background">
+        <div className="h-16 animate-pulse border-b border-border bg-card" />
+        <div className="mx-auto max-w-4xl space-y-4 p-4 pt-8">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className={cn("h-12 w-2/3 animate-pulse rounded-2xl bg-secondary", i % 2 ? "ms-auto" : "")}
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -549,40 +562,45 @@ function ChatThread() {
         </p>
         <div className="flex gap-2">
           {(convError || msgsError) && (
-            <button
+            <Button
               onClick={() => {
                 refetchConv();
                 refetchMsgs();
               }}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+              className="h-11 px-5 font-bold"
             >
               {t("retry")}
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="outline"
             onClick={() => navigate({ to: "/chat", replace: true })}
-            className="rounded-lg border border-border px-4 py-2 text-sm font-bold"
+            className="h-11 px-5 font-bold"
           >
             {t("back")}
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-[100dvh] flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/95 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur">
-        <button
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <div className="mx-auto flex min-h-16 w-full max-w-4xl items-center gap-2 px-2 sm:px-4">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => navigate({ to: "/chat", replace: true })}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-secondary"
+          className="size-11 shrink-0 rounded-full"
           aria-label={t("back")}
         >
           <ArrowLeft className="size-5 rtl:rotate-180" />
-        </button>
-        <Link to="/seller/$id" params={{ id: otherId ?? "" }} className="flex min-w-0 flex-1 items-center gap-2.5">
-          <div className="relative size-10 shrink-0 overflow-hidden rounded-full bg-secondary">
+        </Button>
+        <Link to="/seller/$id" params={{ id: otherId ?? "" }} className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-lg px-1 hover:bg-secondary/60">
+          <div className="relative size-11 shrink-0 overflow-hidden rounded-full border border-border bg-secondary">
             {other?.avatar_url ? (
               <StorageImage bucket="avatars" path={other.avatar_url} alt="" className="size-full object-cover" />
             ) : (
@@ -604,13 +622,16 @@ function ChatThread() {
           </div>
         </Link>
         <div className="relative">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setHeaderMenu((v) => !v)}
-            className="flex size-9 items-center justify-center rounded-full hover:bg-secondary"
-            aria-label="menu"
+            className="size-11 rounded-full"
+            aria-label={t("more")}
           >
             <MoreVertical className="size-5" />
-          </button>
+          </Button>
           {headerMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setHeaderMenu(false)} />
@@ -643,6 +664,7 @@ function ChatThread() {
             </>
           )}
         </div>
+        </div>
       </header>
 
       {!online && (
@@ -657,7 +679,7 @@ function ChatThread() {
         <Link
           to="/listing/$id"
           params={{ id: listing.id }}
-          className="mx-3 mt-3 flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 shadow-sm transition-colors hover:bg-secondary"
+          className="mx-auto mt-3 flex w-[calc(100%-1.5rem)] max-w-4xl items-center gap-3 rounded-lg border border-border bg-card p-2.5 shadow-sm transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
         >
           <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
             <StorageImage bucket="listings" path={listing.image} alt="" className="size-full object-cover" />
@@ -680,9 +702,14 @@ function ChatThread() {
       )}
 
       {/* Messages */}
-      <main className="flex-1 space-y-1 overflow-y-auto p-3 pb-40">
+      <main className="mx-auto w-full max-w-4xl flex-1 space-y-1 overflow-y-auto px-3 pb-44 pt-3 sm:px-5">
         {visible.length === 0 && pending.length === 0 && (
-          <p className="py-16 text-center text-sm text-muted-foreground">{t("typeMessage")}</p>
+          <div className="flex min-h-[45vh] flex-col items-center justify-center gap-3 px-6 text-center">
+            <div className="flex size-16 items-center justify-center rounded-full border border-border bg-card shadow-sm">
+              <Send className="size-6 text-muted-foreground rtl:-scale-x-100" />
+            </div>
+            <p className="max-w-xs text-sm font-semibold text-muted-foreground">{t("typeMessage")}</p>
+          </div>
         )}
         {visible.map((m, i) => {
           const mine = m.sender_id === user?.id;
@@ -706,11 +733,12 @@ function ChatThread() {
                       if (!removed) setMenuOpen(m.id);
                     }}
                     onClick={() => !removed && setMenuOpen((v) => (v === m.id ? null : m.id))}
-                    className="block w-full text-start"
+                    className="block min-h-11 w-full text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   >
                     {removed ? (
-                      <div className="rounded-2xl border border-dashed border-border px-3.5 py-2 text-sm italic text-muted-foreground">
-                        {t("messageRemoved")}
+                      <div className="flex min-h-11 items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/30 px-3.5 py-2 text-sm italic text-muted-foreground">
+                        <Trash2 className="size-3.5 shrink-0" />
+                        <span>{t("messageRemoved")}</span>
                       </div>
                     ) : m.type === "image" && m.image_paths && m.image_paths.length > 0 ? (
                       <div
@@ -737,7 +765,7 @@ function ChatThread() {
                     ) : (
                       <div
                         className={cn(
-                          "whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm",
+                          "min-h-11 whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm leading-6 shadow-sm",
                           mine
                             ? "rounded-ee-sm bg-accent text-accent-foreground"
                             : "rounded-es-sm border border-border bg-card",
@@ -864,10 +892,10 @@ function ChatThread() {
                   </span>
                 ) : (
                   <>
-                    <button onClick={() => retry(p)} className="font-bold text-destructive">
+                    <button onClick={() => retry(p)} className="min-h-9 rounded-md px-2 font-bold text-destructive hover:bg-destructive/10">
                       {t("failedToSend")}
                     </button>
-                    <button onClick={() => discard(p)} aria-label={t("cancel")} className="text-muted-foreground">
+                    <button onClick={() => discard(p)} aria-label={t("cancel")} className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary">
                       <X className="size-3" />
                     </button>
                   </>
@@ -879,7 +907,7 @@ function ChatThread() {
 
         {otherTyping && (
           <div className="flex justify-start">
-            <div className="flex items-center gap-1 rounded-2xl rounded-es-sm border border-border bg-card px-3 py-2">
+            <div className="flex min-h-11 items-center gap-1 rounded-2xl rounded-es-sm border border-border bg-card px-4 py-2 shadow-sm">
               <span className="size-1.5 animate-pulse rounded-full bg-muted-foreground" />
               <span className="size-1.5 animate-pulse rounded-full bg-muted-foreground [animation-delay:150ms]" />
               <span className="size-1.5 animate-pulse rounded-full bg-muted-foreground [animation-delay:300ms]" />
@@ -891,14 +919,14 @@ function ChatThread() {
 
       {/* Composer */}
       {archived ? (
-        <div className="fixed bottom-0 start-0 w-full border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground backdrop-blur">
           {t("archived")} ·{" "}
           <button onClick={toggleArchive} className="font-bold text-accent">
             {t("unarchive")}
           </button>
         </div>
       ) : blockedByMe || blockedMe ? (
-        <div className="fixed bottom-0 start-0 w-full border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground backdrop-blur">
           {t("cannotSendBlocked")}
           {blockedByMe && (
             <>
@@ -910,7 +938,8 @@ function ChatThread() {
           )}
         </div>
       ) : (
-        <div className="fixed bottom-0 start-0 w-full border-t border-border bg-card">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur">
+          <div className="mx-auto w-full max-w-4xl">
           {(replyTo || editing) && (
             <div className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs">
               {editing ? <Pencil className="size-3.5 text-accent" /> : <CornerUpLeft className="size-3.5 text-accent" />}
@@ -925,7 +954,7 @@ function ChatThread() {
                   setEditing(null);
                 }}
                 aria-label={t("cancel")}
-                className="text-muted-foreground"
+                className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
               >
                 <X className="size-4" />
               </button>
@@ -933,7 +962,7 @@ function ChatThread() {
           )}
           <form
             onSubmit={send}
-            className="flex w-full items-end gap-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            className="flex w-full items-end gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-4"
           >
             <input
               ref={fileRef}
@@ -947,7 +976,7 @@ function ChatThread() {
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading || !canSend || !!editing}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 disabled:opacity-50"
               aria-label={t("attach")}
             >
               {uploading ? <Loader2 className="size-5 animate-spin" /> : <Paperclip className="size-5" />}
@@ -967,17 +996,18 @@ function ChatThread() {
               }}
               placeholder={t("typeMessage")}
               rows={1}
-              className="max-h-32 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="min-h-11 max-h-32 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-2.5 text-sm leading-6 outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/30"
             />
             <button
               type="submit"
               disabled={!text.trim() || (!canSend && !editing)}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-transform active:scale-95 disabled:opacity-50"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-40"
               aria-label={t("sendMessage")}
             >
               <Send className="size-5 rtl:-scale-x-100" />
             </button>
           </form>
+          </div>
         </div>
       )}
 
