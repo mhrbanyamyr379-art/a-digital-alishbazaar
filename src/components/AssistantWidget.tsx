@@ -28,6 +28,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Tool, ToolContent, ToolHeader } from "@/components/ai-elements/tool";
 import { useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 const KEY = "alish-assistant-messages";
 
@@ -58,6 +59,7 @@ const TXT = {
 export function AssistantWidget() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const hidden = path.startsWith("/chat/") || path.startsWith("/auth") || path.startsWith("/admin");
+  const onChatList = path === "/chat" || path === "/chat/";
   const [open, setOpen] = useState(false);
   if (hidden) return null;
   return (
@@ -67,7 +69,10 @@ export function AssistantWidget() {
           type="button"
           aria-label="Alish Assistant"
           onClick={() => setOpen(true)}
-          className="fixed bottom-36 end-4 z-50 size-12 overflow-hidden rounded-full shadow-xl ring-2 ring-background transition-transform active:scale-95"
+          className={cn(
+            "fixed end-4 z-50 overflow-hidden rounded-full shadow-xl ring-2 ring-background transition-transform active:scale-95",
+            onChatList ? "bottom-40 size-11" : "bottom-36 size-12",
+          )}
         >
           <img src={assistantAvatar.url} alt="" className="size-full" />
         </button>

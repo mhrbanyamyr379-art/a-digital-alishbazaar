@@ -10,15 +10,15 @@ export function PresenceLabel({ lastSeen }: { lastSeen: string | null | undefine
   const { t, lang } = useI18n();
   if (isOnline(lastSeen)) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-        <span className="size-1.5 rounded-full bg-emerald-500" />
+      <span className="inline-flex min-w-0 items-center gap-1 text-[11px] font-semibold text-primary">
+        <span className="size-1.5 shrink-0 rounded-full bg-primary" />
         {t("online")}
       </span>
     );
   }
   if (!lastSeen) return null;
   return (
-    <span className="text-[11px] text-muted-foreground">
+    <span className="truncate text-[11px] text-muted-foreground">
       {t("lastSeen")} {timeAgo(lastSeen, lang)}
     </span>
   );
@@ -27,6 +27,6 @@ export function PresenceLabel({ lastSeen }: { lastSeen: string | null | undefine
 export function OnlineDot({ lastSeen }: { lastSeen: string | null | undefined }) {
   if (!isOnline(lastSeen)) return null;
   return (
-    <span className="absolute bottom-0 end-0 size-3 rounded-full border-2 border-card bg-emerald-500" />
+    <span className="absolute bottom-0 end-0 size-3 rounded-full border-2 border-card bg-primary" />
   );
 }
