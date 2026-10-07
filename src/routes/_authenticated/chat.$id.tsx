@@ -628,7 +628,7 @@ function ChatThread() {
             size="icon"
             onClick={() => setHeaderMenu((v) => !v)}
             className="size-11 rounded-full"
-            aria-label={t("more")}
+            aria-label="Menu"
           >
             <MoreVertical className="size-5" />
           </Button>
