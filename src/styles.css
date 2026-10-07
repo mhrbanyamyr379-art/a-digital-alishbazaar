@@ -165,3 +165,226 @@
 @utility animate-listing {
   animation: slideUp 0.5s var(--ease-out-expo) both;
 }
+
+/* Home-only presentation: shared cards and controls elsewhere stay unchanged. */
+.alish-home {
+  --home-content-width: 1200px;
+  letter-spacing: 0;
+}
+
+.alish-home .home-header > div,
+.alish-home .home-categories,
+.alish-home > section,
+.alish-home > nav,
+.alish-home > div:not(:last-child),
+.alish-home .home-listings {
+  width: 100%;
+  max-width: var(--home-content-width);
+  margin-inline: auto;
+}
+
+.alish-home .home-header > div:first-child {
+  padding-top: 12px;
+  gap: 12px;
+}
+
+.alish-home .home-header h1 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.alish-home .home-header > div:first-child img {
+  width: 36px;
+  height: 36px;
+}
+
+.alish-home .home-header > div:first-child button {
+  min-height: 40px;
+  padding-inline: 10px;
+  color: var(--primary-foreground);
+  border-color: color-mix(in oklab, var(--primary-foreground) 20%, transparent);
+}
+
+.alish-home .home-header > div:nth-child(2) {
+  gap: 10px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.alish-home .home-header form input {
+  min-height: 48px;
+  border-radius: 8px;
+  font-size: 14px;
+  padding-inline-start: 44px;
+  padding-inline-end: 44px;
+  color: var(--foreground);
+}
+
+.alish-home .home-header form > button {
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alish-home .home-header form + div,
+.alish-home .home-header > div:nth-child(2) > div:last-child {
+  padding-bottom: 0;
+}
+
+.alish-home .home-header > div:nth-child(2) > div:last-child > button {
+  height: 36px;
+  padding-inline: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.alish-home .home-categories {
+  padding-block: 10px;
+  color: var(--foreground);
+}
+
+.alish-home .home-categories > button {
+  min-height: 36px;
+  border-radius: 999px;
+  padding-inline: 14px;
+  font-weight: 600;
+}
+
+.alish-home > section {
+  padding-top: 18px;
+}
+
+.alish-home section h2 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.alish-home > section > div.grid {
+  gap: 8px;
+  padding-top: 12px;
+  padding-bottom: 4px;
+}
+
+.alish-home > section > div.grid > button {
+  min-width: 0;
+  min-height: 84px;
+  border-radius: 8px;
+  padding: 10px 6px;
+  gap: 8px;
+  box-shadow: none;
+}
+
+.alish-home > section > div.grid > button > div {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.alish-home > section > div.grid > button > div > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.alish-home > section > div.grid > button > span {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.alish-home > nav > button,
+.alish-home .home-toolbar > button {
+  min-height: 36px;
+}
+
+.alish-home .home-toolbar {
+  padding-top: 18px;
+}
+
+.alish-home .home-toolbar > p {
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.alish-home .animate-listing,
+.alish-home .home-listings > div.flex {
+  min-width: 0;
+  border-radius: 8px;
+}
+
+.alish-home .animate-listing > div:first-child button {
+  width: 36px;
+  height: 36px;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+}
+
+.alish-home .animate-listing > div:first-child button:hover {
+  background: var(--card);
+}
+
+.alish-home .animate-listing > div:last-child {
+  padding: 12px;
+  gap: 8px;
+}
+
+.alish-home .animate-listing > div:last-child > div:first-child > span {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+}
+
+.alish-home .animate-listing h3 {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  min-height: 39px;
+  overflow-wrap: anywhere;
+}
+
+.alish-home .animate-listing > div:last-child > div:last-child {
+  gap: 4px;
+  padding-top: 10px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .alish-home .home-header > div,
+  .alish-home .home-categories,
+  .alish-home .home-toolbar,
+  .alish-home .home-listings,
+  .alish-home > nav,
+  .alish-home section > div {
+    padding-inline: 24px;
+  }
+
+  .alish-home .animate-listing > div:last-child {
+    padding: 14px;
+  }
+
+  .alish-home .animate-listing > div:last-child > div:last-child {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alish-home .animate-listing {
+    animation: none;
+  }
+
+  .alish-home .animate-listing,
+  .alish-home .animate-listing img,
+  .alish-home > section button {
+    transition: none;
+  }
+}
