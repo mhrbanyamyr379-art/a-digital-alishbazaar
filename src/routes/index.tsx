@@ -12,6 +12,7 @@ import { CATEGORIES, CONDITIONS, categoryById } from "@/data/categories";
 import { subcategoriesFor, subcategoryById } from "@/data/subcategories";
 import { PROVINCES, provinceById } from "@/data/provinces";
 import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/components/ListingCard";
+import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SearchBar } from "@/components/SearchBar";
@@ -233,9 +234,9 @@ function Home() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="alish-home min-h-screen bg-background pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-primary text-primary-foreground">
+      <header className="home-header sticky top-0 z-50 bg-primary text-primary-foreground">
         <div className="flex items-center justify-between gap-4 px-4 pt-3">
           <Link to="/" className="flex items-center gap-2">
             <img
@@ -248,7 +249,7 @@ function Home() {
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             {user ? (
-              <Link to="/profile" className="size-8 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/20">
+              <Link to="/profile" className="size-10 overflow-hidden rounded-full bg-primary-foreground/10 ring-1 ring-primary-foreground/20">
                 {profile?.avatar_url ? (
                   <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
                 ) : (
@@ -260,7 +261,7 @@ function Home() {
             ) : (
               <Link
                 to="/auth"
-                className="rounded-md border border-white/20 px-3 py-1 text-xs font-semibold"
+                className="flex min-h-10 items-center rounded-md border border-primary-foreground/20 px-3 text-xs font-semibold"
               >
                 {t("signIn")}
               </Link>
@@ -282,7 +283,7 @@ function Home() {
           <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1">
             <ProvinceSelect value={search.prov} onChange={(prov) => setParam({ prov, city: "" })} />
             {PROVINCES.slice(0, 6).map((p) => (
-              <button
+              <Button variant="ghost" size="sm"
                 key={p.id}
                 onClick={() =>
                   setParam({ prov: search.prov === p.id ? "" : p.id, city: "" })
@@ -291,19 +292,18 @@ function Home() {
                   "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
                   search.prov === p.id
                     ? "border-accent bg-accent text-accent-foreground"
-                    : "border-white/10 bg-white/10 text-primary-foreground hover:bg-white/20",
+                    : "border-primary-foreground/15 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20",
                 )}
               >
                 {locName(p)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
-      </header>
 
       {/* Category chips */}
-      <nav className="no-scrollbar sticky top-[calc(3.25rem+5.5rem)] z-40 flex items-center gap-2 overflow-x-auto border-b border-border bg-card px-4 py-3">
-        <button
+      <nav className="home-categories no-scrollbar flex items-center gap-2 overflow-x-auto border-b border-border bg-card px-4 py-3">
+        <Button variant="ghost" size="sm"
           onClick={() => setParam({ cat: "", sub: "" })}
           className={cn(
             "flex-none rounded-full px-4 py-1.5 text-xs font-bold transition-colors",
@@ -311,9 +311,9 @@ function Home() {
           )}
         >
           {t("allCategories")}
-        </button>
+        </Button>
         {CATEGORIES.map((c) => (
-          <button
+          <Button variant="ghost" size="sm"
             key={c.id}
             onClick={() => setParam({ cat: search.cat === c.id ? "" : c.id, sub: "" })}
             className={cn(
@@ -323,9 +323,10 @@ function Home() {
           >
             <c.icon className="size-3.5" />
             {locName(c)}
-          </button>
+          </Button>
         ))}
       </nav>
+      </header>
 
       {/* Category grid — shown only when browsing without filters */}
       {!hasAnyFilter && (
@@ -336,7 +337,7 @@ function Home() {
       {/* Subcategory chips — only when a main category is selected */}
       {subcategoriesFor(search.cat).length > 0 && (
         <nav className="no-scrollbar flex items-center gap-2 overflow-x-auto border-b border-border bg-background px-4 py-2.5">
-          <button
+          <Button variant="ghost" size="sm"
             onClick={() => setParam({ sub: "" })}
             className={cn(
               "flex-none rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
@@ -344,9 +345,9 @@ function Home() {
             )}
           >
             {t("allSubcategories")}
-          </button>
+          </Button>
           {subcategoriesFor(search.cat).map((s) => (
-            <button
+            <Button variant="ghost" size="sm"
               key={s.id}
               onClick={() => setParam({ sub: search.sub === s.id ? "" : s.id })}
               className={cn(
@@ -357,7 +358,7 @@ function Home() {
               )}
             >
               {locName(s)}
-            </button>
+            </Button>
           ))}
         </nav>
       )}
@@ -366,8 +367,8 @@ function Home() {
       {!hasAnyFilter && <DiscoverySections />}
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 px-4 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="home-toolbar flex items-center justify-between gap-3 px-4 pt-4">
+        <p className="text-sm font-semibold text-muted-foreground">
           {data ? `${toLocalDigits(totalCount, lang)}${hasNextPage ? "+" : ""} ${t("results")}` : t("latest")}
           {activeProv ? ` · ${locName(activeProv)}` : ""}
         </p>
@@ -398,19 +399,19 @@ function Home() {
       )}
 
       {/* Grid */}
-      <main className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 lg:grid-cols-4">
+      <main className="home-listings grid grid-cols-2 gap-3 px-4 py-4 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
         {isLoading &&
           Array.from({ length: 8 }).map((_, i) => <ListingCardSkeleton key={i} />)}
 
         {isError && (
           <div className="col-span-full flex flex-col items-center gap-3 py-16 text-center">
             <p className="text-sm text-muted-foreground">{t("errorTitle")}</p>
-            <button
+            <Button variant="ghost" size="sm"
               onClick={() => refetch()}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
             >
               {t("retry")}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -441,13 +442,13 @@ function Home() {
       {/* Infinite-scroll sentinel + manual fallback */}
       {hasNextPage && (
         <div ref={loadRef} className="flex justify-center pb-8 pt-2">
-          <button
+          <Button variant="ghost" size="sm"
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
             className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground disabled:opacity-50"
           >
             {isFetchingNextPage ? t("loading") : t("loadMore")}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -502,21 +503,21 @@ function ActiveFilterChips({
   return (
     <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-4 pt-3">
       {chips.map((c) => (
-        <button
+        <Button variant="ghost" size="sm"
           key={c.key}
           onClick={() => onRemove(c.clear)}
           className="flex flex-none items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold text-foreground"
         >
           {c.label}
           <X className="size-3" />
-        </button>
+        </Button>
       ))}
-      <button
+      <Button variant="ghost" size="sm"
         onClick={onClear}
         className="flex-none whitespace-nowrap px-2 text-xs font-bold text-muted-foreground hover:text-foreground"
       >
         {t("clearAll")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -527,7 +528,7 @@ function ProvinceSelect({ value, onChange }: { value: string; onChange: (v: stri
   const prov = provinceById(value);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger className="flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-primary-foreground">
+      <SheetTrigger className="flex flex-none items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-foreground/15 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium text-primary-foreground">
         {prov ? locName(prov) : t("allProvinces")}
         <ChevronDown className="size-3 opacity-60" />
       </SheetTrigger>
@@ -536,7 +537,7 @@ function ProvinceSelect({ value, onChange }: { value: string; onChange: (v: stri
           <SheetTitle>{t("province")}</SheetTitle>
         </SheetHeader>
         <div className="grid grid-cols-2 gap-2 pt-4">
-          <button
+          <Button variant="ghost" size="sm"
             onClick={() => {
               onChange("");
               setOpen(false);
@@ -547,9 +548,9 @@ function ProvinceSelect({ value, onChange }: { value: string; onChange: (v: stri
             )}
           >
             {t("allProvinces")}
-          </button>
+          </Button>
           {PROVINCES.map((p) => (
-            <button
+            <Button variant="ghost" size="sm"
               key={p.id}
               onClick={() => {
                 onChange(p.id);
@@ -561,7 +562,7 @@ function ProvinceSelect({ value, onChange }: { value: string; onChange: (v: stri
               )}
             >
               {locName(p)}
-            </button>
+            </Button>
           ))}
         </div>
       </SheetContent>
@@ -705,7 +706,7 @@ function FiltersSheet({
           </FilterGroup>
 
           <div className="sticky bottom-0 -mx-6 flex gap-3 border-t border-border bg-background px-6 py-3">
-            <button
+            <Button variant="ghost" size="sm"
               onClick={() => {
                 setSort("newest");
                 setMin("");
@@ -728,8 +729,8 @@ function FiltersSheet({
               className="flex-1 rounded-lg border border-border py-3 text-sm font-semibold"
             >
               {t("reset")}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="sm"
               onClick={() => {
                 onApply({
                   sort,
@@ -745,7 +746,7 @@ function FiltersSheet({
               className="flex-1 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground"
             >
               {t("apply")}
-            </button>
+            </Button>
           </div>
         </div>
       </SheetContent>
@@ -772,7 +773,7 @@ function Chip({
   children: React.ReactNode;
 }) {
   return (
-    <button
+    <Button variant="ghost" size="sm"
       onClick={onClick}
       className={cn(
         "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
@@ -780,6 +781,6 @@ function Chip({
       )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
