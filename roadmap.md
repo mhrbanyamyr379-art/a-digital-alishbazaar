@@ -1,3 +1,3 @@
 - [x] Google Search Console setup (SEO finding gsc:gsc): connect, META verify, submit sitemap
-- [ ] Polish Chat list and thread presentation without changing messaging behavior
-- [ ] Verify Chat presentation on mobile and desktop, including floating controls
+- [x] Polish Chat list and thread presentation without changing messaging behavior
+- [x] Verify Chat presentation on mobile and desktop, including floating controls

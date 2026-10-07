@@ -531,7 +531,7 @@ function ChatThread() {
     const q = byId.get(mid);
     if (!q) return null;
     return (
-      <div className="mb-1 truncate rounded-lg border-s-2 border-accent/60 bg-black/5 px-2 py-1 text-[11px] opacity-80 dark:bg-white/10">
+      <div className="mb-1 truncate rounded-lg border-s-2 border-accent/60 bg-muted/60 px-2 py-1 text-[11px] opacity-80">
         {q.deleted_at ? t("messageRemoved") : (q.body ?? t("imageMessage"))}
       </div>
     );
@@ -628,7 +628,7 @@ function ChatThread() {
             size="icon"
             onClick={() => setHeaderMenu((v) => !v)}
             className="size-11 rounded-full"
-            aria-label={t("more")}
+            aria-label="Menu"
           >
             <MoreVertical className="size-5" />
           </Button>
@@ -1013,7 +1013,7 @@ function ChatThread() {
 
       {/* Block confirm */}
       {confirmBlock && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-4 sm:items-center">
           <div className="w-full max-w-sm rounded-2xl bg-card p-5 shadow-2xl">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-lg font-black">{blockedByMe ? t("unblock") : t("block")}</h3>
