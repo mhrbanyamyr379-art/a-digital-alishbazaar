@@ -1,5 +1,5 @@
 - [x] Google Search Console setup (SEO finding gsc:gsc): connect, META verify, submit sitemap
 - [x] Polish Chat list and thread presentation without changing messaging behavior
 - [x] Verify Chat presentation on mobile and desktop, including floating controls
-- [ ] Polish only Home presentation while preserving existing behavior and shared-page styling
-- [ ] Verify Home search, location/category filters, cards, favorites, navigation and mobile RTL/LTR
+- [x] Polish only Home presentation while preserving existing behavior and shared-page styling
+- [x] Verify Home search, location/category filters, cards, favorites, navigation and mobile RTL/LTR

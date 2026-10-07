@@ -298,6 +298,15 @@
   overflow-wrap: anywhere;
 }
 
+html[lang="en"] .alish-home > section > div.grid > button {
+  padding-inline: 4px;
+}
+
+html[lang="en"] .alish-home > section > div.grid > button > span {
+  font-size: 11px;
+  overflow-wrap: normal;
+}
+
 .alish-home > nav > button,
 .alish-home .home-toolbar > button {
   min-height: 36px;
