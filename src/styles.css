@@ -176,7 +176,9 @@
 .alish-home .home-categories,
 .alish-home > section,
 .alish-home > nav,
-.alish-home > div:not(:last-child),
+.alish-home .home-toolbar,
+.alish-home > .no-scrollbar,
+.alish-home > .flex.flex-col.gap-6,
 .alish-home .home-listings {
   width: 100%;
   max-width: var(--home-content-width);
