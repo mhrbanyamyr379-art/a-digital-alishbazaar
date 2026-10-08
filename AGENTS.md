@@ -9,3 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Scope Home presentation rules beneath `.alish-home` so shared marketplace components retain their appearance on other pages.
+- Keep Notifications presentation in its existing route with shared semantic tokens and Button controls; leave notification queries, subscriptions and action handlers unchanged to isolate visual polish.
