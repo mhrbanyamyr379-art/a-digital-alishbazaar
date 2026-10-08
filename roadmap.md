@@ -3,3 +3,5 @@
 - [x] Verify Chat presentation on mobile and desktop, including floating controls
 - [x] Polish only Home presentation while preserving existing behavior and shared-page styling
 - [x] Verify Home search, location/category filters, cards, favorites, navigation and mobile RTL/LTR
+- [ ] Polish only Notifications presentation, preserving existing handlers and data flow
+- [ ] Verify Notifications filters, read/dismiss actions, destinations and mobile RTL/LTR
