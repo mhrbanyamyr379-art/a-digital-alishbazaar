@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CheckCheck, Heart, MessageCircle, Package, Star, X, AlertTriangle } from "lucide-react";
+import { Bell, Check, CheckCheck, Heart, MessageCircle, Package, Star, X, AlertTriangle, BadgeCheck, ShieldCheck, ShoppingBag, Handshake, RefreshCw, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { BottomNav } from "@/components/BottomNav";
 import { BrandTopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -72,6 +73,13 @@ function typeIcon(type: string) {
   if (type === "message") return MessageCircle;
   if (type === "favorite") return Heart;
   if (type === "review") return Star;
+  if (type === "listing_sold") return BadgeCheck;
+  if (type === "listing_rejected") return AlertTriangle;
+  if (type === "listing_expired" || type === "listing_expiring") return Clock;
+  if (type === "listing_renewed") return RefreshCw;
+  if (type === "offer" || type === "purchase_offer") return Handshake;
+  if (type === "purchase" || type === "order") return ShoppingBag;
+  if (type === "security" || type.startsWith("security_")) return ShieldCheck;
   if (type.startsWith("listing_")) return Package;
   return Bell;
 }
@@ -200,58 +208,71 @@ function NotificationsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background pb-48">
       <BrandTopBar right={<LanguageSwitcher />} />
 
-      <div className="flex items-center justify-between gap-2 px-4 pt-4">
-        <h1 className="font-display text-xl font-black">{t("notifications")}</h1>
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-2 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:pt-8">
+        <h1 className="min-w-0 break-words font-display text-2xl font-extrabold leading-tight">{t("notifications")}</h1>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="flex items-center gap-1 text-xs font-bold text-accent">
-            <CheckCheck className="size-4" />
+          <Button variant="ghost" onClick={markAllRead} className="min-h-11 shrink-0 px-2 text-xs font-semibold text-accent hover:bg-accent/10 hover:text-accent">
+            <CheckCheck aria-hidden="true" />
             {t("markAllRead")}
-          </button>
+          </Button>
         )}
       </div>
 
-      <div className="flex gap-2 px-4 pt-3">
+      <div role="group" aria-label={t("notifications")} className="mx-auto grid w-full max-w-3xl grid-cols-3 gap-2 px-4 pb-4 pt-5 sm:flex sm:px-6">
         {tabs.map((tb) => (
-          <button
+          <Button
+            variant="ghost"
             key={tb.id}
             onClick={() => setTab(tb.id)}
+            aria-pressed={tab === tb.id}
             className={cn(
-              "rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
-              tab === tb.id ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
+              "h-auto min-h-11 min-w-0 gap-1 rounded-full border px-2 py-2 text-xs font-semibold sm:px-5 sm:text-sm",
+              tab === tb.id ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "border-border/60 bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground",
             )}
           >
-            {tb.label}
-            {tb.id === "unread" && unreadCount > 0 ? ` · ${unreadCount}` : ""}
-          </button>
+            <span className="min-w-0 whitespace-normal leading-5">{tb.label}</span>
+            {tb.id === "unread" && unreadCount > 0 && <span className="shrink-0 text-[11px] tabular-nums">· {unreadCount}</span>}
+          </Button>
         ))}
       </div>
 
-      <main className="flex flex-col gap-2 p-3">
-        {isLoading && Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-secondary" />)}
+      <main aria-busy={isLoading} className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 pb-6 pt-1 sm:px-6">
+        {isLoading && Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} aria-hidden="true" className="flex min-h-28 gap-3 rounded-lg border border-border/60 bg-card p-4 motion-safe:animate-pulse">
+            <div className="size-11 shrink-0 rounded-lg bg-secondary" />
+            <div className="flex min-w-0 flex-1 flex-col gap-3 py-1">
+              <div className="h-3 w-2/3 rounded bg-secondary" />
+              <div className="h-3 w-full rounded bg-secondary" />
+              <div className="h-2 w-1/3 rounded bg-secondary" />
+            </div>
+          </div>
+        ))}
 
         {error && (
-          <div className="flex flex-col items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center">
+          <div role="alert" className="flex flex-col items-center gap-3 py-12 text-center">
             <AlertTriangle className="size-5 text-destructive" />
             <p className="text-sm font-semibold text-destructive">{t("errorTitle")}</p>
-            <button
+            <Button
+              variant="outline"
               onClick={() => refetch()}
               disabled={isFetching}
-              className="rounded-lg bg-accent px-4 py-2 text-xs font-bold text-accent-foreground disabled:opacity-60"
+              className="min-h-11 gap-2 text-sm"
             >
+              <RefreshCw aria-hidden="true" className={isFetching ? "motion-safe:animate-spin" : ""} />
               {t("retry")}
-            </button>
+            </Button>
           </div>
         )}
 
         {!isLoading && !error && items.length === 0 && (
-          <div className="flex flex-col items-center gap-2 py-20 text-center">
-            <div className="flex size-16 items-center justify-center rounded-full bg-secondary">
-              <Bell className="size-7 text-muted-foreground" />
+          <div role="status" className="flex min-h-80 flex-col items-center justify-center gap-5 px-4 py-16 text-center sm:min-h-96">
+            <div className="flex size-20 items-center justify-center rounded-full border border-primary/10 bg-secondary/70 ring-8 ring-secondary/30">
+              <Bell aria-hidden="true" className="size-8 text-primary/70" strokeWidth={1.5} />
             </div>
-            <p className="text-sm font-semibold text-muted-foreground">{t("emptyNotifications")}</p>
+            <p className="max-w-xs text-base font-semibold leading-relaxed text-muted-foreground">{t("emptyNotifications")}</p>
           </div>
         )}
 
@@ -261,47 +282,55 @@ function NotificationsPage() {
             <div
               key={n.id}
               className={cn(
-                "flex items-start gap-3 rounded-xl border p-3",
-                n.read_at ? "border-border bg-card" : "border-accent/30 bg-accent/5",
+                "grid grid-cols-[minmax(0,1fr)_auto] items-start overflow-hidden rounded-lg border border-s-[3px] transition-colors motion-reduce:transition-none",
+                n.read_at ? "border-border/70 border-s-border bg-card" : "border-accent/20 border-s-accent bg-accent/5",
               )}
             >
-              <button type="button" onClick={() => open(n)} className="flex min-w-0 flex-1 items-start gap-3 text-start">
+              <Button variant="ghost" type="button" onClick={() => open(n)} className="h-auto min-h-28 min-w-0 items-start justify-start gap-3 whitespace-normal rounded-none py-4 pe-0 ps-3 text-start hover:bg-secondary/40 hover:text-foreground sm:gap-4 sm:ps-4">
                 <span
                   className={cn(
-                    "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full",
-                    n.read_at ? "bg-secondary text-muted-foreground" : "bg-accent/15 text-accent",
+                    "mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-lg",
+                    n.read_at ? "bg-secondary/70 text-muted-foreground" : "bg-primary/10 text-primary",
                   )}
                 >
-                  <Icon className="size-4" />
+                  <Icon aria-hidden="true" className="size-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-baseline justify-between gap-2">
-                    <span className="truncate text-sm font-bold">{n.title}</span>
-                    <span className="shrink-0 text-[10px] text-muted-foreground">{timeAgo(n.created_at, lang)}</span>
+                  <span dir="auto" className={cn("block break-words text-sm leading-6", n.read_at ? "font-semibold text-foreground/80" : "font-bold text-foreground")}>{n.title}</span>
+                  {n.body && <span dir="auto" className="mt-1 block break-words text-sm font-normal leading-6 text-muted-foreground">{n.body}</span>}
+                  <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-5">
+                    <span className={cn("font-semibold", n.read_at ? "text-muted-foreground" : "text-primary")}>{typeLabel(n.type, t)}</span>
+                    <span aria-hidden="true" className="text-muted-foreground">·</span>
+                    <time dateTime={n.created_at} className="font-normal text-muted-foreground">{timeAgo(n.created_at, lang)}</time>
                   </span>
-                  <span className="mt-0.5 block text-[11px] font-semibold text-accent">{typeLabel(n.type, t)}</span>
-                  {n.body && <span className="mt-0.5 block truncate text-xs text-muted-foreground">{n.body}</span>}
                 </span>
-              </button>
-              <button
+              </Button>
+              <div className="flex w-11 shrink-0 flex-col items-center gap-2 pt-1 sm:w-12">
+              <Button
+                variant="ghost"
+                size="icon"
                 type="button"
                 aria-label={t("dismiss")}
+                title={t("dismiss")}
                 onClick={() => dismiss(n)}
-                className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
+                className="size-11 rounded-none text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
               >
-                <X className="size-4" />
-              </button>
+                <X aria-hidden="true" className="size-4" />
+              </Button>
+              {n.read_at ? <Check aria-label={t("tabRead")} className="size-3.5 text-muted-foreground" /> : <span role="img" aria-label={t("tabUnread")} className="size-2 rounded-full bg-accent" />}
+              </div>
             </div>
           );
         })}
 
         {!error && data && data.length >= limit && (
-          <button
+          <Button
+            variant="outline"
             onClick={() => setLimit((l) => l + PAGE_SIZE)}
-            className="mx-auto mt-2 rounded-lg border border-border px-4 py-2 text-xs font-bold"
+            className="mx-auto mt-3 min-h-11 px-6 text-sm font-semibold"
           >
             {t("loadMore")}
-          </button>
+          </Button>
         )}
       </main>
       <BottomNav />
