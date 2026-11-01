@@ -118,7 +118,8 @@ async function fetchFeed(page: number, userId: string | null): Promise<{
     shareCountByListing.set(s.listing_id, (shareCountByListing.get(s.listing_id) ?? 0) + 1);
   }
 
-  const commentsByListing = new Map<string, typeof commentsRes.data>();
+  type CommentRow = NonNullable<typeof commentsRes.data>[number];
+  const commentsByListing = new Map<string, CommentRow[]>();
   for (const c of commentsRes.data ?? []) {
     const arr = commentsByListing.get(c.listing_id) ?? [];
     arr.push(c);
