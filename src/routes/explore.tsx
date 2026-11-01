@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { StorageImage } from "@/components/StorageImage";
 import { BrandTopBar } from "@/components/TopBar";
+import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
