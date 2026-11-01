@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Bell, MessageCircle, User, Plus } from "lucide-react";
+import { Home, Bell, MessageCircle, User, Plus, Compass } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useUnreadNotifications, useUnreadTotal } from "@/hooks/useUnread";
