@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Heart, MessageCircle, Share2, Send, Trash2, User } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Heart, MessageCircle, Share2, Send, Trash2, User, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -339,6 +339,9 @@ function Explore() {
               {isFetchingNextPage ? t("loading") : t("loadMore")}
             </button>
           </div>
+        )}
+        {!hasNextPage && items.length > 0 && (
+          <p className="py-4 text-center text-xs font-bold text-muted-foreground">{L.end}</p>
         )}
       </div>
       <BottomNav />
