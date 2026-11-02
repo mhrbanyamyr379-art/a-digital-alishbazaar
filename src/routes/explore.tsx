@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Heart, MessageCircle, Share2, Send, Trash2, User } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Heart, MessageCircle, Share2, Send, Trash2, User, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -188,23 +188,64 @@ function Explore() {
   const { t, lang } = useI18n();
   const { user } = useAuth();
 
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage, isRefetching } =
     useInfiniteQuery({
       queryKey: ["explore-feed", user?.id ?? "guest"],
       queryFn: ({ pageParam }) => fetchFeed(pageParam, user?.id ?? null),
       initialPageParam: 0,
       getNextPageParam: (last) => last.nextPage,
+      staleTime: 0,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
     });
 
   const items = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
+  const newestAt = items[0]?.created_at ?? null;
+  const [hasNew, setHasNew] = useState(false);
+
+  const L = {
+    fa: { newPosts: "آگهی‌های جدید", refresh: "تازه‌سازی", subtitle: "تازه‌ترین آگهی‌های همه مردم", end: "همه آگهی‌ها را دیدید" },
+    ps: { newPosts: "نوي اعلانونه", refresh: "تازه کول", subtitle: "د ټولو خلکو تازه اعلانونه", end: "ټول اعلانونه مو ولیدل" },
+    en: { newPosts: "New posts", refresh: "Refresh", subtitle: "The latest listings from everyone", end: "You're all caught up" },
+  }[lang];
+
+  // Facebook-style: reset to top and reload from the newest posts.
+  const resetFeed = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setHasNew(false);
+    queryClient.resetQueries({ queryKey: ["explore-feed"] });
+  }, [queryClient]);
+
+  useEffect(() => {
+    window.addEventListener("alish:explore-refresh", resetFeed);
+    return () => window.removeEventListener("alish:explore-refresh", resetFeed);
+  }, [resetFeed]);
+
+  // Check for newly posted listings every 45s.
+  useEffect(() => {
+    if (!newestAt) return;
+    const id = window.setInterval(async () => {
+      const { count } = await supabase
+        .from("listings")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active")
+        .gt("created_at", newestAt);
+      if ((count ?? 0) > 0) setHasNew(true);
+    }, 45000);
+    return () => window.clearInterval(id);
+  }, [newestAt]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || !hasNextPage || isFetchingNextPage) return;
-    const io = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) fetchNextPage();
-    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) fetchNextPage();
+      },
+      { rootMargin: "600px" },
+    );
     io.observe(el);
     return () => io.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -213,8 +254,30 @@ function Explore() {
     <div className="min-h-screen bg-background pb-32">
       <BrandTopBar right={<LanguageSwitcher />} />
 
+      {hasNew && (
+        <button
+          onClick={resetFeed}
+          className="fixed left-1/2 top-20 z-40 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-lg"
+        >
+          ↑ {L.newPosts}
+        </button>
+      )}
+
       <div className="mx-auto flex w-full max-w-xl flex-col gap-4 px-3 py-4">
-        <h1 className="font-display text-lg font-black">{t("explore")}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="font-display text-lg font-black">{t("explore")}</h1>
+            <p className="text-xs text-muted-foreground">{L.subtitle}</p>
+          </div>
+          <button
+            onClick={resetFeed}
+            aria-label={L.refresh}
+            className="flex min-h-10 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-bold text-muted-foreground active:scale-95"
+          >
+            <RefreshCw className={isRefetching ? "size-4 animate-spin" : "size-4"} />
+            {L.refresh}
+          </button>
+        </div>
 
         {isLoading && (
           <>
@@ -276,6 +339,9 @@ function Explore() {
               {isFetchingNextPage ? t("loading") : t("loadMore")}
             </button>
           </div>
+        )}
+        {!hasNextPage && items.length > 0 && (
+          <p className="py-4 text-center text-xs font-bold text-muted-foreground">{L.end}</p>
         )}
       </div>
       <BottomNav />

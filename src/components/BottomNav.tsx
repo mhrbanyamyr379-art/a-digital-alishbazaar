@@ -42,6 +42,12 @@ export function BottomNav() {
             <Link
               key={it.to}
               to={it.to}
+              onClick={(e) => {
+                if (it.to === "/explore" && active) {
+                  e.preventDefault();
+                  window.dispatchEvent(new Event("alish:explore-refresh"));
+                }
+              }}
               className={cn(
                 "relative flex flex-1 flex-col items-center gap-1 py-1",
                 active ? "text-primary" : "text-muted-foreground",
