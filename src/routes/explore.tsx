@@ -278,6 +278,7 @@ function Explore() {
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   );
 }
