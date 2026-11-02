@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Heart, MessageCircle, Share2, Send, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Send, Trash2, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -390,12 +390,18 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
           className="flex min-w-0 flex-1 items-center gap-3"
         >
           <div className="size-10 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
-            <StorageImage
-              bucket="avatars"
-              path={listing.sellerAvatar}
-              alt={listing.sellerName}
-              className="h-full w-full object-cover"
-            />
+            {listing.sellerAvatar ? (
+              <StorageImage
+                bucket="avatars"
+                path={listing.sellerAvatar}
+                alt={listing.sellerName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+                <User className="size-5" />
+              </div>
+            )}
           </div>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-bold">{listing.sellerName}</span>
@@ -538,12 +544,18 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
           {listing.comments.map((c) => (
             <div key={c.id} className="flex items-start gap-2.5">
               <div className="size-8 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
-                <StorageImage
-                  bucket="avatars"
-                  path={c.authorAvatar}
-                  alt={c.authorName}
-                  className="h-full w-full object-cover"
-                />
+                {c.authorAvatar ? (
+                  <StorageImage
+                    bucket="avatars"
+                    path={c.authorAvatar}
+                    alt={c.authorName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+                    <User className="size-4" />
+                  </div>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
