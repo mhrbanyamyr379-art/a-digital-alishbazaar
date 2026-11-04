@@ -3,7 +3,7 @@ import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, SlidersHorizontal, ChevronDown, X } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronDown, X, Sun, Moon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -19,6 +19,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { DiscoverySections, CategoryGrid } from "@/components/DiscoverySections";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
+import { useTheme } from "@/lib/theme";
 import { StorageImage } from "@/components/StorageImage";
 import { toLocalDigits } from "@/lib/format";
 import { cn } from "@/lib/utils";
