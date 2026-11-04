@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -24,6 +23,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
+import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -62,11 +62,6 @@ const AuthRoute = AuthRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExploreRoute = ExploreRouteImport.update({
-  id: '/explore',
-  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -113,6 +108,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
@@ -197,7 +197,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/explore': typeof ExploreRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/mcp': typeof McpRoute
@@ -207,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
+  '/explore': typeof AuthenticatedExploreRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -228,7 +228,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/explore': typeof ExploreRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/mcp': typeof McpRoute
@@ -237,6 +236,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/explore': typeof AuthenticatedExploreRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/my-listings': typeof AuthenticatedMyListingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -260,7 +260,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/explore': typeof ExploreRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/mcp': typeof McpRoute
@@ -270,6 +269,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
+  '/_authenticated/explore': typeof AuthenticatedExploreRoute
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -293,7 +293,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
-    | '/explore'
     | '/faq'
     | '/help'
     | '/mcp'
@@ -303,6 +302,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/chat'
+    | '/explore'
     | '/favorites'
     | '/my-listings'
     | '/notifications'
@@ -324,7 +324,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
-    | '/explore'
     | '/faq'
     | '/help'
     | '/mcp'
@@ -333,6 +332,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
+    | '/explore'
     | '/favorites'
     | '/my-listings'
     | '/notifications'
@@ -355,7 +355,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
-    | '/explore'
     | '/faq'
     | '/help'
     | '/mcp'
@@ -365,6 +364,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/chat'
+    | '/_authenticated/explore'
     | '/_authenticated/favorites'
     | '/_authenticated/my-listings'
     | '/_authenticated/notifications'
@@ -388,7 +388,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
-  ExploreRoute: typeof ExploreRoute
   FaqRoute: typeof FaqRoute
   HelpRoute: typeof HelpRoute
   McpRoute: typeof McpRoute
@@ -438,13 +437,6 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -508,6 +500,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof AuthenticatedChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/explore': {
+      id: '/_authenticated/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof AuthenticatedExploreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/favorites': {
@@ -634,6 +633,7 @@ const AuthenticatedChatRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
+  AuthenticatedExploreRoute: typeof AuthenticatedExploreRoute
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -647,6 +647,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
+  AuthenticatedExploreRoute: AuthenticatedExploreRoute,
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
@@ -666,7 +667,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
-  ExploreRoute: ExploreRoute,
   FaqRoute: FaqRoute,
   HelpRoute: HelpRoute,
   McpRoute: McpRoute,

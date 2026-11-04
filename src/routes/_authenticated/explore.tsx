@@ -13,7 +13,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/explore")({
+export const Route = createFileRoute("/_authenticated/explore")({
   head: () => ({
     meta: [
       { title: "کشف | الیش — Explore Alish" },
