@@ -113,6 +113,13 @@
       "when": 1793525011916,
       "tag": "0015_create_explore_feed_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793850158622,
+      "tag": "0016_profile_last_active",
+      "breakpoints": true
     }
   ]
 }

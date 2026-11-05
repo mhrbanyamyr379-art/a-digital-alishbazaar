@@ -511,8 +511,10 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string
+          hide_last_active: boolean
           id: string
           is_banned: boolean
+          last_active: string | null
           last_seen: string | null
           phone: string | null
           province: string | null
@@ -527,8 +529,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string
+          hide_last_active?: boolean
           id: string
           is_banned?: boolean
+          last_active?: string | null
           last_seen?: string | null
           phone?: string | null
           province?: string | null
@@ -543,8 +547,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string
+          hide_last_active?: boolean
           id?: string
           is_banned?: boolean
+          last_active?: string | null
           last_seen?: string | null
           phone?: string | null
           province?: string | null
