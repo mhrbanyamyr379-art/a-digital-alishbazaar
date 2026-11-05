@@ -176,7 +176,18 @@ function Home() {
   const navigate = useNavigate({ from: "/" });
   const { t, locName, lang } = useI18n();
   const { user, profile } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [qInput, setQInput] = useState(search.q);
+  const [sysDark, setSysDark] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    setSysDark(mql.matches);
+    const onChange = () => setSysDark(mql.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  const isDark = theme === "dark" || (theme === "system" && sysDark);
   const { add: recordSearch } = useRecentSearches();
 
   useEffect(() => {
@@ -248,6 +259,15 @@ function Home() {
             <h1 className="font-display text-lg font-black tracking-tight">{t("appName")}</h1>
           </Link>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              aria-label={isDark ? t("themeLight") : t("themeDark")}
+              title={isDark ? t("themeLight") : t("themeDark")}
+              className="flex size-10 items-center justify-center rounded-md border border-primary-foreground/20 text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+            >
+              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            </button>
             <LanguageSwitcher />
             {user ? (
               <Link to="/profile" className="size-10 overflow-hidden rounded-full bg-primary-foreground/10 ring-1 ring-primary-foreground/20">

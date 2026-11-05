@@ -172,6 +172,12 @@
   letter-spacing: 0;
 }
 
+/* Keep the Alish brand header dark in dark mode too. */
+.dark .alish-home .home-header {
+  --primary: hsl(170 40% 18%);
+  --primary-foreground: hsl(38 25% 97%);
+}
+
 .alish-home .home-header > div,
 .alish-home .home-categories,
 .alish-home > section,
