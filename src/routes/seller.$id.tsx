@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
@@ -15,6 +15,13 @@ import {
   ShieldCheck,
   Clock,
   MessageSquare,
+  User,
+  Mail,
+  CalendarDays,
+  Phone,
+  Map as MapIcon,
+  Pencil,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,7 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { StorageImage } from "@/components/StorageImage";
-import { toLocalDigits, timeAgo } from "@/lib/format";
+import { toLocalDigits, timeAgo, formatPhoneIntl, formatSolarDate } from "@/lib/format";
 import { provinceById } from "@/data/provinces";
 import { CATEGORIES, categoryById } from "@/data/categories";
 import { TopBar } from "@/components/TopBar";
@@ -83,6 +90,7 @@ interface Review {
 interface SellerListing extends ListingCardData {
   status: string;
   category: string;
+  contact_whatsapp: string | null;
 }
 
 type SortKey = "newest" | "oldest" | "price_low" | "price_high";
@@ -108,7 +116,7 @@ function SellerPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,updated_at")
+        .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,updated_at,last_active,hide_last_active")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -129,7 +137,7 @@ function SellerPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id,title,price,currency,province,city,created_at,is_featured,status,category,listing_images(url,position)")
+        .select("id,title,price,currency,province,city,created_at,is_featured,status,category,contact_whatsapp,listing_images(url,position)")
         .eq("seller_id", id)
         .in("status", ["active", "sold"])
         .order("created_at", { ascending: false });
@@ -148,6 +156,7 @@ function SellerPage() {
           image: first?.url ?? null,
           status: l.status,
           category: l.category,
+          contact_whatsapp: l.contact_whatsapp ?? null,
         };
       });
     },
@@ -163,6 +172,15 @@ function SellerPage() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Review[];
+    },
+  });
+
+  const { data: sellerPhone } = useQuery({
+    queryKey: ["seller-phone", id, user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_seller_phone", { _seller_id: id });
+      return typeof data === "string" ? data : null;
     },
   });
 
@@ -278,13 +296,10 @@ function SellerPage() {
   const prov = provinceById(profile.province);
   const canReview = user && user.id !== id;
   const isSelf = user?.id === id;
-  const memberSinceLabel = new Date(profile.created_at).toLocaleDateString(
-    lang === "en" ? "en-US" : lang === "fa" ? "fa-AF" : "ps-AF",
-    { year: "numeric", month: "long" },
-  );
+  const memberSinceLabel = formatSolarDate(profile.created_at, lang);
 
   return (
-    <div className="min-h-screen bg-background pb-16">
+    <div className="min-h-screen bg-background pb-24">
       <TopBar title={profile.display_name} />
 
       {/* Header */}
@@ -323,11 +338,7 @@ function SellerPage() {
                 <Clock className="size-3" />
                 {t("memberSince")} {memberSinceLabel}
               </span>
-              {profile.updated_at && (
-                <span className="opacity-90">
-                  {t("lastActive")}: {timeAgo(profile.updated_at, lang)}
-                </span>
-              )}
+              {!profile.hide_last_active && profile.last_active && <ActiveStatus at={profile.last_active} />}
             </div>
           </div>
         </div>
@@ -390,6 +401,18 @@ function SellerPage() {
           )}
         </div>
       </div>
+
+      <ProfileInfoCards
+        name={profile.display_name}
+        email={isSelf ? user?.email ?? null : null}
+        isSelf={isSelf}
+        joined={profile.created_at}
+        phone={sellerPhone ?? null}
+        phoneHidden={!sellerPhone && !isSelf}
+        whatsapp={(listings ?? []).find((l) => l.contact_whatsapp)?.contact_whatsapp ?? null}
+        province={prov ? locName(prov) : null}
+      />
+      {isSelf && <ActivityPrivacyToggle hidden={!!profile.hide_last_active} userId={id} />}
 
       {/* About */}
       {profile.bio && (
@@ -589,6 +612,148 @@ function SellerPage() {
           </ul>
         </div>
       </section>
+
+      {isSelf && (
+        <div className="px-4 pt-6">
+          <Link
+            to="/profile"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-sm active:scale-[0.98]"
+          >
+            <Pencil className="size-4" />
+            {t("editProfile")}
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ACTIVE_WINDOW_MS = 5 * 60 * 1000;
+
+function ActiveStatus({ at }: { at: string }) {
+  const { lang } = useI18n();
+  const active = Date.now() - new Date(at).getTime() < ACTIVE_WINDOW_MS;
+  const L = {
+    now: { fa: "هم‌اکنون فعال", ps: "اوس فعال", en: "Active now" },
+    last: { fa: "آخرین بازدید", ps: "وروستی لید", en: "Last seen" },
+  };
+  return (
+    <span className="inline-flex items-center gap-1.5 font-semibold">
+      <span className={cn("size-2 rounded-full ring-2 ring-primary-foreground/30", active ? "bg-success" : "bg-muted-foreground")} />
+      {active ? L.now[lang] : `${L.last[lang]}: ${timeAgo(at, lang)}`}
+    </span>
+  );
+}
+
+function ActivityPrivacyToggle({ hidden, userId }: { hidden: boolean; userId: string }) {
+  const { lang } = useI18n();
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const label = { fa: "پنهان کردن وضعیت فعالیت من", ps: "زما د فعالیت حالت پټ کړئ", en: "Hide my activity status" };
+  const toggle = async () => {
+    setBusy(true);
+    const next = !hidden;
+    const { error } = await supabase
+      .from("profiles")
+      .update(next ? { hide_last_active: true, last_active: null, last_seen: null } : { hide_last_active: false, last_active: new Date().toISOString() })
+      .eq("id", userId);
+    setBusy(false);
+    if (error) toast.error("—");
+    qc.invalidateQueries({ queryKey: ["seller", userId] });
+  };
+  return (
+    <div className="px-4 pt-3">
+      <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-border bg-card px-4 shadow-sm">
+        <EyeOff className="size-[18px] shrink-0 text-muted-foreground" />
+        <span className="min-w-0 flex-1 text-sm font-semibold">{label[lang]}</span>
+        <input type="checkbox" checked={hidden} disabled={busy} onChange={toggle} className="size-5 accent-[var(--color-primary)]" />
+      </label>
+    </div>
+  );
+}
+
+function ProfileInfoCards(p: {
+  name: string;
+  email: string | null;
+  isSelf: boolean;
+  joined: string;
+  phone: string | null;
+  phoneHidden: boolean;
+  whatsapp: string | null;
+  province: string | null;
+}) {
+  const { lang, t } = useI18n();
+  const L = {
+    personal: { fa: "اطلاعات شخصی", ps: "شخصي معلومات", en: "Personal info" },
+    contact: { fa: "اطلاعات تماس", ps: "د اړیکې معلومات", en: "Contact info" },
+    address: { fa: "آدرس", ps: "پته", en: "Address" },
+    name: { fa: "نام", ps: "نوم", en: "Name" },
+    email: { fa: "ایمیل", ps: "ایمیل", en: "Email" },
+    joined: { fa: "عضویت", ps: "غړیتوب", en: "Joined" },
+    empty: { fa: "هنوز اضافه نشده", ps: "لا نه دی اضافه شوی", en: "Not added yet" },
+    afterChat: { fa: "پس از شروع گفتگو نمایش داده می‌شود", ps: "د خبرو له پیل وروسته ښکاري", en: "Shown after you start a chat" },
+  };
+  const phoneVal = p.phone ? formatPhoneIntl(p.phone) : null;
+  const waVal = p.whatsapp ? formatPhoneIntl(p.whatsapp) : null;
+  return (
+    <div className="flex flex-col gap-4 px-4 pt-5">
+      <InfoCard title={L.personal[lang]}>
+        <InfoRow icon={User} label={L.name[lang]} value={p.name || null} empty={L.empty[lang]} />
+        {p.isSelf && <InfoRow icon={Mail} label={L.email[lang]} value={p.email} empty={L.empty[lang]} ltr />}
+        <InfoRow icon={CalendarDays} label={L.joined[lang]} value={`${t("memberSince")} ${formatSolarDate(p.joined, lang)}`} empty={L.empty[lang]} />
+      </InfoCard>
+      <InfoCard title={L.contact[lang]}>
+        <InfoRow icon={Phone} label={t("phone")} value={phoneVal} empty={p.phoneHidden ? L.afterChat[lang] : L.empty[lang]} ltr />
+        <InfoRow icon={MessageCircle} label={t("whatsapp")} value={waVal} empty={L.empty[lang]} ltr />
+      </InfoCard>
+      <InfoCard title={L.address[lang]}>
+        <InfoRow icon={MapIcon} label={t("province")} value={p.province} empty={L.empty[lang]} />
+      </InfoCard>
+    </div>
+  );
+}
+
+function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-2 px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h2>
+      <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">{children}</div>
+    </section>
+  );
+}
+
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+  empty,
+  ltr,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string | null;
+  empty: string;
+  ltr?: boolean;
+}) {
+  return (
+    <div className="flex min-h-14 items-center gap-3 px-4 py-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="size-[18px]" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-semibold text-muted-foreground">{label}</p>
+        {value ? (
+          <p
+            className="break-words text-sm font-bold text-foreground"
+            dir={ltr ? "ltr" : undefined}
+            style={ltr ? { textAlign: "start", unicodeBidi: "isolate" } : undefined}
+          >
+            {value}
+          </p>
+        ) : (
+          <p className="text-sm italic text-muted-foreground/70">{empty}</p>
+        )}
+      </div>
     </div>
   );
 }
