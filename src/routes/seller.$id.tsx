@@ -639,7 +639,7 @@ function ActiveStatus({ at }: { at: string }) {
   };
   return (
     <span className="inline-flex items-center gap-1.5 font-semibold">
-      <span className={cn("size-2 rounded-full ring-2 ring-primary-foreground/30", active ? "bg-success" : "bg-muted-foreground")} />
+      <span className={cn("size-2 rounded-full ring-2 ring-primary-foreground/30", active ? "bg-green-400" : "bg-primary-foreground/50")} />
       {active ? L.now[lang] : `${L.last[lang]}: ${timeAgo(at, lang)}`}
     </span>
   );
