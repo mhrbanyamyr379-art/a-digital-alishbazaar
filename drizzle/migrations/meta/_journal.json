@@ -127,6 +127,13 @@
       "when": 1793942045841,
       "tag": "0017_grant_profile_last_active",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793944515137,
+      "tag": "0018_profile_edit_contact_address_fields",
+      "breakpoints": true
     }
   ]
 }

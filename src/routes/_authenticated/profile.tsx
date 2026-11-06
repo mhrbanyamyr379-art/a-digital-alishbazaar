@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Trash2,
   UserPen,
+  Camera,
   MessageSquareWarning,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,7 +33,9 @@ import { useI18n, LANGS } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { uploadImage } from "@/lib/storage";
 import { StorageImage } from "@/components/StorageImage";
-import { toLocalDigits } from "@/lib/format";
+import { toLocalDigits, formatPhoneIntl } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { PROVINCES } from "@/data/provinces";
 import { BottomNav } from "@/components/BottomNav";
 import { BrandTopBar } from "@/components/TopBar";
@@ -330,89 +333,349 @@ function DeleteAccountDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   );
 }
 
+const EDIT_L = {
+  personal: { fa: "اطلاعات شخصی", ps: "شخصي معلومات", en: "Personal info" },
+  contact: { fa: "اطلاعات تماس", ps: "د اړیکې معلومات", en: "Contact info" },
+  address: { fa: "آدرس", ps: "پته", en: "Address" },
+  changePhoto: { fa: "تغییر عکس", ps: "انځور بدل کړئ", en: "Change photo" },
+  removePhoto: { fa: "حذف عکس انتخاب‌شده", ps: "ټاکل شوی انځور لرې کړئ", en: "Remove selected photo" },
+  name: { fa: "نام", ps: "نوم", en: "Name" },
+  phone: { fa: "شماره تماس", ps: "د اړیکې شمېره", en: "Phone number" },
+  whatsapp: { fa: "شماره واتساپ", ps: "واټساپ شمېره", en: "WhatsApp number" },
+  same: { fa: "همان شماره تماس", ps: "هماغه د اړیکې شمېره", en: "Same as phone number" },
+  province: { fa: "ولایت", ps: "ولایت", en: "Province" },
+  provincePh: { fa: "ولایت را انتخاب کنید", ps: "ولایت وټاکئ", en: "Choose province" },
+  district: { fa: "ولسوالی / ناحیه", ps: "ولسوالي / ناحیه", en: "District" },
+  village: { fa: "منطقه / قریه", ps: "سیمه / کلی", en: "Area / village" },
+  villageHint: { fa: "نام منطقه، قریه یا محل زندگی‌تان را بنویسید", ps: "د سیمې، کلي یا استوګنځي نوم ولیکئ", en: "Write your area, village or neighbourhood" },
+  bio: { fa: "درباره من", ps: "زما په اړه", en: "About me" },
+  save: { fa: "ذخیره", ps: "خوندي کول", en: "Save" },
+  cancel: { fa: "لغو", ps: "لغوه", en: "Cancel" },
+  saved: { fa: "پروفایل با موفقیت ذخیره شد", ps: "پروفایل په بریالیتوب خوندي شو", en: "Profile saved" },
+  saveErr: { fa: "ذخیره نشد. لطفاً دوباره تلاش کنید", ps: "خوندي نشو. بیا هڅه وکړئ", en: "Could not save. Please try again" },
+  fixErr: { fa: "لطفاً خطاهای فرم را اصلاح کنید", ps: "مهرباني وکړئ تېروتنې سمې کړئ", en: "Please fix the errors" },
+  nameReq: { fa: "نام نمی‌تواند خالی باشد", ps: "نوم باید خالي نه وي", en: "Name is required" },
+  nameMin: { fa: "نام باید حداقل ۲ حرف باشد", ps: "نوم لږ تر لږه ۲ توري وي", en: "Name must be at least 2 characters" },
+  phoneBad: { fa: "شماره معتبر نیست. مثال: ‎+93 78 654 4323", ps: "شمېره سمه نه ده. بېلګه: ‎+93 78 654 4323", en: "Invalid number. Example: +93 78 654 4323" },
+} as const;
+
+const NAME_MAX = 40;
+const BIO_MAX = 150;
+const TEXT_MAX = 60;
+
+/** Normalize a typed phone to digits "93XXXXXXXXX"; returns "" when empty, null when invalid. */
+function normalizeAfPhone(raw: string): string | null {
+  let d = raw.replace(/\D/g, "");
+  if (!d) return "";
+  if (d.startsWith("0093")) d = d.slice(2);
+  if (d.length === 10 && d.startsWith("0")) d = "93" + d.slice(1);
+  if (d.length === 9 && d.startsWith("7")) d = "93" + d;
+  return /^937\d{8}$/.test(d) ? d : null;
+}
+
 function EditProfileDialog({ onClose }: { onClose: () => void }) {
-  const { t, locName } = useI18n();
+  const { lang, locName } = useI18n();
+  const L = (k: keyof typeof EDIT_L) => EDIT_L[k][lang as "fa" | "ps" | "en"] ?? EDIT_L[k].fa;
   const { user, profile, refreshProfile } = useAuth();
-  const [name, setName] = useState(profile?.display_name ?? "");
+  const [name, setName] = useState((profile?.display_name ?? "").slice(0, NAME_MAX));
   const [phone, setPhone] = useState("");
-  const [bio, setBio] = useState(profile?.bio ?? "");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [sameWa, setSameWa] = useState(false);
+  const [bio, setBio] = useState((profile?.bio ?? "").slice(0, BIO_MAX));
   const [province, setProvince] = useState(profile?.province ?? "");
+  const [district, setDistrict] = useState("");
+  const [village, setVillage] = useState("");
   const [avatar, setAvatar] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.rpc("get_my_phone" as never);
-      if (!cancelled && typeof data === "string") setPhone(data);
+      const [{ data: ph }, { data: ex }] = await Promise.all([
+        supabase.rpc("get_my_phone" as never),
+        supabase.rpc("get_my_profile_extras" as never),
+      ]);
+      if (cancelled) return;
+      const phoneStr = typeof ph === "string" ? formatPhoneIntl(ph) : "";
+      setPhone(phoneStr);
+      const row = Array.isArray(ex) ? (ex[0] as { whatsapp: string | null; district: string | null; village: string | null } | undefined) : undefined;
+      if (row) {
+        const wa = row.whatsapp ? formatPhoneIntl(row.whatsapp) : "";
+        setWhatsapp(wa);
+        setSameWa(!!wa && wa === phoneStr);
+        setDistrict(row.district ?? "");
+        setVillage(row.village ?? "");
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
+  useEffect(() => {
+    if (!avatar) return setPreview(null);
+    const url = URL.createObjectURL(avatar);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatar]);
+
+  const phoneInput = (v: string) => v.replace(/[^\d+ ]/g, "").slice(0, 17);
+  const prettify = (v: string) => {
+    const n = normalizeAfPhone(v);
+    return n ? formatPhoneIntl(n) : v;
+  };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    const n = name.trim();
+    if (!n) e.name = L("nameReq");
+    else if (n.length < 2) e.name = L("nameMin");
+    if (normalizeAfPhone(phone) === null) e.phone = L("phoneBad");
+    if (!sameWa && normalizeAfPhone(whatsapp) === null) e.whatsapp = L("phoneBad");
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const save = async () => {
     if (!user) return;
+    if (!validate()) {
+      toast.error(L("fixErr"));
+      return;
+    }
     setSaving(true);
     try {
+      const ph = normalizeAfPhone(phone) || null;
+      const wa = sameWa ? ph : normalizeAfPhone(whatsapp) || null;
       let avatar_url = profile?.avatar_url ?? null;
       if (avatar) avatar_url = await uploadImage("avatars", user.id, "me", avatar);
       const { error } = await supabase
         .from("profiles")
-        .update({ display_name: name, phone: phone || null, bio: bio || null, province: province || null, avatar_url })
+        .update({
+          display_name: name.trim(),
+          phone: ph,
+          whatsapp: wa,
+          bio: bio.trim() || null,
+          province: province || null,
+          district: district.trim() || null,
+          village: village.trim() || null,
+          avatar_url,
+        })
         .eq("id", user.id);
       if (error) throw error;
       await refreshProfile();
-      toast.success(t("saved"));
+      toast.success(L("saved"));
       onClose();
     } catch {
-      toast.error(t("errorTitle"));
+      toast.error(L("saveErr"));
     } finally {
       setSaving(false);
     }
   };
 
-  const field = "w-full rounded-lg border border-border bg-background p-3 text-sm";
+  const field =
+    "w-full min-h-12 rounded-xl border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40";
+  const errCls = "border-destructive focus:ring-destructive/40";
+
+  const Label = ({ htmlFor, text, count }: { htmlFor: string; text: string; count?: string }) => (
+    <div className="mb-1.5 flex items-center justify-between gap-2">
+      <label htmlFor={htmlFor} className="text-xs font-bold text-foreground">
+        {text}
+      </label>
+      {count && (
+        <span className="text-[11px] tabular-nums text-muted-foreground" dir="ltr">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+  const Err = ({ k }: { k: string }) =>
+    errors[k] ? <p className="mt-1 text-xs font-semibold text-destructive">{errors[k]}</p> : null;
+  const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <section>
+      <h3 className="mb-2 px-1 text-xs font-bold text-muted-foreground">{title}</h3>
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4">{children}</div>
+    </section>
+  );
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("editProfile")}</DialogTitle>
+    <Dialog open onOpenChange={(o) => !o && !saving && onClose()}>
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-2xl p-0">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle>{t_editTitle(lang)}</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-3">
-          <AvatarPicker
-            currentPath={profile?.avatar_url}
-            file={avatar}
-            onFile={setAvatar}
-            uploading={saving}
-            fallbackLetter={profile?.display_name?.[0]}
-          />
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("displayName")} className={field} />
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t("phone")} className={field} />
-          <Select value={province} onValueChange={setProvince}>
-            <SelectTrigger className={field}>
-              <SelectValue placeholder={t("province")} />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              {PROVINCES.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {locName(p)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("bio")} rows={3} className={field} />
-          <button
-            onClick={save}
-            disabled={saving}
-            className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-accent text-sm font-bold text-accent-foreground disabled:opacity-60"
-          >
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+          <div className="flex flex-col gap-5">
+            {/* Avatar */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="size-24 overflow-hidden rounded-full bg-secondary ring-2 ring-border">
+                {preview ? (
+                  <img src={preview} alt="" className="size-full object-cover" />
+                ) : profile?.avatar_url ? (
+                  <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
+                ) : (
+                  <span className="flex size-full items-center justify-center text-3xl font-black text-muted-foreground">
+                    {profile?.display_name?.[0]?.toUpperCase() ?? "U"}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={saving}>
+                  <Camera className="size-4" />
+                  {L("changePhoto")}
+                </Button>
+                {avatar && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setAvatar(null);
+                      if (fileRef.current) fileRef.current.value = "";
+                    }}
+                  >
+                    {L("removePhoto")}
+                  </Button>
+                )}
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setAvatar(e.target.files?.[0] ?? null)}
+              />
+            </div>
+
+            <Card title={L("personal")}>
+              <div>
+                <Label htmlFor="ep-name" text={L("name")} count={`${toLocalDigits(name.length, lang)} / ${toLocalDigits(NAME_MAX, lang)}`} />
+                <input
+                  id="ep-name"
+                  value={name}
+                  maxLength={NAME_MAX}
+                  onChange={(e) => setName(e.target.value.slice(0, NAME_MAX))}
+                  className={cn(field, errors.name && errCls)}
+                />
+                <Err k="name" />
+              </div>
+              <div>
+                <Label htmlFor="ep-bio" text={L("bio")} count={`${toLocalDigits(bio.length, lang)} / ${toLocalDigits(BIO_MAX, lang)}`} />
+                <textarea
+                  id="ep-bio"
+                  value={bio}
+                  maxLength={BIO_MAX}
+                  onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
+                  rows={3}
+                  className={cn(field, "py-3")}
+                />
+              </div>
+            </Card>
+
+            <Card title={L("contact")}>
+              <div>
+                <Label htmlFor="ep-phone" text={L("phone")} />
+                <input
+                  id="ep-phone"
+                  type="tel"
+                  inputMode="tel"
+                  dir="ltr"
+                  placeholder="+93 78 654 4323"
+                  value={phone}
+                  onChange={(e) => {
+                    const v = phoneInput(e.target.value);
+                    setPhone(v);
+                    if (sameWa) setWhatsapp(v);
+                  }}
+                  onBlur={() => {
+                    const v = prettify(phone);
+                    setPhone(v);
+                    if (sameWa) setWhatsapp(v);
+                  }}
+                  className={cn(field, "text-left", errors.phone && errCls)}
+                />
+                <Err k="phone" />
+              </div>
+              <div>
+                <Label htmlFor="ep-wa" text={L("whatsapp")} />
+                <input
+                  id="ep-wa"
+                  type="tel"
+                  inputMode="tel"
+                  dir="ltr"
+                  placeholder="+93 78 654 4323"
+                  value={sameWa ? phone : whatsapp}
+                  disabled={sameWa}
+                  onChange={(e) => setWhatsapp(phoneInput(e.target.value))}
+                  onBlur={() => setWhatsapp(prettify(whatsapp))}
+                  className={cn(field, "text-left disabled:opacity-60", errors.whatsapp && errCls)}
+                />
+                <Err k="whatsapp" />
+                <label className="mt-2 flex min-h-10 cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={sameWa}
+                    onChange={(e) => {
+                      setSameWa(e.target.checked);
+                      if (e.target.checked) setWhatsapp(phone);
+                    }}
+                    className="size-5 accent-[var(--color-primary)]"
+                  />
+                  {L("same")}
+                </label>
+              </div>
+            </Card>
+
+            <Card title={L("address")}>
+              <div>
+                <Label htmlFor="ep-province" text={L("province")} />
+                <Select value={province} onValueChange={setProvince}>
+                  <SelectTrigger id="ep-province" className={field}>
+                    <SelectValue placeholder={L("provincePh")} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {PROVINCES.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {locName(p)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ep-district" text={L("district")} />
+                <input id="ep-district" value={district} maxLength={TEXT_MAX} onChange={(e) => setDistrict(e.target.value)} className={field} />
+              </div>
+              <div>
+                <Label htmlFor="ep-village" text={L("village")} />
+                <input
+                  id="ep-village"
+                  value={village}
+                  maxLength={TEXT_MAX}
+                  placeholder={L("villageHint")}
+                  onChange={(e) => setVillage(e.target.value)}
+                  className={field}
+                />
+              </div>
+            </Card>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 border-t border-border bg-background px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+          <Button type="button" onClick={save} disabled={saving} className="min-h-12 font-bold">
             {saving && <Loader2 className="size-4 animate-spin" />}
-            {t("save")}
-          </button>
+            {L("save")}
+          </Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="min-h-12 font-bold">
+            {L("cancel")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
+}
+
+function t_editTitle(lang: string) {
+  return lang === "en" ? "Edit profile" : lang === "ps" ? "پروفایل سمول" : "ویرایش پروفایل";
 }
