@@ -511,6 +511,7 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string
+          district: string | null
           hide_last_active: boolean
           id: string
           is_banned: boolean
@@ -521,6 +522,8 @@ export type Database = {
           rating_avg: number
           rating_count: number
           updated_at: string
+          village: string | null
+          whatsapp: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -529,6 +532,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string
+          district?: string | null
           hide_last_active?: boolean
           id: string
           is_banned?: boolean
@@ -539,6 +543,8 @@ export type Database = {
           rating_avg?: number
           rating_count?: number
           updated_at?: string
+          village?: string | null
+          whatsapp?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -547,6 +553,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string
+          district?: string | null
           hide_last_active?: boolean
           id?: string
           is_banned?: boolean
@@ -557,6 +564,8 @@ export type Database = {
           rating_avg?: number
           rating_count?: number
           updated_at?: string
+          village?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -840,6 +849,14 @@ export type Database = {
       }
       ensure_profile: { Args: never; Returns: undefined }
       get_my_phone: { Args: never; Returns: string }
+      get_my_profile_extras: {
+        Args: never
+        Returns: {
+          district: string
+          village: string
+          whatsapp: string
+        }[]
+      }
       get_or_create_conversation: {
         Args: { _listing_id: string; _seller_id: string }
         Returns: string
