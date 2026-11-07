@@ -35,8 +35,8 @@ export function BottomNav() {
           {t("sellSomething")}
         </Link>
       </div>
-      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-border bg-card px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {items.map((it, i) => {
+      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-5 items-center border-t border-border bg-card px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        {items.map((it) => {
           const active = it.to === "/" ? path === "/" : path.startsWith(it.to);
           return (
             <Link
@@ -49,10 +49,8 @@ export function BottomNav() {
                 }
               }}
               className={cn(
-                "relative flex flex-1 flex-col items-center gap-1 py-1",
+                "relative flex min-w-0 flex-col items-center gap-1 py-1",
                 active ? "text-primary" : "text-muted-foreground",
-                i === 1 && "me-8",
-                i === 2 && "ms-8",
               )}
             >
               <span className="relative">
