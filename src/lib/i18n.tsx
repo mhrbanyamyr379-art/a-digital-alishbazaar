@@ -20,7 +20,7 @@ const T: Dict = {
   favorites: { fa: "پسندیده‌ها", ps: "خوښې", en: "Favorites" },
   chat: { fa: "پیام‌ها", ps: "چټ", en: "Chat" },
   profile: { fa: "پروفایل", ps: "پروفایل", en: "Profile" },
-  notifications: { fa: "اطلاعات", ps: "خبرتیاوې", en: "Notifications" },
+  notifications: { fa: "اعلان‌ها", ps: "خبرتیاوې", en: "Notifications" },
   sell: { fa: "فروش", ps: "خرڅول", en: "Sell" },
   sellSomething: { fa: "چیزی بفروشید", ps: "څه شی خرڅ کړئ", en: "Sell something" },
   signIn: { fa: "ورود", ps: "ننوتل", en: "Sign in" },
