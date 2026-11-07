@@ -17,6 +17,7 @@ import { I18nProvider, useI18n, tStandalone } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import { AssistantWidget } from "@/components/AssistantWidget";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 function NotFoundComponent() {
   const { t } = useI18n();
@@ -154,6 +155,7 @@ function RootComponent() {
         <I18nProvider>
           <AuthProvider>
             <AuthInvalidator />
+            <OfflineBanner />
             <Outlet />
             <AssistantWidget />
             <Toaster position="top-center" richColors />

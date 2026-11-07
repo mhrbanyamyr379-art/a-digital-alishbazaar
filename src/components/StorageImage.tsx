@@ -103,11 +103,15 @@ export function StorageImage({ bucket, path, alt = "", className, fallbackClassN
     return <div className={cn("h-full w-full animate-pulse bg-muted", className)} />;
   }
 
+  // Lazy + async by default; callers pass loading="eager" (and optionally
+  // fetchPriority="high") for above-the-fold images, which overrides these.
   return (
     <img
       src={src}
       alt={alt}
       className={className}
+      loading="lazy"
+      decoding="async"
       onError={() => setFailed(true)}
       {...rest}
     />
