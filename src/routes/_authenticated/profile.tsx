@@ -40,7 +40,6 @@ import { PROVINCES } from "@/data/provinces";
 import { BottomNav } from "@/components/BottomNav";
 import { BrandTopBar } from "@/components/TopBar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { AvatarPicker } from "@/components/AvatarPicker";
 import { useUnreadTotal } from "@/hooks/useUnread";
 import { APP_VERSION, TELEGRAM_LINK, TELEGRAM_HANDLE } from "@/lib/app-meta";
 import {
@@ -479,27 +478,6 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
     "w-full min-h-12 rounded-xl border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40";
   const errCls = "border-destructive focus:ring-destructive/40";
 
-  const Label = ({ htmlFor, text, count }: { htmlFor: string; text: string; count?: string }) => (
-    <div className="mb-1.5 flex items-center justify-between gap-2">
-      <label htmlFor={htmlFor} className="text-xs font-bold text-foreground">
-        {text}
-      </label>
-      {count && (
-        <span className="text-[11px] tabular-nums text-muted-foreground" dir="ltr">
-          {count}
-        </span>
-      )}
-    </div>
-  );
-  const Err = ({ k }: { k: string }) =>
-    errors[k] ? <p className="mt-1 text-xs font-semibold text-destructive">{errors[k]}</p> : null;
-  const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <section>
-      <h3 className="mb-2 px-1 text-xs font-bold text-muted-foreground">{title}</h3>
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4">{children}</div>
-    </section>
-  );
-
   return (
     <Dialog open onOpenChange={(o) => !o && !saving && onClose()}>
       <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-2xl p-0">
@@ -549,9 +527,9 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
               />
             </div>
 
-            <Card title={L("personal")}>
+            <EpCard title={L("personal")}>
               <div>
-                <Label htmlFor="ep-name" text={L("name")} count={`${toLocalDigits(name.length, lang)} / ${toLocalDigits(NAME_MAX, lang)}`} />
+                <EpLabel htmlFor="ep-name" text={L("name")} count={`${toLocalDigits(name.length, lang)} / ${toLocalDigits(NAME_MAX, lang)}`} />
                 <input
                   id="ep-name"
                   value={name}
@@ -559,10 +537,10 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
                   onChange={(e) => setName(e.target.value.slice(0, NAME_MAX))}
                   className={cn(field, errors.name && errCls)}
                 />
-                <Err k="name" />
+                <EpErr msg={errors.name} />
               </div>
               <div>
-                <Label htmlFor="ep-bio" text={L("bio")} count={`${toLocalDigits(bio.length, lang)} / ${toLocalDigits(BIO_MAX, lang)}`} />
+                <EpLabel htmlFor="ep-bio" text={L("bio")} count={`${toLocalDigits(bio.length, lang)} / ${toLocalDigits(BIO_MAX, lang)}`} />
                 <textarea
                   id="ep-bio"
                   value={bio}
@@ -572,11 +550,11 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
                   className={cn(field, "py-3")}
                 />
               </div>
-            </Card>
+            </EpCard>
 
-            <Card title={L("contact")}>
+            <EpCard title={L("contact")}>
               <div>
-                <Label htmlFor="ep-phone" text={L("phone")} />
+                <EpLabel htmlFor="ep-phone" text={L("phone")} />
                 <input
                   id="ep-phone"
                   type="tel"
@@ -596,10 +574,10 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
                   }}
                   className={cn(field, "text-left", errors.phone && errCls)}
                 />
-                <Err k="phone" />
+                <EpErr msg={errors.phone} />
               </div>
               <div>
-                <Label htmlFor="ep-wa" text={L("whatsapp")} />
+                <EpLabel htmlFor="ep-wa" text={L("whatsapp")} />
                 <input
                   id="ep-wa"
                   type="tel"
@@ -612,7 +590,7 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
                   onBlur={() => setWhatsapp(prettify(whatsapp))}
                   className={cn(field, "text-left disabled:opacity-60", errors.whatsapp && errCls)}
                 />
-                <Err k="whatsapp" />
+                <EpErr msg={errors.whatsapp} />
                 <label className="mt-2 flex min-h-10 cursor-pointer items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -626,11 +604,11 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
                   {L("same")}
                 </label>
               </div>
-            </Card>
+            </EpCard>
 
-            <Card title={L("address")}>
+            <EpCard title={L("address")}>
               <div>
-                <Label htmlFor="ep-province" text={L("province")} />
+                <EpLabel htmlFor="ep-province" text={L("province")} />
                 <Select value={province} onValueChange={setProvince}>
                   <SelectTrigger id="ep-province" className={field}>
                     <SelectValue placeholder={L("provincePh")} />
@@ -645,11 +623,11 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="ep-district" text={L("district")} />
+                <EpLabel htmlFor="ep-district" text={L("district")} />
                 <input id="ep-district" value={district} maxLength={TEXT_MAX} onChange={(e) => setDistrict(e.target.value)} className={field} />
               </div>
               <div>
-                <Label htmlFor="ep-village" text={L("village")} />
+                <EpLabel htmlFor="ep-village" text={L("village")} />
                 <input
                   id="ep-village"
                   value={village}
@@ -659,7 +637,7 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
                   className={field}
                 />
               </div>
-            </Card>
+            </EpCard>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 border-t border-border bg-background px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
@@ -678,4 +656,32 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
 
 function t_editTitle(lang: string) {
   return lang === "en" ? "Edit profile" : lang === "ps" ? "پروفایل سمول" : "ویرایش پروفایل";
+}
+
+function EpLabel({ htmlFor, text, count }: { htmlFor: string; text: string; count?: string }) {
+  return (
+    <div className="mb-1.5 flex items-center justify-between gap-2">
+      <label htmlFor={htmlFor} className="text-xs font-bold text-foreground">
+        {text}
+      </label>
+      {count && (
+        <span className="text-[11px] tabular-nums text-muted-foreground" dir="ltr">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function EpErr({ msg }: { msg?: string }) {
+  return msg ? <p className="mt-1 text-xs font-semibold text-destructive">{msg}</p> : null;
+}
+
+function EpCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h3 className="mb-2 px-1 text-xs font-bold text-muted-foreground">{title}</h3>
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4">{children}</div>
+    </section>
+  );
 }
