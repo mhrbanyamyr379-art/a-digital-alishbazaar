@@ -362,6 +362,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
   const [liking, setLiking] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  const sharingRef = useRef(false);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["explore-feed"] });
 
@@ -424,6 +425,15 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
   };
 
   const share = async () => {
+    if (sharingRef.current) return;
+    sharingRef.current = true;
+    try {
+      await doShare();
+    } finally {
+      sharingRef.current = false;
+    }
+  };
+  const doShare = async () => {
     const url = `${window.location.origin}/listing/${listing.id}`;
     try {
       if (typeof navigator !== "undefined" && navigator.share) {

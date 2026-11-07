@@ -365,6 +365,8 @@ const T: Dict = {
   sending: { fa: "در حال ارسال", ps: "لیږل کیږي", en: "Sending" },
   failedToSend: { fa: "ارسال نشد — برای تلاش دوباره بزنید", ps: "ونه لیږل شو — بیا هڅه وکړئ", en: "Not sent — tap to retry" },
   youAreOffline: { fa: "اتصال اینترنت قطع است", ps: "انټرنټ نشته", en: "You are offline" },
+  offlineBanner: { fa: "اتصال اینترنت قطع است؛ اطلاعات ذخیره‌شده نمایش داده می‌شود", ps: "انټرنټ نشته؛ خوندي شوي معلومات ښودل کېږي", en: "You're offline — showing saved data" },
+  backOnline: { fa: "اتصال اینترنت دوباره برقرار شد", ps: "انټرنټ بېرته وصل شو", en: "Back online" },
   noPhone: { fa: "شماره تماس در دسترس نیست", ps: "د اړیکې شمېره نشته", en: "Phone number unavailable" },
   photo: { fa: "عکس", ps: "انځور", en: "Photo" },
   markAllRead: { fa: "خواندن همه", ps: "ټول لوستل شوي", en: "Mark all read" },

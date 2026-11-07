@@ -387,6 +387,7 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
   const [avatar, setAvatar] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -444,6 +445,8 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
       toast.error(L("fixErr"));
       return;
     }
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     try {
       const ph = normalizeAfPhone(phone) || null;
@@ -470,6 +473,7 @@ function EditProfileDialog({ onClose }: { onClose: () => void }) {
     } catch {
       toast.error(L("saveErr"));
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
