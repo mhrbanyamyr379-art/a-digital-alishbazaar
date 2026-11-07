@@ -120,6 +120,7 @@ export function ListingForm({
     })),
   );
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const dragIndex = useRef<number | null>(null);
 
   const cat = categoryById(category);
@@ -201,6 +202,8 @@ export function ListingForm({
       return setStepIdx(0);
     }
 
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     try {
       const nowIso = new Date().toISOString();
@@ -276,6 +279,7 @@ export function ListingForm({
     } catch (err) {
       toast.error(t(dbErrorKey(err)));
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
