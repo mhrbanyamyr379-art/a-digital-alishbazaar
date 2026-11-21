@@ -187,8 +187,14 @@ function AuthPage() {
         toast.error(t("errGoogleOffline"));
         return;
       }
+      try {
+        if (next) {
+          sessionStorage.setItem("alish:auth-next", next);
+          localStorage.setItem("alish:auth-next", next);
+        }
+      } catch { /* storage blocked */ }
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/auth/callback`,
         extraParams: { prompt: "select_account" },
       });
       if (result.error) {

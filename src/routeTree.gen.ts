@@ -32,6 +32,7 @@ import { Route as AuthenticatedRecentRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedSellRouteImport } from './routes/_authenticated/sell'
 import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
+import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
 import { Route as ListingIdRouteImport } from './routes/listing.$id'
 import { Route as SellerIdRouteImport } from './routes/seller.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -156,6 +157,11 @@ const ApiAssistantRoute = ApiAssistantRouteImport.update({
   path: '/api/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth_/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ListingIdRoute = ListingIdRouteImport.update({
   id: '/listing/$id',
   path: '/listing/$id',
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof AuthenticatedSecurityRoute
   '/sell': typeof AuthenticatedSellRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/security': typeof AuthenticatedSecurityRoute
   '/sell': typeof AuthenticatedSellRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -278,6 +286,7 @@ export interface FileRoutesById {
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/sell': typeof AuthenticatedSellRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/auth_/callback': typeof AuthCallbackRoute
   '/listing/$id': typeof ListingIdRoute
   '/seller/$id': typeof SellerIdRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -311,6 +320,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/sell'
     | '/api/assistant'
+    | '/auth/callback'
     | '/listing/$id'
     | '/seller/$id'
     | '/.lovable/oauth/consent'
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/sell'
     | '/api/assistant'
+    | '/auth/callback'
     | '/listing/$id'
     | '/seller/$id'
     | '/.lovable/oauth/consent'
@@ -373,6 +384,7 @@ export interface FileRouteTypes {
     | '/_authenticated/security'
     | '/_authenticated/sell'
     | '/api/assistant'
+    | '/auth_/callback'
     | '/listing/$id'
     | '/seller/$id'
     | '/.lovable/oauth/consent'
@@ -396,6 +408,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAssistantRoute: typeof ApiAssistantRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   ListingIdRoute: typeof ListingIdRoute
   SellerIdRoute: typeof SellerIdRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -565,6 +578,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth_/callback': {
+      id: '/auth_/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/listing/$id': {
       id: '/listing/$id'
       path: '/listing/$id'
@@ -676,6 +696,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiAssistantRoute: ApiAssistantRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   ListingIdRoute: ListingIdRoute,
   SellerIdRoute: SellerIdRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
