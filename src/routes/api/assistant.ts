@@ -89,15 +89,15 @@ export const Route = createFileRoute("/api/assistant")({
           if (request.signal.aborted) return new Response(null, { status: 499 });
           return new Response("Bad request", { status: 400 });
         }
-        // Never trust caller-chosen roles: only user/assistant turns, with text/file parts only
+        // Never trust caller-chosen roles: only user turns are accepted, with text/file parts only
         // (no system turns, no tool/reasoning parts injected into the model context).
         const messages: UIMessage[] = (Array.isArray(body.messages) ? body.messages.slice(-30) : [])
-          .filter((m) => m && (m.role === "user" || m.role === "assistant") && Array.isArray(m.parts))
+          .filter((m) => m && m.role === "user" && Array.isArray(m.parts))
           .map((m, i) => ({
             id: typeof m.id === "string" ? m.id.slice(0, 100) : `m${i}`,
-            role: m.role,
+            role: "user" as const,
             parts: m.parts
-              .filter((p) => p && (p.type === "text" || (p.type === "file" && m.role === "user")))
+              .filter((p) => p && (p.type === "text" || p.type === "file"))
               .map((p) => (p.type === "text" ? { type: "text" as const, text: String(p.text ?? "").slice(0, 8000) } : p)),
           }))
           .filter((m) => m.parts.length > 0);

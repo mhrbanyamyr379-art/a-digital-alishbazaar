@@ -22,7 +22,7 @@ export const signAvatarImage = createServerFn({ method: "POST" })
 
     const { data: signed } = await supabaseAdmin.storage
       .from("avatars")
-      .createSignedUrl(data.path, 3600);
+      .createSignedUrl(data.path, 600);
 
     return { url: signed?.signedUrl ?? null };
   });

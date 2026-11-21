@@ -272,6 +272,32 @@ export type Database = {
           },
         ]
       }
+      listing_view_log: {
+        Row: {
+          listing_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          listing_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          listing_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_view_log_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           category: string

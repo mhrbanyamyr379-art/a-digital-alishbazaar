@@ -5,7 +5,7 @@ import { signActiveListingImage } from "@/lib/listing-images.functions";
 import { signAvatarImage } from "@/lib/avatar-images.functions";
 import { cn } from "@/lib/utils";
 
-const SIGNED_TTL_SECONDS = 3600;
+const SIGNED_TTL_SECONDS = 600;
 const cache = new Map<string, { url: string; expires: number }>();
 const inflight = new Map<string, Promise<string | null>>();
 async function getSignedUrl(bucket: string, path: string): Promise<string | null> {

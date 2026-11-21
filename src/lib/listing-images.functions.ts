@@ -23,7 +23,7 @@ export const signActiveListingImage = createServerFn({ method: "POST" })
 
     const { data: signed } = await supabaseAdmin.storage
       .from("listings")
-      .createSignedUrl(data.path, 3600);
+      .createSignedUrl(data.path, 600);
 
     return { url: signed?.signedUrl ?? null };
   });
