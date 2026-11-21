@@ -176,16 +176,33 @@ function AuthPage() {
   };
 
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const googleBusy = useRef(false);
   const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: next ? `${window.location.origin}${next}` : window.location.origin,
-    });
-    if (result.error) {
-      toast.error(t("errorTitle"));
-      return;
+    if (googleBusy.current) return;
+    googleBusy.current = true;
+    setGoogleLoading(true);
+    try {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        toast.error(t("errGoogleOffline"));
+        return;
+      }
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
+      });
+      if (result.error) {
+        toast.error(t("errGoogle"));
+        return;
+      }
+      if (result.redirected) return;
+      goNext();
+    } catch {
+      toast.error(t("errGoogle"));
+    } finally {
+      googleBusy.current = false;
+      setGoogleLoading(false);
     }
-    if (result.redirected) return;
-    goNext();
   };
 
   return (
@@ -218,10 +235,13 @@ function AuthPage() {
 
           <div className="mt-8 rounded-2xl bg-card p-5 text-card-foreground shadow-xl">
             <button
+              type="button"
               onClick={google}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-3 text-sm font-semibold transition-colors hover:bg-secondary"
+              disabled={googleLoading}
+              aria-busy={googleLoading}
+              className="flex w-full disabled:cursor-not-allowed disabled:opacity-60 items-center justify-center gap-2 rounded-lg border border-border py-3 text-sm font-semibold transition-colors hover:bg-secondary"
             >
-              <GoogleIcon />
+              {googleLoading ? <Loader2 className="size-4 animate-spin" /> : <GoogleIcon />}
               {t("continueGoogle")}
             </button>
 

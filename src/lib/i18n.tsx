@@ -109,6 +109,8 @@ const T: Dict = {
   memberSince: { fa: "عضو از", ps: "غړی له", en: "Member since" },
   view: { fa: "بازدید", ps: "لید", en: "views" },
   loading: { fa: "بارگذاری...", ps: "بارول کیږي...", en: "Loading..." },
+  errGoogle: { fa: "ورود با گوگل انجام نشد. لطفاً دوباره تلاش کنید.", ps: "له ګوګل سره ننوتل ونه شول. بیا هڅه وکړئ.", en: "Google sign-in failed. Please try again." },
+  errGoogleOffline: { fa: "اتصال اینترنت برقرار نیست. لطفاً اتصال خود را بررسی کنید.", ps: "انټرنېټ نشته. خپل اتصال وګورئ.", en: "No internet connection. Please check your connection." },
   errorTitle: { fa: "خطایی رخ داد", ps: "یوه ستونزه رامنځته شوه", en: "Something went wrong" },
   retry: { fa: "تلاش دوباره", ps: "بیا هڅه", en: "Try again" },
   pageNotFound: { fa: "صفحه یافت نشد", ps: "پاڼه ونه موندل شوه", en: "Page not found" },
