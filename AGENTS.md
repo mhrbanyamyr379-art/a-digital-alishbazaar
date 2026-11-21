@@ -11,3 +11,4 @@
 - Scope Home presentation rules beneath `.alish-home` so shared marketplace components retain their appearance on other pages.
 - Keep Notifications presentation in its existing route with shared semantic tokens and Button controls; leave notification queries, subscriptions and action handlers unchanged to isolate visual polish.
 - Bind listing photo references and privileged signing to the listing seller's upload folder; a user-writable image reference alone must never authorize private file access.
+- Sign public profile photos only when the file's upload-folder owner selected it on their own profile; another user's avatar reference is not authorization.
