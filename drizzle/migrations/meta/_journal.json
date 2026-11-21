@@ -141,6 +141,13 @@
       "when": 1795256678767,
       "tag": "0019_security_hardening_views_feed_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795257913584,
+      "tag": "0020_bind_listing_image_writes_to_seller",
+      "breakpoints": true
     }
   ]
 }
