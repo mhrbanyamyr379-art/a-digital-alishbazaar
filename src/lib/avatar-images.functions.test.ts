@@ -5,8 +5,8 @@ const otherUser = "22222222-2222-4222-8222-222222222222";
 const path = `${owner}/me/photo.jpg`;
 
 const mocks = vi.hoisted(() => ({
-  profiles: [] as { id: string; avatar_url: string }[],
-  filters: [] as [string, string][],
+  profiles: [] as { id: string; avatar_url: string; is_banned?: boolean }[],
+  filters: [] as [string, string | boolean][],
   lookupError: null as null | { message: string },
   createSignedUrl: vi.fn(),
   from: vi.fn(),
@@ -38,13 +38,13 @@ describe("profile photo owner authorization", () => {
     mocks.lookupError = null;
     const query = {
       select: () => query,
-      eq: (column: string, value: string) => {
+      eq: (column: string, value: string | boolean) => {
         mocks.filters.push([column, value]);
         return query;
       },
       limit: async () => ({
         data: mocks.profiles.filter((row) => mocks.filters.every(([column, value]) =>
-          column === "id" ? row.id === value : row.avatar_url === value,
+          column === "id" ? row.id === value : column === "is_banned" ? (row.is_banned ?? false) === value : row.avatar_url === value,
         )),
         error: mocks.lookupError,
       }),
@@ -55,9 +55,9 @@ describe("profile photo owner authorization", () => {
 
   it("allows visitors to see a photo selected by its actual owner", async () => {
     mocks.profiles = [{ id: owner, avatar_url: path }];
-    expect(await signAvatarImage({ data: { path } })).toEqual({ url: "signed-avatar" });
+    expect(await signAvatarImage({ data: { path } })).toEqual({ url: `/api/public/photo?bucket=avatars&path=${encodeURIComponent(path)}` });
     expect(mocks.filters).toContainEqual(["id", owner]);
-    expect(mocks.createSignedUrl).toHaveBeenCalledWith(path, 600);
+    expect(mocks.createSignedUrl).not.toHaveBeenCalled();
   });
 
   it("blocks another user's reference to a private owner photo", async () => {

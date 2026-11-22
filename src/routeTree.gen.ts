@@ -40,6 +40,7 @@ import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated/edit.$id'
 import { Route as ApiPublicNotifyExpiringRouteImport } from './routes/api/public/notify-expiring'
+import { Route as ApiPublicPhotoRouteImport } from './routes/api/public/photo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -197,6 +198,11 @@ const ApiPublicNotifyExpiringRoute = ApiPublicNotifyExpiringRouteImport.update({
   path: '/api/public/notify-expiring',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPhotoRoute = ApiPublicPhotoRouteImport.update({
+  id: '/api/public/photo',
+  path: '/api/public/photo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/api/public/notify-expiring': typeof ApiPublicNotifyExpiringRoute
+  '/api/public/photo': typeof ApiPublicPhotoRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
 }
 export interface FileRoutesByTo {
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/api/public/notify-expiring': typeof ApiPublicNotifyExpiringRoute
+  '/api/public/photo': typeof ApiPublicPhotoRoute
   '/chat': typeof AuthenticatedChatIndexRoute
 }
 export interface FileRoutesById {
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/api/public/notify-expiring': typeof ApiPublicNotifyExpiringRoute
+  '/api/public/photo': typeof ApiPublicPhotoRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
 }
 export interface FileRouteTypes {
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/chat/$id'
     | '/edit/$id'
     | '/api/public/notify-expiring'
+    | '/api/public/photo'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/chat/$id'
     | '/edit/$id'
     | '/api/public/notify-expiring'
+    | '/api/public/photo'
     | '/chat'
   id:
     | '__root__'
@@ -391,6 +402,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/$id'
     | '/_authenticated/edit/$id'
     | '/api/public/notify-expiring'
+    | '/api/public/photo'
     | '/_authenticated/chat/'
   fileRoutesById: FileRoutesById
 }
@@ -413,6 +425,7 @@ export interface RootRouteChildren {
   SellerIdRoute: typeof SellerIdRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicNotifyExpiringRoute: typeof ApiPublicNotifyExpiringRoute
+  ApiPublicPhotoRoute: typeof ApiPublicPhotoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -634,6 +647,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNotifyExpiringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/photo': {
+      id: '/api/public/photo'
+      path: '/api/public/photo'
+      fullPath: '/api/public/photo'
+      preLoaderRoute: typeof ApiPublicPhotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -701,6 +721,7 @@ const rootRouteChildren: RootRouteChildren = {
   SellerIdRoute: SellerIdRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicNotifyExpiringRoute: ApiPublicNotifyExpiringRoute,
+  ApiPublicPhotoRoute: ApiPublicPhotoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

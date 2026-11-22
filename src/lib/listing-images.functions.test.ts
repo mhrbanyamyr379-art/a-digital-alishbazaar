@@ -43,11 +43,11 @@ describe("listing photo signing authority", () => {
 
   it("signs an active listing photo only within its seller's folder", async () => {
     mocks.limit.mockResolvedValue({ data: [{ url: path }], error: null });
-    expect(await signActiveListingImage({ data: { path } })).toEqual({ url: "signed-photo" });
+    expect(await signActiveListingImage({ data: { path } })).toEqual({ url: `/api/public/photo?bucket=listings&path=${encodeURIComponent(path)}` });
     expect(mocks.eq).toHaveBeenCalledWith("url", path);
     expect(mocks.eq).toHaveBeenCalledWith("listings.status", "active");
     expect(mocks.eq).toHaveBeenCalledWith("listings.seller_id", seller);
-    expect(mocks.createSignedUrl).toHaveBeenCalledWith(path, 600);
+    expect(mocks.createSignedUrl).not.toHaveBeenCalled();
   });
 
   it("does not sign another seller's file attached to a caller-owned listing", async () => {

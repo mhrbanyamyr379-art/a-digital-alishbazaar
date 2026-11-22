@@ -1,8 +1,7 @@
 import { useEffect, useState, type ImgHTMLAttributes } from "react";
 import { ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { signActiveListingImage } from "@/lib/listing-images.functions";
-import { signAvatarImage } from "@/lib/avatar-images.functions";
+import { publicPhotoUrl } from "@/lib/public-photo";
 import { cn } from "@/lib/utils";
 
 const SIGNED_TTL_SECONDS = 600;
@@ -15,27 +14,12 @@ async function getSignedUrl(bucket: string, path: string): Promise<string | null
   if (hit && hit.expires > now + 30_000) return hit.url;
   const existing = inflight.get(key);
   if (existing) return existing;
-  // Public photos (listing + profile) are signed by the server in ONE round
-  // trip; the direct storage call is only a fallback for the owner's own
-  // non-public photos. Halves image latency on high-ping mobile networks.
+  // Signed URL caching is reserved for chat attachments, not public photos.
   const direct = async (): Promise<string | null> => {
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, SIGNED_TTL_SECONDS);
     return error ? null : (data?.signedUrl ?? null);
   };
-  const viaServer = async (): Promise<string | null> => {
-    try {
-      if (bucket === "listings") return (await signActiveListingImage({ data: { path } }))?.url ?? null;
-      if (bucket === "avatars") return (await signAvatarImage({ data: { path } }))?.url ?? null;
-    } catch {
-      return null;
-    }
-    return null;
-  };
-  const p = (async () => {
-    let url = bucket === "chat-images" ? null : await viaServer();
-    if (!url) url = await direct();
-    return url;
-  })()
+  const p = direct()
     .then((url) => {
       inflight.delete(key);
       if (!url) return null;
@@ -63,6 +47,8 @@ export function StorageImage({ bucket, path, alt = "", className, fallbackClassN
 
   useEffect(() => {
     let cancelled = false;
+    let objectUrl: string | null = null;
+    const controller = new AbortController();
     setFailed(false);
     setSrc(null);
     if (!path) {
@@ -73,13 +59,38 @@ export function StorageImage({ bucket, path, alt = "", className, fallbackClassN
       setSrc(path);
       return;
     }
-    getSignedUrl(bucket, path).then((url) => {
+    const load = async () => {
+      if (bucket === "chat-images") return getSignedUrl(bucket, path);
+      // Every new display checks current public visibility. Never cache a
+      // storage token or fall back to signed URLs when public access is denied.
+      const response = await fetch(publicPhotoUrl(bucket, path), {
+        cache: "no-store", signal: controller.signal,
+      });
+      let image: Blob | null = response.ok ? await response.blob() : null;
+      if (!response.ok && response.status === 404) {
+        // Preserve owners' previews of drafts/unselected uploads using their
+        // authenticated storage permissions, not privileged public signing.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user.id === path.split("/")[0]) {
+          const { data, error } = await supabase.storage.from(bucket).download(path);
+          if (!error) image = data;
+        }
+      }
+      if (!image || cancelled) return null;
+      objectUrl = URL.createObjectURL(image);
+      return objectUrl;
+    };
+    load().then((url) => {
       if (cancelled) return;
       if (!url) setFailed(true);
       else setSrc(url);
+    }).catch(() => {
+      if (!cancelled) setFailed(true);
     });
     return () => {
       cancelled = true;
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [bucket, path]);
 
