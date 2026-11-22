@@ -15,29 +15,28 @@ async function getSignedUrl(bucket: string, path: string): Promise<string | null
   if (hit && hit.expires > now + 30_000) return hit.url;
   const existing = inflight.get(key);
   if (existing) return existing;
-  const p = supabase.storage
-    .from(bucket)
-    .createSignedUrl(path, SIGNED_TTL_SECONDS)
-    .then(async ({ data, error }) => {
-      let url = error ? null : (data?.signedUrl ?? null);
-      // Direct read access is owner-only; fall back to the server, which only
-      // signs listing photos of active ads or photos used as a profile avatar.
-      if (!url && bucket === "listings") {
-        try {
-          const res = await signActiveListingImage({ data: { path } });
-          url = res?.url ?? null;
-        } catch {
-          url = null;
-        }
-      }
-      if (!url && bucket === "avatars") {
-        try {
-          const res = await signAvatarImage({ data: { path } });
-          url = res?.url ?? null;
-        } catch {
-          url = null;
-        }
-      }
+  // Public photos (listing + profile) are signed by the server in ONE round
+  // trip; the direct storage call is only a fallback for the owner's own
+  // non-public photos. Halves image latency on high-ping mobile networks.
+  const direct = async (): Promise<string | null> => {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, SIGNED_TTL_SECONDS);
+    return error ? null : (data?.signedUrl ?? null);
+  };
+  const viaServer = async (): Promise<string | null> => {
+    try {
+      if (bucket === "listings") return (await signActiveListingImage({ data: { path } }))?.url ?? null;
+      if (bucket === "avatars") return (await signAvatarImage({ data: { path } }))?.url ?? null;
+    } catch {
+      return null;
+    }
+    return null;
+  };
+  const p = (async () => {
+    let url = bucket === "chat-images" ? null : await viaServer();
+    if (!url) url = await direct();
+    return url;
+  })()
+    .then((url) => {
       inflight.delete(key);
       if (!url) return null;
       cache.set(key, { url, expires: now + SIGNED_TTL_SECONDS * 1000 });

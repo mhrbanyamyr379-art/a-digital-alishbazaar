@@ -8,7 +8,28 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+
+// The assistant pulls in large chat/markdown libraries; load it only after the
+// page is idle so slow 3G/4G connections show listings first.
+const AssistantWidget = lazy(() =>
+  import("@/components/AssistantWidget").then((m) => ({ default: m.AssistantWidget })),
+);
+
+function DeferredAssistant() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(() => setReady(true), { timeout: 4000 });
+    else setTimeout(() => setReady(true), 2500);
+  }, []);
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      <AssistantWidget />
+    </Suspense>
+  );
+}
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
@@ -16,7 +37,6 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider, useI18n, tStandalone } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
-import { AssistantWidget } from "@/components/AssistantWidget";
 import { OfflineBanner } from "@/components/OfflineBanner";
 
 function NotFoundComponent() {
@@ -157,7 +177,7 @@ function RootComponent() {
             <AuthInvalidator />
             <OfflineBanner />
             <Outlet />
-            <AssistantWidget />
+            <DeferredAssistant />
             <Toaster position="top-center" richColors />
           </AuthProvider>
         </I18nProvider>
