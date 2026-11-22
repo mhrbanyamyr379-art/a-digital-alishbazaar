@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -18,12 +19,13 @@ const AssistantWidget = lazy(() =>
 
 function DeferredAssistant() {
   const [ready, setReady] = useState(false);
+  const onExplore = useRouterState({ select: (s) => s.location.pathname.startsWith("/explore") });
   useEffect(() => {
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
     if (w.requestIdleCallback) w.requestIdleCallback(() => setReady(true), { timeout: 4000 });
     else setTimeout(() => setReady(true), 2500);
   }, []);
-  if (!ready) return null;
+  if (!ready || onExplore) return null;
   return (
     <Suspense fallback={null}>
       <AssistantWidget />
