@@ -12,6 +12,13 @@ import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 
 export const Route = createFileRoute("/_authenticated/explore")({
   head: () => ({
@@ -130,7 +137,7 @@ async function fetchFeed(page: number, userId: string | null): Promise<{
   // Batch-load commenter profiles for the visible previews.
   const commenterIds = new Set<string>();
   for (const arr of commentsByListing.values()) {
-    for (const c of arr.slice(0, 3)) commenterIds.add(c.user_id);
+    for (const c of arr) commenterIds.add(c.user_id);
   }
   const missing = [...commenterIds].filter((id) => !profileMap.has(id));
   if (missing.length > 0) {
@@ -149,8 +156,7 @@ async function fetchFeed(page: number, userId: string | null): Promise<{
       .map((i) => i.url);
     const seller = profileMap.get(l.seller_id as string);
     const allComments = commentsByListing.get(l.id) ?? [];
-    const preview = allComments
-      .slice(0, 3)
+    const preview = [...allComments]
       .reverse()
       .map((c) => ({
         id: c.id,
@@ -356,6 +362,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
   const queryClient = useQueryClient();
 
   const [expanded, setExpanded] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [commentInput, setCommentInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -579,7 +586,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
         </button>
         <button
           type="button"
-          onClick={() => commentInputRef.current?.focus()}
+          onClick={() => setCommentsOpen(true)}
           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl text-xs font-bold text-muted-foreground transition-colors hover:bg-secondary"
         >
           <MessageCircle className="size-4" />
@@ -595,34 +602,22 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
         </button>
       </div>
 
-      {/* Comment input */}
-      <div className="flex items-center gap-2 border-t border-border px-3 py-2">
-        <input
-          ref={commentInputRef}
-          value={commentInput}
-          onChange={(e) => setCommentInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") submitComment();
-          }}
-          placeholder={t("writeComment")}
-          maxLength={1000}
-          className="min-h-10 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
-        />
-        <button
-          type="button"
-          onClick={submitComment}
-          disabled={sending || !commentInput.trim()}
-          aria-label={t("submit")}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
-        >
-          <Send className="size-4 rtl:-scale-x-100" />
-        </button>
-      </div>
-
-      {/* Comments */}
-      {listing.comments.length > 0 && (
-        <div className="flex flex-col gap-3 border-t border-border px-4 py-3">
-          {listing.comments.map((c) => (
+      <Drawer open={commentsOpen} onOpenChange={setCommentsOpen} shouldScaleBackground={false}>
+        <DrawerContent className="max-h-[85vh]" dir="rtl">
+          <DrawerHeader className="border-b border-border pb-3 text-center">
+            <DrawerTitle className="font-display text-base font-black">
+              {listing.commentCount} {t("comment")}
+            </DrawerTitle>
+            <DrawerDescription className="line-clamp-1 text-xs">{listing.title}</DrawerDescription>
+          </DrawerHeader>
+          <div className="flex min-h-[30vh] flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
+            {listing.comments.length === 0 && (
+              <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-muted-foreground">
+                <MessageCircle className="size-8" />
+                <p className="text-sm font-bold">{t("writeComment")}</p>
+              </div>
+            )}
+            {listing.comments.map((c) => (
             <div key={c.id} className="flex items-start gap-2.5">
               <div className="size-8 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
                 {c.authorAvatar ? (
@@ -661,8 +656,33 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
               )}
             </div>
           ))}
-        </div>
-      )}
+          </div>
+        {/* Comment input */}
+      <div className="flex items-center gap-2 border-t border-border bg-background px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <input
+          ref={commentInputRef}
+          value={commentInput}
+          onChange={(e) => setCommentInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submitComment();
+          }}
+          placeholder={t("writeComment")}
+          maxLength={1000}
+          className="min-h-10 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
+        />
+        <button
+          type="button"
+          onClick={submitComment}
+          disabled={sending || !commentInput.trim()}
+          aria-label={t("submit")}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+        >
+          <Send className="size-4 rtl:-scale-x-100" />
+        </button>
+      </div>
+
+        </DrawerContent>
+      </Drawer>
     </article>
   );
 }
