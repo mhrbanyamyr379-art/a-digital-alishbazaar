@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useRouter, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { ArrowRight, ArrowLeft, Loader2, Phone as PhoneIcon, Mail } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2, Phone as PhoneIcon, Mail, Eye, EyeOff } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -41,6 +41,7 @@ function AuthPage() {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -327,15 +328,25 @@ function AuthPage() {
                     className="rounded-lg border border-border bg-background p-3 text-sm"
                     required
                   />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t("password")}
-                    minLength={6}
-                    className="rounded-lg border border-border bg-background p-3 text-sm"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPw ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t("password")}
+                      minLength={6}
+                      className="w-full rounded-lg border border-border bg-background p-3 pe-11 text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((s) => !s)}
+                      aria-label={showPw ? "پنهان کردن رمز" : "نمایش رمز"}
+                      className="absolute inset-y-0 end-0 flex w-11 items-center justify-center text-muted-foreground"
+                    >
+                      {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
                   <button
                     type="submit"
                     disabled={loading}
