@@ -102,7 +102,8 @@ export function ListingForm({
     supabase
       .rpc("get_my_phone")
       .then(({ data }) => {
-        const p = (data as unknown as string | null) ?? null;
+        const raw = (data as unknown as string | null) ?? null;
+        const p = raw ? normalizePhone(raw) ?? raw : null;
         if (p) {
           setContactPhone((v) => v || p);
           setContactWhatsapp((v) => v || p);
