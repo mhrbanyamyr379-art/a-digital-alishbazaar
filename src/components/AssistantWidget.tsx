@@ -1,7 +1,8 @@
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ImagePlus, RotateCcw, SendHorizontal, X } from "lucide-react";
@@ -87,6 +88,33 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
   const tx = (k: keyof typeof TXT) => TXT[k][lang];
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
+  // Links to Alish pages open inside the app (closing the panel); others open in a new tab.
+  const mdComponents = useMemo(() => ({
+    a: ({ href, children }: { href?: string; children?: React.ReactNode }) => {
+      let internal: string | null = null;
+      try {
+        const u = new URL(href ?? "", window.location.origin);
+        if (u.origin === window.location.origin || /\.lovable\.app$/.test(u.hostname)) internal = u.pathname + u.search + u.hash;
+      } catch { /* invalid */ }
+      return (
+        <a
+          href={internal ?? href}
+          target={internal ? undefined : "_blank"}
+          rel={internal ? undefined : "noopener noreferrer"}
+          onClick={(e) => {
+            if (!internal) return;
+            e.preventDefault();
+            onClose();
+            router.history.push(internal);
+          }}
+          className="font-bold text-primary underline underline-offset-4"
+        >
+          {children}
+        </a>
+      );
+    },
+  }), [onClose, router]);
   const [input, setInput] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
   const langRef = useRef(lang);
@@ -230,7 +258,7 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
                       <p key={i} dir="auto" className="whitespace-pre-wrap break-words text-start">{p.text}</p>
                     ) : (
                       <div key={i} dir="auto" className="break-words text-start leading-7 [&_a]:font-bold [&_a]:text-primary [&_a]:underline">
-                        <MessageResponse>{p.text}</MessageResponse>
+                        <MessageResponse components={mdComponents}>{p.text}</MessageResponse>
                       </div>
                     );
                   if (p.type.startsWith("tool-")) {
