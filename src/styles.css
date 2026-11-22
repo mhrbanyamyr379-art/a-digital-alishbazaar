@@ -143,6 +143,20 @@
   }
 }
 
+/* Prevent double-tap zoom while browsing on mobile */
+html {
+  touch-action: manipulation;
+}
+
+/* Prevent iOS/Android auto-zoom when focusing form fields (needs >=16px) */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 @utility no-scrollbar {
   &::-webkit-scrollbar {
     display: none;

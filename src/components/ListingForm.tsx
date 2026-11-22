@@ -272,7 +272,7 @@ export function ListingForm({
   };
 
   const field =
-    "w-full rounded-lg border border-border bg-card p-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40";
+    "w-full rounded-lg border border-border bg-card p-3 text-base focus:outline-none focus:ring-2 focus:ring-accent/40";
 
   const currentStep = STEPS[stepIdx];
 
