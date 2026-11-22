@@ -96,20 +96,6 @@ export function ListingForm({
   const [contactPhone, setContactPhone] = useState(initial?.contact_phone ?? "");
   const [contactWhatsapp, setContactWhatsapp] = useState(initial?.contact_whatsapp ?? "");
 
-  // Prefill phone fields from the seller's profile number (create mode only).
-  useEffect(() => {
-    if (mode !== "create" || !user) return;
-    supabase
-      .rpc("get_my_phone")
-      .then(({ data }) => {
-        const raw = (data as unknown as string | null) ?? null;
-        const p = raw ? normalizePhone(raw) ?? raw : null;
-        if (p) {
-          setContactPhone((v) => v || p);
-          setContactWhatsapp((v) => v || p);
-        }
-      });
-  }, [mode, user]);
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [images, setImages] = useState<ImgItem[]>(
