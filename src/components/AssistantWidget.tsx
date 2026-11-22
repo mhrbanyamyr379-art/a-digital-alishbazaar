@@ -95,21 +95,28 @@ function AssistantPanel({ onClose }: { onClose: () => void }) {
       let internal: string | null = null;
       try {
         const u = new URL(href ?? "", window.location.origin);
-        if (u.origin === window.location.origin || /\.lovable\.app$/.test(u.hostname)) internal = u.pathname + u.search + u.hash;
+        const isApp = u.origin === window.location.origin || /\.lovable\.app$/.test(u.hostname) || /^(localhost|127\.0\.0\.1)$/.test(u.hostname);
+        if (isApp || u.pathname.startsWith("/listing/")) internal = u.pathname + u.search + u.hash;
       } catch { /* invalid */ }
+      if (internal) {
+        const to = internal;
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+              router.history.push(to);
+            }}
+            className="inline p-0 font-bold text-primary underline underline-offset-4"
+          >
+            {children}
+          </button>
+        );
+      }
       return (
-        <a
-          href={internal ?? href}
-          target={internal ? undefined : "_blank"}
-          rel={internal ? undefined : "noopener noreferrer"}
-          onClick={(e) => {
-            if (!internal) return;
-            e.preventDefault();
-            onClose();
-            router.history.push(internal);
-          }}
-          className="font-bold text-primary underline underline-offset-4"
-        >
+        <a href={href} target="_blank" rel="noopener noreferrer" className="font-bold text-primary underline underline-offset-4">
           {children}
         </a>
       );
