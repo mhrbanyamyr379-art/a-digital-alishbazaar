@@ -272,7 +272,7 @@ function Home() {
             {user ? (
               <Link to="/profile" className="size-10 overflow-hidden rounded-full bg-primary-foreground/10 ring-1 ring-primary-foreground/20">
                 {profile?.avatar_url ? (
-                  <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
+                  <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" loading="eager" fetchPriority="high" />
                 ) : (
                   <span className="flex size-full items-center justify-center text-xs font-bold">
                     {profile?.display_name?.[0]?.toUpperCase() ?? "U"}

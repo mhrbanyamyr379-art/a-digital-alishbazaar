@@ -44,12 +44,23 @@ interface Props extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
 export function StorageImage({ bucket, path, alt = "", className, fallbackClassName, ...rest }: Props) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [triedOwner, setTriedOwner] = useState(false);
+
+  const handleError = async () => {
+    if (bucket === "chat-images" || !path || triedOwner) return setFailed(true);
+    setTriedOwner(true);
+    // Owners can still preview drafts/unselected uploads with their own access.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user.id !== path.split("/")[0]) return setFailed(true);
+    const { data, error } = await supabase.storage.from(bucket).download(path);
+    if (error || !data) return setFailed(true);
+    setSrc(URL.createObjectURL(data));
+  };
 
   useEffect(() => {
     let cancelled = false;
-    let objectUrl: string | null = null;
-    const controller = new AbortController();
     setFailed(false);
+    setTriedOwner(false);
     setSrc(null);
     if (!path) {
       setFailed(true);
@@ -59,39 +70,18 @@ export function StorageImage({ bucket, path, alt = "", className, fallbackClassN
       setSrc(path);
       return;
     }
-    const load = async () => {
-      if (bucket === "chat-images") return getSignedUrl(bucket, path);
-      // Every new display checks current public visibility. Never cache a
-      // storage token or fall back to signed URLs when public access is denied.
-      const response = await fetch(publicPhotoUrl(bucket, path), {
-        cache: "no-store", signal: controller.signal,
+    if (bucket === "chat-images") {
+      getSignedUrl(bucket, path).then((url) => {
+        if (cancelled) return;
+        if (!url) setFailed(true);
+        else setSrc(url);
       });
-      let image: Blob | null = response.ok ? await response.blob() : null;
-      if (!response.ok && response.status === 404) {
-        // Preserve owners' previews of drafts/unselected uploads using their
-        // authenticated storage permissions, not privileged public signing.
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user.id === path.split("/")[0]) {
-          const { data, error } = await supabase.storage.from(bucket).download(path);
-          if (!error) image = data;
-        }
-      }
-      if (!image || cancelled) return null;
-      objectUrl = URL.createObjectURL(image);
-      return objectUrl;
-    };
-    load().then((url) => {
-      if (cancelled) return;
-      if (!url) setFailed(true);
-      else setSrc(url);
-    }).catch(() => {
-      if (!cancelled) setFailed(true);
-    });
-    return () => {
-      cancelled = true;
-      controller.abort();
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
+      return () => { cancelled = true; };
+    }
+    // Public photos: let the browser load the revalidating endpoint directly
+    // so lazy loading and the native request queue keep pages fast.
+    setSrc(publicPhotoUrl(bucket, path));
+    return () => { cancelled = true; };
   }, [bucket, path]);
 
   if (failed || !path) {
@@ -122,7 +112,7 @@ export function StorageImage({ bucket, path, alt = "", className, fallbackClassN
       className={className}
       loading="lazy"
       decoding="async"
-      onError={() => setFailed(true)}
+      onError={() => { void handleError(); }}
       {...rest}
     />
   );
