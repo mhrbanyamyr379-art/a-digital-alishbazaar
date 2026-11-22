@@ -602,6 +602,60 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
         </button>
       </div>
 
+      {/* Comment input */}
+      <div className="flex items-center gap-2 border-t border-border px-3 py-2">
+        <input
+          value={commentInput}
+          onChange={(e) => setCommentInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submitComment();
+          }}
+          placeholder={t("writeComment")}
+          maxLength={1000}
+          className="min-h-10 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
+        />
+        <button
+          type="button"
+          onClick={submitComment}
+          disabled={sending || !commentInput.trim()}
+          aria-label={t("submit")}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+        >
+          <Send className="size-4 rtl:-scale-x-100" />
+        </button>
+      </div>
+
+      {/* Latest comment only */}
+      {listing.comments.length > 0 && (() => {
+        const c = listing.comments[listing.comments.length - 1]!;
+        return (
+          <button
+            type="button"
+            onClick={() => setCommentsOpen(true)}
+            className="flex w-full items-start gap-2.5 border-t border-border px-4 py-3 text-start"
+          >
+            <div className="size-8 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+              {c.authorAvatar ? (
+                <StorageImage bucket="avatars" path={c.authorAvatar} alt="" className="size-full object-cover" />
+              ) : (
+                <div className="flex size-full items-center justify-center text-muted-foreground">
+                  <MessageCircle className="size-4" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-foreground">{c.authorName}</p>
+              <p className="line-clamp-2 text-sm text-foreground">{c.body}</p>
+              {listing.commentCount > 1 && (
+                <p className="mt-1 text-xs font-bold text-muted-foreground">
+                  {listing.commentCount} {t("comment")}
+                </p>
+              )}
+            </div>
+          </button>
+        );
+      })()}
+
       <Drawer open={commentsOpen} onOpenChange={setCommentsOpen} shouldScaleBackground={false}>
         <DrawerContent className="max-h-[85vh]" dir="rtl">
           <DrawerHeader className="border-b border-border pb-3 text-center">
