@@ -450,9 +450,14 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
         /* clipboard blocked */
       }
     }
-    await supabase
-      .from("listing_shares")
-      .insert({ listing_id: listing.id, user_id: user?.id ?? null });
+    if (user?.id) {
+      await supabase
+        .from("listing_shares")
+        .upsert(
+          { listing_id: listing.id, user_id: user.id },
+          { onConflict: "listing_id,user_id", ignoreDuplicates: true },
+        );
+    }
     refresh();
   };
 

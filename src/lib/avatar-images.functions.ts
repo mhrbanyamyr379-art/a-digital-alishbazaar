@@ -24,6 +24,8 @@ export const signAvatarImage = createServerFn({ method: "POST" })
       // Upload RLS reserves the first folder for this profile owner. Only
       // that owner's chosen avatar may authorize public signing of the file.
       .eq("id", data.path.split("/")[0])
+      // Banned accounts are hidden from the public; don't serve their photo.
+      .eq("is_banned", false)
       .limit(1);
 
     if (lookupError || !rows || rows.length === 0) return { url: null as string | null };

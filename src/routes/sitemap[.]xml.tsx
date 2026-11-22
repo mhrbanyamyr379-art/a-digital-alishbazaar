@@ -38,6 +38,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           const { data: sellers } = await supabaseAdmin
             .from("profiles")
             .select("id, updated_at")
+            .eq("is_banned", false)
             .limit(5000);
           for (const s of sellers ?? []) {
             entries.push({
