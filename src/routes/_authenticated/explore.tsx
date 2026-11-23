@@ -603,7 +603,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
       </div>
 
       {/* Comment input */}
-      <div className="flex items-center gap-2 border-t border-border px-3 py-2">
+      <div className="flex items-center gap-2 border-t border-border py-2 ps-3 pe-6">
         <input
           value={commentInput}
           onChange={(e) => setCommentInput(e.target.value)}
@@ -612,14 +612,14 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
           }}
           placeholder={t("writeComment")}
           maxLength={1000}
-          className="min-h-10 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
+          className="min-h-11 w-0 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-base outline-none placeholder:text-muted-foreground focus:border-primary"
         />
         <button
           type="button"
           onClick={submitComment}
           disabled={sending || !commentInput.trim()}
           aria-label={t("submit")}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
         >
           <Send className="size-4 rtl:-scale-x-100" />
         </button>
@@ -712,7 +712,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
           ))}
           </div>
         {/* Comment input */}
-      <div className="flex items-center gap-2 border-t border-border bg-background px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <div className="flex items-center gap-2 border-t border-border bg-background py-2 ps-3 pe-7 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <input
           ref={commentInputRef}
           value={commentInput}
@@ -722,14 +722,14 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
           }}
           placeholder={t("writeComment")}
           maxLength={1000}
-          className="min-h-10 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
+          className="min-h-11 w-0 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-base outline-none placeholder:text-muted-foreground focus:border-primary"
         />
         <button
           type="button"
           onClick={submitComment}
           disabled={sending || !commentInput.trim()}
           aria-label={t("submit")}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
         >
           <Send className="size-4 rtl:-scale-x-100" />
         </button>
