@@ -1,4 +1,8 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
+
+// True when the current tab screen was opened from Home, so Back can return there.
+let openedFromHome = false;
+const TAB_ROOTS = ["/explore", "/notifications", "/chat", "/profile"];
 import { Home, Bell, MessageCircle, User, Plus, Compass } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -12,6 +16,8 @@ export function BottomNav() {
   const { unreadChats } = useUnreadTotal();
   const unreadNotifs = useUnreadNotifications();
   const onChat = path.startsWith("/chat");
+  const router = useRouter();
+  const onTabRoot = TAB_ROOTS.includes(path);
 
   const items = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
@@ -44,7 +50,16 @@ export function BottomNav() {
             <Link
               key={it.to}
               to={it.to}
+              replace={onTabRoot}
               onClick={(e) => {
+                if (it.to === "/" && onTabRoot && openedFromHome) {
+                  e.preventDefault();
+                  openedFromHome = false;
+                  router.history.back();
+                  return;
+                }
+                if (path === "/" && it.to !== "/") openedFromHome = true;
+                else if (!onTabRoot) openedFromHome = false;
                 if (it.to === "/explore" && active) {
                   e.preventDefault();
                   window.dispatchEvent(new Event("alish:explore-refresh"));
