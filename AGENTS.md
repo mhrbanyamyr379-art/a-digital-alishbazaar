@@ -13,3 +13,5 @@
 - Bind listing photo references and privileged signing to the listing seller's upload folder; a user-writable image reference alone must never authorize private file access.
 - Sign public profile photos only when the file's upload-folder owner selected it on their own profile; another user's avatar reference is not authorization.
 - Deliver public listing/profile photos through a no-store endpoint that rechecks visibility on every request; never issue reusable storage tokens, so moderation revokes future requests immediately.
+- Derive public image URLs during render; reserve asynchronous resolution for private attachments and owner previews, so native image loading starts without a mount-effect waterfall.
+- Use passive connection hints with a hydration-safe external store for optional preloading; unknown/slow/data-saving connections keep native lazy loading and no speculative requests.

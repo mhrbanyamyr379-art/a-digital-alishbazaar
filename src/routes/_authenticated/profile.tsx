@@ -121,7 +121,7 @@ function ProfilePage() {
           <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
             <div className="size-16 shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-border">
               {profile?.avatar_url ? (
-                <StorageImage bucket="avatars" path={profile.avatar_url} alt="" className="size-full object-cover" />
+                <StorageImage bucket="avatars" path={profile.avatar_url} alt="" loading="eager" fetchPriority="high" className="size-full object-cover" />
               ) : (
                 <span className="flex size-full items-center justify-center text-2xl font-black text-muted-foreground">
                   {profile?.display_name?.[0]?.toUpperCase() ?? "U"}

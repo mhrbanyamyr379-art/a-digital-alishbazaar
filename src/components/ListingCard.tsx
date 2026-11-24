@@ -5,6 +5,7 @@ import { formatPrice, timeAgo } from "@/lib/format";
 import { provinceById } from "@/data/provinces";
 import { cn } from "@/lib/utils";
 import { StorageImage } from "@/components/StorageImage";
+import { useNetworkProfile } from "@/lib/network-profile";
 
 export interface ListingCardData {
   id: string;
@@ -33,11 +34,13 @@ export function ListingCard({
   const { lang, locName, t } = useI18n();
   const prov = provinceById(listing.province);
   const isSold = listing.status === "sold";
+  const network = useNetworkProfile();
 
   return (
     <Link
       to="/listing/$id"
       params={{ id: listing.id }}
+      preload={network === "fast" ? "intent" : false}
       className="animate-listing group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg"
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
     >
@@ -46,7 +49,6 @@ export function ListingCard({
           bucket="listings"
           path={listing.image}
           alt={listing.title}
-          loading="lazy"
           className={cn(
             "h-full w-full object-cover transition-transform duration-300 group-hover:scale-105",
             isSold && "opacity-50 grayscale",

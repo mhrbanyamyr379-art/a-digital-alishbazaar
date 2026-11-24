@@ -44,10 +44,17 @@ async function fetchSellerMeta(id: string) {
   try {
     const { data } = await supabase
       .from("profiles")
-      .select("id,display_name,bio,province")
+      .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,updated_at,last_active,hide_last_active")
       .eq("id", id)
       .maybeSingle();
-    return (data as { id: string; display_name: string | null; bio: string | null; province: string | null } | null) ?? null;
+    if (!data) return null;
+    return {
+      ...data,
+      display_name: data.display_name ?? "",
+      rating_avg: Number(data.rating_avg ?? 0),
+      rating_count: data.rating_count ?? 0,
+      created_at: data.created_at ?? new Date().toISOString(),
+    };
   } catch {
     return null;
   }
@@ -55,7 +62,12 @@ async function fetchSellerMeta(id: string) {
 
 export const Route = createFileRoute("/seller/$id")({
   component: SellerPage,
-  loader: ({ params }) => fetchSellerMeta(params.id),
+  loader: ({ params, context }) => context.queryClient.fetchQuery({
+    queryKey: ["seller", params.id],
+    queryFn: () => fetchSellerMeta(params.id),
+    staleTime: 60_000,
+  }),
+  pendingMinMs: 0,
   head: ({ params, loaderData }) => {
     const url = `${SITE_URL}/seller/${params.id}`;
     const name = loaderData?.display_name?.trim() || "Seller";
@@ -113,23 +125,7 @@ function SellerPage() {
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["seller", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id,display_name,avatar_url,bio,province,rating_avg,rating_count,created_at,updated_at,last_active,hide_last_active")
-        .eq("id", id)
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) return null;
-      return {
-        ...data,
-        id: data.id as string,
-        display_name: data.display_name ?? "",
-        rating_avg: Number(data.rating_avg ?? 0),
-        rating_count: data.rating_count ?? 0,
-        created_at: data.created_at ?? new Date().toISOString(),
-      };
-    },
+    queryFn: () => fetchSellerMeta(id),
   });
 
   const { data: listings, isLoading: listingsLoading, error: listingsError, refetch: refetchListings } = useQuery({
@@ -308,7 +304,7 @@ function SellerPage() {
           <div className="relative">
             <div className="size-20 overflow-hidden rounded-full bg-white/10 ring-2 ring-white/25 shadow-lg">
               {profile.avatar_url ? (
-                <StorageImage bucket="avatars" path={profile.avatar_url} alt={profile.display_name} className="size-full object-cover" />
+                <StorageImage bucket="avatars" path={profile.avatar_url} alt={profile.display_name} loading="eager" fetchPriority="high" className="size-full object-cover" />
               ) : (
                 <span className="flex size-full items-center justify-center text-3xl font-black">
                   {profile.display_name?.[0]?.toUpperCase()}

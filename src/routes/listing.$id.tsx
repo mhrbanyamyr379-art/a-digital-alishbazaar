@@ -55,13 +55,23 @@ async function fetchListingMeta(id: string) {
 
 export const Route = createFileRoute("/listing/$id")({
   component: ListingDetail,
-  loader: ({ params }) => fetchListingMeta(params.id),
+  loader: ({ params, context }) => context.queryClient.fetchQuery({
+    queryKey: ["listing-meta", params.id],
+    queryFn: () => fetchListingMeta(params.id),
+    staleTime: 60_000,
+  }),
+  pendingMinMs: 0,
   head: ({ params, loaderData }) => {
     const url = `${SITE_URL}/listing/${params.id}`;
     if (!loaderData) {
       return {
         meta: [
           { title: "Listing — Alish الیش" },
+          { name: "description", content: "View an ad on Alish, Afghanistan's local marketplace." },
+          { property: "og:title", content: "Listing — Alish الیش" },
+          { property: "og:description", content: "View an ad on Alish, Afghanistan's local marketplace." },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary_large_image" },
           { property: "og:url", content: url },
         ],
         links: [{ rel: "canonical", href: url }],
@@ -133,16 +143,16 @@ async function fetchListing(id: string) {
   if (error) throw error;
   if (!row) return null;
   const data = row as unknown as ListingRow;
-  const { data: seller } = await supabase
-    .from("profiles")
-    .select("id,display_name,avatar_url,rating_avg,rating_count")
-    .eq("id", data.seller_id)
-    .maybeSingle();
-  let phone: string | null = null;
-  if (isAuthed) {
-    const { data: p } = await supabase.rpc("get_seller_phone", { _seller_id: data.seller_id } as never);
-    phone = (p as unknown as string | null) ?? null;
-  }
+  const [sellerResult, phoneResult] = await Promise.all([
+    supabase.from("profiles")
+      .select("id,display_name,avatar_url,rating_avg,rating_count")
+      .eq("id", data.seller_id).maybeSingle(),
+    isAuthed
+      ? supabase.rpc("get_seller_phone", { _seller_id: data.seller_id } as never)
+      : Promise.resolve({ data: null }),
+  ]);
+  const seller = sellerResult.data;
+  const phone = (phoneResult.data as unknown as string | null) ?? null;
   return { ...data, seller: seller ? { ...(seller as { id: string; display_name: string; avatar_url: string | null; rating_avg: number; rating_count: number }), phone } : null };
 }
 
@@ -352,7 +362,7 @@ function ListingDetail() {
       {/* Gallery */}
       <div className="relative aspect-square w-full bg-muted">
         {imgs.length > 0 ? (
-          <StorageImage bucket="listings" path={imgs[active]?.url} alt={l.title} className="h-full w-full object-cover" />
+          <StorageImage bucket="listings" path={imgs[active]?.url} alt={l.title} loading="eager" fetchPriority="high" className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">{t("appName")}</div>
         )}

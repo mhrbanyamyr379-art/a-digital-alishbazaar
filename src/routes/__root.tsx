@@ -10,6 +10,7 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { useNetworkProfile } from "@/lib/network-profile";
 
 // The assistant pulls in large chat/markdown libraries; load it only after the
 // page is idle so slow 3G/4G connections show listings first.
@@ -19,12 +20,18 @@ const AssistantWidget = lazy(() =>
 
 function DeferredAssistant() {
   const [ready, setReady] = useState(false);
+  const network = useNetworkProfile();
   const onExplore = useRouterState({ select: (s) => s.location.pathname.startsWith("/explore") });
   useEffect(() => {
-    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
-    if (w.requestIdleCallback) w.requestIdleCallback(() => setReady(true), { timeout: 4000 });
-    else setTimeout(() => setReady(true), 2500);
-  }, []);
+    if (ready || onExplore) return;
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(() => setReady(true), { timeout: network === "fast" ? 1000 : 4000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const id = setTimeout(() => setReady(true), network === "fast" ? 0 : 2500);
+    return () => clearTimeout(id);
+  }, [network, ready, onExplore]);
   if (!ready || onExplore) return null;
   return (
     <Suspense fallback={null}>
