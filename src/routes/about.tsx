@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { TopBar } from "@/components/TopBar";
+import logoAsset from "@/assets/logo.png.asset.json";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n";
@@ -31,9 +32,7 @@ function AboutPage() {
       <div className="mx-auto w-full max-w-2xl px-4 py-5">
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent font-display text-lg font-black text-accent-foreground">
-              A
-            </div>
+            <img src={logoAsset.url} alt={t("appName")} className="size-10 shrink-0 rounded-lg object-cover" />
             <div className="min-w-0">
               <h1 className="truncate font-display text-lg font-black">{t("appName")}</h1>
               <p className="truncate text-xs text-muted-foreground">{t("tagline")}</p>
