@@ -5,5 +5,5 @@
 - [x] Verify Home search, location/category filters, cards, favorites, navigation and mobile RTL/LTR
 - [ ] Polish only Notifications presentation, preserving existing handlers and data flow
 - [ ] Verify Notifications filters, read/dismiss actions, destinations and mobile RTL/LTR
-- [ ] Remove image-start delays and adapt optional loading to connection quality without changing photo security
-- [ ] Verify fast/weak Android loading, listing navigation, reconnect and image security tests
+- [x] Remove image-start delays and adapt optional loading to connection quality without changing photo security
+- [x] Verify fast/weak Android loading, listing navigation, reconnect and image security tests
