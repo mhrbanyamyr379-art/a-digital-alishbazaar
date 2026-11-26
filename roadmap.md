@@ -7,3 +7,5 @@
 - [ ] Verify Notifications filters, read/dismiss actions, destinations and mobile RTL/LTR
 - [x] Remove image-start delays and adapt optional loading to connection quality without changing photo security
 - [x] Verify fast/weak Android loading, listing navigation, reconnect and image security tests
+- [x] Unify all Share controls with native sharing and explicit clipboard fallback without design changes
+- [x] Verify share payloads, cancellation, blocked/unsupported browsers and Android-emulated flows

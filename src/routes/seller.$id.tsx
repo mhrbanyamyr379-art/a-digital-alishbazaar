@@ -36,6 +36,8 @@ import { TopBar } from "@/components/TopBar";
 import { ListingCard, ListingCardSkeleton, type ListingCardData } from "@/components/ListingCard";
 import { useStartChat } from "@/hooks/useStartChat";
 import { cn } from "@/lib/utils";
+import { useShare } from "@/hooks/useShare";
+import { shareData } from "@/lib/share";
 
 
 const SITE_URL = "https://a-digital-alishbazaar.lovable.app";
@@ -113,6 +115,7 @@ function SellerPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const shareContent = useShare();
   const { startChat, starting } = useStartChat();
   const isSelfSeller = user?.id === id;
 
@@ -227,20 +230,7 @@ function SellerPage() {
     }
   };
 
-  const shareProfile = async () => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    const title = profile?.display_name ?? "";
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({ title, url });
-      } catch {
-        /* cancelled */
-      }
-    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(url);
-      toast.success(t("saved"));
-    }
-  };
+  const shareProfile = () => shareContent(shareData("seller", id, profile?.display_name ?? t("appName"), profile?.bio));
 
   const startChatWithSeller = () => {
     if (isSelfSeller) return;

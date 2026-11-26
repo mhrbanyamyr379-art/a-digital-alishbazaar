@@ -15,3 +15,4 @@
 - Deliver public listing/profile photos through a no-store endpoint that rechecks visibility on every request; never issue reusable storage tokens, so moderation revokes future requests immediately.
 - Derive public image URLs during render; reserve asynchronous resolution for private attachments and owner previews, so native image loading starts without a mount-effect waterfall.
 - Use passive connection hints with a hydration-safe external store for optional preloading; unknown/slow/data-saving connections keep native lazy loading and no speculative requests.
+- Use the shared share utility and hook for all Share controls; invoke native sharing before any awaited work and copy only after an explicit fallback action, so cancellation or browser restrictions never silently copy links.

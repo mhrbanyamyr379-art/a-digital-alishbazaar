@@ -19,6 +19,8 @@ import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
 import { ListingCard } from "@/components/ListingCard";
 import { useStartChat } from "@/hooks/useStartChat";
 import { cn } from "@/lib/utils";
+import { useShare } from "@/hooks/useShare";
+import { shareData } from "@/lib/share";
 
 
 import {
@@ -165,6 +167,7 @@ function ListingDetail() {
   const [active, setActive] = useState(0);
   const [savingStatus, setSavingStatus] = useState(false);
   const qc = useQueryClient();
+  const shareContent = useShare();
 
 
   const { data: l, isLoading, isError, refetch } = useQuery({
@@ -301,44 +304,7 @@ function ListingDetail() {
   const shareText = `${l.title} — ${window.location.origin}/listing/${l.id}`;
 
 
-  const copyLink = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success(t("linkCopied"));
-      return;
-    } catch {
-      /* clipboard blocked (insecure context or iframe permission) */
-    }
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = url;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      toast.success(t("linkCopied"));
-    } catch {
-      toast.message(url);
-    }
-  };
-
-  const share = async () => {
-    const url = `${window.location.origin}/listing/${l.id}`;
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({ title: l.title, url });
-        return;
-      } catch (err) {
-        // User cancelled → do nothing. Anything else (blocked in an iframe,
-        // missing permission, no target app) → fall back to copying the link.
-        if ((err as DOMException)?.name === "AbortError") return;
-      }
-    }
-    await copyLink(url);
-  };
+  const share = () => shareContent(shareData("listing", l.id, l.title, l.description));
 
   return (
     <div className="min-h-screen bg-background pb-28">

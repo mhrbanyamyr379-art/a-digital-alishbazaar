@@ -12,6 +12,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useShare } from "@/hooks/useShare";
+import { shareData } from "@/lib/share";
 import {
   Drawer,
   DrawerContent,
@@ -369,7 +371,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
   const [liking, setLiking] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
-  const sharingRef = useRef(false);
+  const shareContent = useShare();
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["explore-feed"] });
 
@@ -431,32 +433,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
     refresh();
   };
 
-  const share = async () => {
-    if (sharingRef.current) return;
-    sharingRef.current = true;
-    try {
-      await doShare();
-    } finally {
-      sharingRef.current = false;
-    }
-  };
-  const doShare = async () => {
-    const url = `${window.location.origin}/listing/${listing.id}`;
-    try {
-      if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: listing.title, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast.success(t("linkCopied"));
-      }
-    } catch {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.success(t("linkCopied"));
-      } catch {
-        /* clipboard blocked */
-      }
-    }
+  const share = () => shareContent(shareData("listing", listing.id, listing.title, listing.description), async () => {
     if (user?.id) {
       await supabase
         .from("listing_shares")
@@ -466,7 +443,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
         );
     }
     refresh();
-  };
+  });
 
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
