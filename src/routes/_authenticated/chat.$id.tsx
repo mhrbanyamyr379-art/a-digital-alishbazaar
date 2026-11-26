@@ -728,12 +728,12 @@ function ChatThread() {
               <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
                 <div className="relative max-w-[78%]">
                   <button
-                    onContextMenu={(e) => {
-                      e.preventDefault();
+                    onContextMenu={() => {
+                      // Keep Android's native long-press selection/copy; just open our menu too.
                       if (!removed) setMenuOpen(m.id);
                     }}
                     onClick={() => !removed && setMenuOpen((v) => (v === m.id ? null : m.id))}
-                    className="block min-h-11 w-full text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+                    className="block min-h-11 w-full select-text text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   >
                     {removed ? (
                       <div className="flex min-h-11 items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/30 px-3.5 py-2 text-sm italic text-muted-foreground">

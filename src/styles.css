@@ -143,6 +143,21 @@
   }
 }
 
+/* Text selection / copy / paste everywhere (Android Chrome & WebView) */
+body,
+p, span, h1, h2, h3, h4, h5, h6, li, dd, dt, td, th, blockquote, pre, code, label,
+button .whitespace-pre-wrap {
+  -webkit-user-select: text;
+  user-select: text;
+}
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: auto;
+  user-select: auto;
+  -webkit-touch-callout: default;
+}
+
 /* Prevent double-tap zoom while browsing on mobile */
 html {
   touch-action: manipulation;
