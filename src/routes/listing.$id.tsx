@@ -1,3 +1,4 @@
+import { Linkify } from "@/components/Linkify";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -438,7 +439,7 @@ function ListingDetail() {
         {l.description && (
           <div className="mt-5">
             <h2 className="mb-1.5 text-sm font-bold">{t("description")}</h2>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{l.description}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80"><Linkify text={l.description} /></p>
           </div>
         )}
 

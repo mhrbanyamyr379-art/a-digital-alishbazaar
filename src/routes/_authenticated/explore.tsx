@@ -1,3 +1,4 @@
+import { Linkify } from "@/components/Linkify";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -622,7 +623,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-foreground">{c.authorName}</p>
-              <p className="line-clamp-2 text-sm text-foreground">{c.body}</p>
+              <p className="line-clamp-2 text-sm text-foreground"><Linkify text={c.body} /></p>
               {listing.commentCount > 1 && (
                 <p className="mt-1 text-xs font-bold text-muted-foreground">
                   {listing.commentCount} {t("comment")}
@@ -672,7 +673,7 @@ function ExploreCard({ listing, lang }: { listing: FeedListing; lang: "fa" | "ps
                   </span>
                 </div>
                 <p className="whitespace-pre-line text-xs leading-relaxed text-foreground/90">
-                  {c.body}
+                  <Linkify text={c.body} />
                 </p>
               </div>
               {user?.id === c.user_id && (

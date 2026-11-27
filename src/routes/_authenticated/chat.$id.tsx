@@ -1,3 +1,4 @@
+import { Linkify } from "@/components/Linkify";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -727,7 +728,9 @@ function ChatThread() {
               )}
               <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
                 <div className="relative max-w-[78%]">
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onContextMenu={() => {
                       // Keep Android's native long-press selection/copy; just open our menu too.
                       if (!removed) setMenuOpen(m.id);
@@ -772,10 +775,10 @@ function ChatThread() {
                         )}
                       >
                         {quoted(m.reply_to_id)}
-                        {m.body}
+                        <Linkify text={m.body ?? ""} />
                       </div>
                     )}
-                  </button>
+                  </div>
                   <div
                     className={cn(
                       "mt-0.5 flex items-center gap-1 px-1 text-[10px] text-muted-foreground",
