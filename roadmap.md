@@ -9,3 +9,5 @@
 - [x] Verify fast/weak Android loading, listing navigation, reconnect and image security tests
 - [x] Unify all Share controls with native sharing and explicit clipboard fallback without design changes
 - [x] Verify share payloads, cancellation, blocked/unsupported browsers and Android-emulated flows
+- [x] Replace unavailable/blocked share errors with direct WhatsApp, Telegram and explicit copy choices
+- [x] Verify all share entry points and mobile browser capability scenarios in Android-sized browser simulation

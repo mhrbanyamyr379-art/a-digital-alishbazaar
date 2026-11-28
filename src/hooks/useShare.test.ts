@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useShare } from "./useShare";
 import { nativeShare, copyShareLink } from "../lib/share";
 import { toast } from "sonner";
+import { shareFallbackStore } from "../lib/share-fallback";
 
 vi.mock("react", () => ({ useRef: () => ({ current: false }) }));
 vi.mock("@/lib/i18n", () => ({ useI18n: () => ({ t: (key: string) => key }) }));
@@ -10,24 +11,32 @@ vi.mock("sonner", () => ({ toast: { message: vi.fn(), success: vi.fn(), error: v
 
 describe("Share button clipboard and completion rules", () => {
   const payload = { title: "ماشین خیاطی", text: "ماشین سالم", url: "https://a-digital-alishbazaar.lovable.app/listing/ad-1" };
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); shareFallbackStore.close(); });
   it("copies only after the user selects the unsupported-browser fallback", async () => {
     vi.mocked(nativeShare).mockResolvedValue("unsupported");
     await useShare()(payload);
     expect(copyShareLink).not.toHaveBeenCalled();
-    const options = vi.mocked(toast.message).mock.calls[0]?.[1];
-    const action = options?.action;
-    if (!action || typeof action !== "object" || !("onClick" in action)) throw new Error("Missing copy action");
-    await action.onClick({} as React.MouseEvent<HTMLButtonElement>);
-    expect(copyShareLink).toHaveBeenCalledWith(payload.url);
+    expect(shareFallbackStore.getSnapshot()?.data).toEqual(payload);
+    expect(toast.error).not.toHaveBeenCalled();
   });
-  it.each(["cancelled", "failed"] as const)("does not copy or record a share after %s", async (result) => {
+  it("does not copy, show fallback or record a share after cancellation", async () => {
+    const result = "cancelled";
     vi.mocked(nativeShare).mockResolvedValue(result);
     const completed = vi.fn();
     await useShare()(payload, completed);
     expect(copyShareLink).not.toHaveBeenCalled();
     expect(completed).not.toHaveBeenCalled();
     expect(toast.message).not.toHaveBeenCalled();
+    expect(shareFallbackStore.getSnapshot()).toBeNull();
+  });
+  it("opens fallback choices instead of an error for blocked native sharing", async () => {
+    vi.mocked(nativeShare).mockResolvedValue("failed");
+    const completed = vi.fn();
+    await useShare()(payload, completed);
+    expect(shareFallbackStore.getSnapshot()?.data).toEqual(payload);
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(copyShareLink).not.toHaveBeenCalled();
+    expect(completed).not.toHaveBeenCalled();
   });
   it("records completion only after successful native sharing", async () => {
     vi.mocked(nativeShare).mockResolvedValue("shared");

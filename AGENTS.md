@@ -16,3 +16,4 @@
 - Derive public image URLs during render; reserve asynchronous resolution for private attachments and owner previews, so native image loading starts without a mount-effect waterfall.
 - Use passive connection hints with a hydration-safe external store for optional preloading; unknown/slow/data-saving connections keep native lazy loading and no speculative requests.
 - Use the shared share utility and hook for all Share controls; invoke native sharing before any awaited work and copy only after an explicit fallback action, so cancellation or browser restrictions never silently copy links.
+- Mount one shared fallback share dialog at the root; unsupported or blocked native sharing opens direct WhatsApp/Telegram and explicit copy choices, while cancellation does nothing, so every Share control behaves consistently.

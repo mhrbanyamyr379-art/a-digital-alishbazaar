@@ -47,6 +47,7 @@ import { I18nProvider, useI18n, tStandalone } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ShareFallback } from "@/components/ShareFallback";
 
 function NotFoundComponent() {
   const { t } = useI18n();
@@ -186,6 +187,7 @@ function RootComponent() {
             <AuthInvalidator />
             <OfflineBanner />
             <Outlet />
+            <ShareFallback />
             <DeferredAssistant />
             <Toaster position="top-center" richColors />
           </AuthProvider>
